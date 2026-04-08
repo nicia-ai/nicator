@@ -1,0 +1,144 @@
+# KWB-030 · synthesis
+#
+# This task requires skill decomposition to answer well. The source document
+# is an internal memo that poses a research question but does NOT contain the
+# answer. The agent must use the researcher skill (web-search + web-fetch) to
+# gather current data, then synthesize findings with the memo's context.
+#
+# The baseline (single call, no tools) must rely on training data, which may
+# be stale or incomplete for specific regulatory details. The harness can
+# activate the researcher skill to find current information.
+#
+# Floor: Baseline can produce a plausible but generic answer from training data.
+# Ceiling: Harness with researcher skill finds specific, current regulatory
+# details and cites concrete frameworks, deadlines, and requirements.
+
+id: kwb-030
+category: synthesis
+name: Research-dependent regulatory comparison
+description: >-
+  An internal memo asks for a comparison of AI regulation approaches across
+  three jurisdictions. The source document provides context and constraints
+  but not the regulatory details. The agent must research current AI
+  regulation to produce a useful comparison.
+
+sources:
+  - id: src-a
+    title: "Internal Memo — VP of Compliance"
+    tokenCount: 280
+    content: |
+      FROM: Sarah Chen, VP Compliance
+      TO: AI Governance Committee
+      RE: Regulatory landscape assessment for Q2 planning
+
+      Team,
+
+      We need a structured comparison of AI regulation across the EU, US, and
+      UK before our Q2 compliance planning session. Our product (an AI-powered
+      hiring screening tool) will launch in all three markets by year end.
+
+      For each jurisdiction, I need:
+      1. The primary legislation or regulatory framework governing AI in
+         employment/hiring decisions
+      2. Whether our system would be classified as "high-risk" or equivalent
+      3. Specific obligations that apply (transparency, human oversight, bias
+         audits, record-keeping)
+      4. Key compliance deadlines we need to hit
+
+      Please research this thoroughly. Generic summaries from last year won't
+      cut it — I need the current state as of 2025, with specific provisions
+      that apply to hiring tools. The board will ask pointed questions.
+
+      — Sarah
+
+question: |
+  Based on Sarah's memo, research and produce the regulatory comparison she
+  requested. Focus on the most important legislation in each jurisdiction —
+  you don't need to be exhaustive, but you do need to identify the primary
+  framework and its key provisions for AI hiring tools. A focused answer
+  covering the top 2-3 requirements per jurisdiction is better than an
+  encyclopedic one.
+
+referenceFacts:
+  - id: fact-1
+    description: Identifies the EU AI Act as the primary EU framework
+    canonical: "AI Act"
+    weight: 2
+  - id: fact-2
+    description: Identifies AI hiring tools as high-risk under EU AI Act
+    canonical: "high-risk"
+    pattern: "high.risk|high risk"
+    weight: 2
+  - id: fact-3
+    description: Mentions transparency or explainability obligations
+    canonical: "transparency"
+    pattern: "transparen|explain"
+    weight: 1
+  - id: fact-4
+    description: Mentions human oversight requirements
+    canonical: "human oversight"
+    pattern: "human oversight|human.in.the.loop|human review"
+    weight: 1
+  - id: fact-5
+    description: Mentions bias audit or testing requirements
+    canonical: "bias"
+    pattern: "bias audit|bias test|fairness|non.discrimination|discriminat"
+    weight: 1
+  - id: fact-6
+    description: Mentions a US framework (NYC Local Law 144, EEOC, or executive order)
+    canonical: "Local Law 144"
+    pattern: "Local Law 144|LL ?144|EEOC|EO 14110|executive order|Blueprint|NIST"
+    weight: 2
+  - id: fact-7
+    description: Mentions UK approach (pro-innovation, sectoral, or EHRC)
+    canonical: "pro-innovation"
+    pattern: "pro.innovation|sectoral|EHRC|Equality Act|ICO|DSIT|Alan Turing"
+    weight: 1
+  - id: fact-8
+    description: Mentions record-keeping or documentation requirements
+    canonical: "record"
+    pattern: "record.keeping|documentation|technical documentation|log"
+    weight: 1
+
+rubricWeights:
+  faithfulness: 0.30
+  completeness: 0.40
+  coherence: 0.10
+  actionability: 0.20
+
+passFail:
+  minFactualScore: 0.6
+  requiredFactIds: [fact-1, fact-2, fact-6]
+  description: >-
+    Must identify the EU AI Act, classify hiring AI as high-risk, and identify
+    at least one US regulatory framework. Generic answers without specific
+    legislation names fail. The harness should outperform the baseline by
+    finding current, specific regulatory details through web research.
+
+expectedSkills:
+  - researcher
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a compliance research analyst. Use the researcher skill once to
+    gather information on AI regulation across the EU, US, and UK as it
+    applies to hiring tools. Then synthesize the findings into a structured
+    comparison. Keep your research focused — a single well-targeted research
+    pass is better than exhaustive coverage.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+  limits:
+    maxTasksPerRun: 30
+
+graphAssertions:
+  - type: run_status
+    status: completed
+    description: "Run should complete successfully"
+
+  - type: task_exists
+    match:
+      subagentName: researcher
+    description: "Researcher skill should be activated to find regulatory details"

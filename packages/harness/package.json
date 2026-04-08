@@ -1,0 +1,27 @@
+{
+  "name": "@nicator/harness",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format:check": "prettier --check --ignore-path ../../.prettierignore .",
+    "fix": "eslint --fix . && prettier --write --ignore-path ../../.prettierignore ."
+  },
+  "dependencies": {
+    "@libsql/client": "^0.17.2",
+    "@nicator/core": "workspace:*",
+    "@nicator/sdk": "workspace:*",
+    "@nicator/workspace": "workspace:*",
+    "@nicia-ai/typegraph": "^0.19.0",
+    "yaml": "^2.8.3",
+    "zod": "^4.3.6"
+  }
+}

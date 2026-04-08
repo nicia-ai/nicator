@@ -1,0 +1,32 @@
+{
+  "name": "@nicator/workspace",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./bash-tool": "./src/bash-tool.ts",
+    "./worker": "./src/worker.ts",
+    "./browser": "./src/browser.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format:check": "prettier --check --ignore-path ../../.prettierignore .",
+    "fix": "eslint --fix . && prettier --write --ignore-path ../../.prettierignore ."
+  },
+  "dependencies": {
+    "@nicator/core": "workspace:*",
+    "agentfs-sdk": "^0.6.4",
+    "just-bash": "^2.14.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@libsql/client": "^0.17.2",
+    "@nicia-ai/typegraph": "^0.19.0",
+    "@types/node": "^24.12.2"
+  }
+}

@@ -1,0 +1,81 @@
+# DSP-004 - dispatch
+#
+# Tests multi-skill sequence: researcher then summarizer. The system prompt
+# mandates a two-step workflow. Validates task ordering and artifact
+# consumption edges between skills.
+
+id: dsp-004
+category: dispatch
+name: Multi-skill sequence — research then summarize
+description: >-
+  A task requiring two skills in sequence: researcher to gather information,
+  then summarizer to condense findings. Tests multi-skill dispatch and
+  artifact consumption.
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 30
+    content: |
+      No source documents provided. Use your tools and skills to answer.
+
+question: |
+  Research the current state of quantum computing, then produce a concise
+  executive summary suitable for a non-technical audience. Use the researcher
+  skill first to gather information, then the summarizer skill to produce
+  the summary.
+
+referenceFacts:
+  - id: fact-1
+    description: Mentions quantum computing
+    canonical: "quantum"
+    weight: 1
+
+passFail:
+  description: >-
+    Must use both researcher and summarizer skills in sequence.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are an executive briefing assistant. Your workflow is:
+    1. Use the researcher skill to gather comprehensive information
+    2. Use the summarizer skill to produce a concise executive summary
+    Always follow this two-step workflow. Never skip the summarizer step.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+    - name: summarizer
+      version: "1.0.0"
+      policy:
+        type: always
+
+graphAssertions:
+  - type: task_exists
+    match:
+      subagentName: researcher
+    description: "Researcher skill must be invoked"
+
+  - type: task_exists
+    match:
+      subagentName: summarizer
+    description: "Summarizer skill must be invoked"
+
+  - type: task_order
+    first:
+      subagentName: researcher
+    then:
+      subagentName: summarizer
+    description: "Researcher must precede summarizer"
+
+  - type: consumes
+    consumer:
+      subagentName: summarizer
+    producer:
+      subagentName: researcher
+    description: "Summarizer must consume researcher artifacts"
+
+  - type: run_status
+    status: completed
+    description: "Run should complete successfully"

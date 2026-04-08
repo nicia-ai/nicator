@@ -1,0 +1,73 @@
+# KWB-003 · synthesis (negative case)
+#
+# Sources cover Q2 and Q4 but the question asks about Q3. The correct answer
+# is that the sources don't cover Q3 — the agent should decline rather than
+# interpolate or hallucinate.
+
+id: kwb-003
+category: synthesis
+name: "Missing quarter — insufficient sources"
+description: >-
+  Sources cover Q2 and Q4 but the question asks about Q3. The correct response
+  is to identify the gap.
+isNegativeCase: true
+
+sources:
+  - id: src-q2
+    title: "Lakeshore Capital — NovaTech Q2 2024 Review"
+    tokenCount: 180
+    content: |
+      NovaTech (NVTK) — Q2 2024 Quarterly Review
+
+      Revenue: $31.7M (+18% YoY). Gross margin improved to 71.2% from 68.1% in Q2
+      prior year, driven by the shift toward annual contracts. Operating loss narrowed
+      to -$4.1M from -$6.8M. Cash position: $52.3M at June 30, 2024.
+
+      Management raised full-year revenue guidance to $135M–$140M. We maintain
+      Outperform.
+
+  - id: src-q4
+    title: "Lakeshore Capital — NovaTech Q4 2024 Preview"
+    tokenCount: 195
+    content: |
+      NovaTech (NVTK) — Q4 2024 Preview Note
+
+      We model Q4 revenue at $38.5M, implying sequential acceleration from the
+      company's reported Q3 figure. Full-year revenue tracking to $138M, within
+      the raised guidance range. We expect the company to report positive operating
+      income for Q4 for the first time, driven by the annual contract renewal cycle
+      peaking in October–November.
+
+      Cash position at year-end: we estimate $48.2M, reflecting the Q3 working
+      capital draw-down and Q4 collections recovery.
+
+question: |
+  What was NovaTech's revenue and gross margin performance in Q3 2024?
+  How did it compare to Q2?
+
+referenceFacts:
+  - id: fact-1
+    description: Acknowledges Q3 data is not in the provided sources
+    canonical: "not"
+    pattern: "not (available|provided|included|present|covered)|no Q3|missing|don.t have|cannot (determine|answer)"
+    weight: 3
+  - id: fact-2
+    description: "Q2 revenue was $31.7M (correctly cited as Q2, not Q3)"
+    canonical: "31.7"
+    weight: 1
+
+rubricWeights:
+  faithfulness: 0.5
+  completeness: 0.2
+  coherence: 0.15
+  actionability: 0.15
+
+passFail:
+  requiredFactIds: [fact-1]
+  minJudgeComposite: 0.4
+  description: >-
+    Must acknowledge that Q3 data is not in the sources. Interpolating or
+    presenting Q2/Q4 numbers as Q3 is a fail.
+
+expectedSkills:
+  - researcher

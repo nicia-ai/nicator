@@ -1,0 +1,61 @@
+# DSP-007 - dispatch
+#
+# Tests that the agent uses save_artifact to promote workspace files
+# as named artifacts. The prompt asks for a structured output file
+# that should be saved as an artifact.
+
+id: dsp-007
+category: dispatch
+name: Bash tool — save_artifact promotion
+description: >-
+  A task requiring the agent to create a file with bash and save it as
+  a named artifact. Tests the save_artifact command integration.
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 30
+    content: |
+      Countries and their capitals:
+      France - Paris
+      Germany - Berlin
+      Japan - Tokyo
+      Brazil - Brasilia
+      Australia - Canberra
+
+question: |
+  Using the bash tool, create a JSON file called "capitals.json" containing
+  the countries and capitals from the source data as an array of objects
+  with "country" and "capital" fields. Then use save_artifact to save
+  the file as a named artifact. Finally, use jq to count the entries
+  and report the count.
+
+referenceFacts:
+  - id: fact-1
+    description: Five countries in the dataset
+    canonical: "5"
+    pattern: "5"
+    weight: 1
+
+passFail:
+  description: >-
+    Must use bash to create a JSON file and call save_artifact. The
+    answer should include 5 (the number of entries).
+
+definitionOverrides:
+  systemPrompt: >-
+    You are an assistant with a virtual bash shell. Use the bash tool to
+    create and manipulate files. Use save_artifact to save important output
+    files. Available commands include jq for JSON processing.
+
+graphAssertions:
+  - type: task_count
+    match:
+      role: tool
+      operationType: tool_call
+    min: 2
+    description: "Agent must make at least 2 bash calls (create file + process)"
+
+  - type: run_status
+    status: completed
+    description: "Run should complete successfully"

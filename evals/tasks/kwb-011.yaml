@@ -1,0 +1,95 @@
+# KWB-011 · extraction
+#
+# A product requirements document with nested conditions and exceptions.
+# The extraction task tests ability to handle conditional logic — facts
+# that are true only under specific circumstances.
+
+id: kwb-011
+category: extraction
+name: Conditional requirements extraction
+description: >-
+  Extract requirements with their conditions and exceptions from a product spec.
+
+sources:
+  - id: src-prd
+    title: "Athena Platform — Data Export PRD v2.1"
+    tokenCount: 380
+    content: |
+      PRODUCT REQUIREMENTS — Data Export Feature
+      Athena Platform, v2.1 — Author: Product Lead
+
+      1. EXPORT FORMATS
+      1.1 All users can export to CSV. JSON export is available on Pro and Enterprise plans.
+      1.2 Parquet export is available on Enterprise plans only and requires the "Advanced
+          Analytics" add-on ($200/month).
+      1.3 All exports include a SHA-256 checksum file. For Enterprise users, exports also
+          include a PGP signature when the tenant has uploaded a public key.
+
+      2. SIZE LIMITS
+      2.1 Free tier: 10,000 rows per export, maximum 5 exports per day.
+      2.2 Pro tier: 500,000 rows per export, maximum 50 exports per day.
+      2.3 Enterprise tier: No row limit. Daily export limit of 200 unless overridden
+          by the customer success team via the admin panel.
+      2.4 Exports exceeding 1M rows on any tier are processed asynchronously and
+          delivered via a download link sent to the user's email. The link expires
+          after 72 hours.
+
+      3. RETENTION
+      3.1 Export files are retained for 7 days on Free and Pro tiers.
+      3.2 Enterprise export files are retained for 30 days, or indefinitely if the
+          tenant has enabled the "Compliance Archive" feature.
+
+      4. AUDIT
+      4.1 All exports are logged in the tenant audit trail with: user ID, timestamp,
+          format, row count, and destination. Audit logs are immutable.
+      4.2 Enterprise tenants can configure real-time export alerts via webhook.
+          Webhook delivery is guaranteed at-least-once with 3 retries.
+
+question: |
+  Answer these questions from the PRD:
+  1. What export formats are available on the Pro plan?
+  2. Under what conditions is a PGP signature included?
+  3. What happens to exports over 1M rows?
+  4. How long are export files retained on Enterprise with Compliance Archive?
+  5. How many retries does the webhook delivery attempt?
+
+referenceFacts:
+  - id: fact-1
+    description: "Pro plan gets CSV and JSON (not Parquet)"
+    canonical: JSON
+    weight: 2
+  - id: fact-2
+    description: "PGP signature requires Enterprise AND uploaded public key"
+    canonical: public key
+    pattern: "public key|PGP.*Enterprise|Enterprise.*PGP"
+    weight: 2
+  - id: fact-3
+    description: "1M+ row exports are async with email download link, 72-hour expiry"
+    canonical: "72 hours"
+    pattern: "72.hour|asynchronous|email"
+    weight: 2
+  - id: fact-4
+    description: "Enterprise with Compliance Archive retains indefinitely"
+    canonical: indefinitely
+    weight: 2
+  - id: fact-5
+    description: "Webhook delivery has 3 retries"
+    canonical: "3 retries"
+    pattern: "3 retries|three retries"
+    weight: 1
+
+rubricWeights:
+  faithfulness: 0.4
+  completeness: 0.4
+  coherence: 0.1
+  actionability: 0.1
+
+passFail:
+  minFactualScore: 0.7
+  requiredFactIds: [fact-2, fact-4]
+  description: >-
+    Must correctly handle conditional facts — PGP requires Enterprise + public
+    key, not just Enterprise. Indefinite retention requires Compliance Archive.
+
+expectedSkills:
+  - researcher

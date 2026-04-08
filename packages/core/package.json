@@ -1,0 +1,27 @@
+{
+  "name": "@nicator/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./env": "./src/env.ts",
+    "./test-factories": "./src/test-factories.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format:check": "prettier --check --ignore-path ../../.prettierignore .",
+    "fix": "eslint --fix . && prettier --write --ignore-path ../../.prettierignore ."
+  },
+  "dependencies": {
+    "@nicia-ai/typegraph": "^0.19.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@libsql/client": "^0.17.2"
+  }
+}

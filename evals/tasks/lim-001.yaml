@@ -1,0 +1,57 @@
+# LIM-001 - limits
+#
+# Tests maxTasksPerRun limit enforcement. With the limit set to 2 (root + 1
+# child), the run should fail after the first skill activation when the
+# next loop iteration checks the task count.
+
+id: lim-001
+category: limits
+name: maxTasksPerRun limit hit
+description: >-
+  Force the maxTasksPerRun limit by setting it to 2. The question requires
+  multiple skill activations, but only one can complete before the limit.
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 20
+    content: |
+      No source documents provided. Use your tools to find the answer.
+
+question: |
+  Compare the GDP of the top 5 economies in 2024. Research each one
+  separately and provide a detailed comparison with specific figures.
+
+referenceFacts: []
+
+passFail:
+  description: >-
+    Run must fail with limit_exceeded after the task limit is reached.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a research assistant. For each country's GDP, activate the
+    researcher skill separately. Do not combine multiple countries into
+    a single research task.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+  limits:
+    maxTasksPerRun: 2
+
+graphAssertions:
+  - type: run_status
+    status: failed
+    description: "Run must fail due to task limit"
+
+  - type: run_error
+    pattern: "max tasks per run"
+    description: "Error must indicate task limit exceeded"
+
+  - type: task_count
+    match: {}
+    min: 2
+    max: 2
+    description: "Exactly 2 tasks (root + 1 child dispatch)"

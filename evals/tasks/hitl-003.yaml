@@ -1,0 +1,69 @@
+# HITL-003 · hitl
+#
+# Tests the require_hitl_approval policy on a skill. The researcher skill
+# has a policy requiring HITL before activation. The agent should trigger
+# HITL before (or as part of) using researcher.
+
+id: hitl-003
+category: hitl
+name: Policy-gated skill — HITL before skill activation
+description: >-
+  The researcher skill has a require_hitl_approval policy. The agent must
+  get human approval before the skill can execute. Tests that the policy
+  enforcement path creates the expected graph nodes.
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 20
+    content: |
+      No source documents are provided. Use your tools to find the answer.
+
+question: |
+  Research the current market cap of NVIDIA and summarize the key drivers
+  of its recent stock performance.
+
+referenceFacts:
+  - id: fact-1
+    description: Mentions NVIDIA
+    canonical: "NVIDIA"
+    weight: 1
+
+passFail:
+  description: >-
+    Must trigger HITL approval before the researcher skill executes. The
+    policy enforcement should be visible in the graph as a human-approval
+    task preceding the researcher task.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a financial research assistant. Use available skills to research
+    questions about companies and markets.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: require_hitl_approval
+        approverPrompt: "The agent wants to research: {{task_input}}. Approve?"
+
+graphAssertions:
+  - type: task_exists
+    match:
+      operationType: hitl_response
+    description: "Policy enforcement must trigger a HITL operation"
+
+  - type: task_exists
+    match:
+      subagentName: researcher
+    description: "Researcher skill should execute after approval"
+
+  - type: task_order
+    first:
+      operationType: hitl_response
+    then:
+      subagentName: researcher
+    description: "Human approval must precede researcher activation"
+
+  - type: run_status
+    status: completed
+    description: "Run should complete successfully"

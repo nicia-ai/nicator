@@ -1,0 +1,97 @@
+# KWB-002 · synthesis
+#
+# Two market research reports with different methodologies reach the same
+# directional conclusion but with significantly different quantitative claims.
+
+id: kwb-002
+category: synthesis
+name: Divergent market size estimates
+description: >-
+  Synthesize two research reports that estimate the same market at different
+  sizes due to different methodologies.
+
+sources:
+  - id: src-a
+    title: "Verdant Research — B2B SaaS Spend Survey 2024"
+    tokenCount: 275
+    content: |
+      Verdant Research — Annual B2B SaaS Spend Survey, 2024 Edition
+
+      Methodology: Online survey of 1,200 IT budget owners at US companies with
+      500+ employees. Respondents self-reported their SaaS spend across 14 categories.
+
+      Key finding: The US enterprise vertical SaaS market reached $48.2B in annual
+      spend in 2024, growing 23% year-over-year. The largest category remains
+      HR/Payroll ($9.1B), followed by Finance/Accounting ($7.8B) and Sales/CRM ($6.4B).
+
+      Note: Our survey methodology captures only direct SaaS license spend. It does
+      not include implementation services, customization, or embedded SaaS components
+      within larger platform contracts. We estimate these exclusions understate total
+      economic activity by 15–20%.
+
+  - id: src-b
+    title: "Granite Analytics — SaaS Market Sizing from Transaction Data"
+    tokenCount: 290
+    content: |
+      Granite Analytics — Enterprise SaaS Market Model, Q4 2024 Update
+
+      Methodology: Bottom-up model built from anonymized corporate card and AP/AR
+      transaction data across 8,400 US enterprises. We identify SaaS vendors by
+      merchant category codes and recurring payment patterns, then extrapolate to
+      the full US enterprise base using BLS employment data.
+
+      Key finding: US enterprise vertical SaaS market totaled $71.3B in 2024,
+      representing 26% YoY growth. Transaction data reveals significant "shadow SaaS"
+      spend — departmental purchases that bypass central IT procurement. We estimate
+      shadow SaaS accounts for approximately 32% of total spend, a category largely
+      invisible to survey-based methodologies.
+
+      Top categories by transaction volume: HR/Payroll ($12.8B), Sales/CRM ($11.2B),
+      Finance/Accounting ($9.6B).
+
+question: |
+  Two research firms estimate the US enterprise vertical SaaS market at very
+  different sizes: $48.2B (Verdant) vs $71.3B (Granite). Both claim healthy
+  growth. Explain the discrepancy. Which number should a strategic planner use,
+  and what caveats should they attach?
+
+referenceFacts:
+  - id: fact-1
+    description: "Verdant's figure is $48.2B"
+    canonical: "48.2"
+    weight: 1
+  - id: fact-2
+    description: "Granite's figure is $71.3B"
+    canonical: "71.3"
+    weight: 1
+  - id: fact-3
+    description: Verdant uses survey methodology; Granite uses transaction data
+    canonical: survey
+    weight: 2
+  - id: fact-4
+    description: Shadow SaaS / departmental purchases explain the gap
+    canonical: shadow
+    pattern: "shadow.{0,10}saas|departmental|bypass.{0,20}(IT|procurement)"
+    weight: 2
+  - id: fact-5
+    description: Verdant acknowledges 15-20% understatement from exclusions
+    canonical: "15"
+    pattern: "15.{0,5}20|understate"
+    weight: 1
+
+rubricWeights:
+  faithfulness: 0.3
+  completeness: 0.3
+  coherence: 0.15
+  actionability: 0.25
+
+passFail:
+  minFactualScore: 0.5
+  requiredFactIds: [fact-3, fact-4]
+  minJudgeComposite: 0.5
+  description: >-
+    Must explain the methodology difference (survey vs transaction) and identify
+    shadow SaaS as the primary driver of the gap.
+
+expectedSkills:
+  - researcher

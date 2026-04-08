@@ -1,0 +1,132 @@
+# KWB-007 · gap-analysis
+#
+# A vendor contract and an internal requirements document are inconsistent on
+# multiple points. Faithfulness is heavily weighted because this is a legal
+# document task where fabricated gaps are actively harmful.
+
+id: kwb-007
+category: gap-analysis
+name: Vendor contract vs. internal requirements
+description: >-
+  Identify all inconsistencies between a vendor SLA contract and an internal
+  requirements document. Do not report gaps that are not actually present.
+
+sources:
+  - id: src-contract
+    title: "DataPipe Inc. — Master Services Agreement (excerpt)"
+    tokenCount: 441
+    content: |
+      MASTER SERVICES AGREEMENT — DataPipe Inc. and Buyer
+
+      4. SERVICE LEVELS
+
+      4.1 Uptime. DataPipe shall maintain 99.5% monthly uptime for the Core Data Pipeline
+      service, measured as the fraction of minutes in a calendar month during which the
+      service is available. Uptime is measured by DataPipe's internal monitoring system.
+      Scheduled maintenance windows (not to exceed 4 hours per month) are excluded from
+      uptime calculations.
+
+      4.2 Support Response. DataPipe will acknowledge Priority 1 incidents within 2 business
+      hours of notification via the designated support portal. Resolution SLAs are provided
+      on a commercially reasonable efforts basis and are not guaranteed.
+
+      4.3 Data Retention. DataPipe will retain customer pipeline outputs for a minimum of
+      30 days. Longer retention periods are available at additional cost.
+
+      4.4 Geographic Processing. All data will be processed within DataPipe's US-East and
+      US-West regions. Cross-border data transfer will not occur without prior written
+      consent.
+
+      4.5 Security. DataPipe maintains SOC 2 Type I certification. Annual penetration tests
+      are conducted by a third-party firm; results are available to customers upon request
+      under NDA.
+
+      5. REMEDIES
+
+      5.1 SLA Credits. In the event of an uptime breach, Buyer is entitled to a service
+      credit equal to 5% of monthly fees for each 0.5% of uptime below the SLA, capped
+      at 30% of monthly fees.
+
+  - id: src-requirements
+    title: "Internal IT Requirements — Cloud Data Pipeline (Rev 3)"
+    tokenCount: 388
+    content: |
+      CLOUD DATA PIPELINE — VENDOR REQUIREMENTS
+      IT & Security, Rev 3 — Approved by: CTO, CISO
+
+      1. AVAILABILITY
+         Minimum uptime: 99.9% measured monthly.
+         Uptime measurement must use an independent third-party monitoring source,
+         not vendor self-reporting. Maintenance windows may not exceed 2 hours/month.
+
+      2. SUPPORT
+         Priority 1 incident acknowledgment: within 1 hour, 24/7 (not business hours only).
+         Priority 1 resolution: within 4 hours for service-affecting outages.
+
+      3. DATA
+         Pipeline output retention: minimum 90 days, included in base pricing.
+         No additional charges for standard retention periods up to 90 days.
+
+      4. GEOGRAPHY & SOVEREIGNTY
+         All processing must occur within US regions. Cross-border transfer prohibited
+         without explicit written consent. (Vendor's US-East/US-West regions acceptable.)
+
+      5. SECURITY
+         Vendor must hold SOC 2 Type II certification (not Type I).
+         Penetration test results must be available without NDA requirement.
+
+question: |
+  Compare the DataPipe MSA against our internal IT requirements document.
+  Identify every gap or inconsistency where the contract does not meet our
+  requirements. For each gap, cite the specific section in both documents.
+  Do not report items that are consistent between the two documents.
+
+referenceFacts:
+  - id: gap-1-uptime
+    description: "Contract offers 99.5% uptime; requirements demand 99.9%"
+    canonical: "99.5"
+    weight: 2
+  - id: gap-1-monitoring
+    description: Contract uses vendor self-monitoring; requirements demand independent monitoring
+    canonical: self
+    pattern: "self-report|vendor.{0,20}monitor|internal monitor"
+    weight: 2
+  - id: gap-1-maintenance
+    description: "Contract allows 4-hour maintenance windows; requirements allow 2 hours"
+    canonical: "4 hour"
+    pattern: "4.hour|four.hour"
+    weight: 1
+  - id: gap-2-support
+    description: "Contract offers 2 business hours P1 ack; requirements demand 1 hour 24/7"
+    canonical: 2 business hours
+    pattern: "2 business|two business"
+    weight: 2
+  - id: gap-3-retention
+    description: "Contract retains 30 days; requirements demand 90 days included in base price"
+    canonical: 30 days
+    weight: 2
+  - id: gap-4-soc2
+    description: "Contract holds SOC 2 Type I; requirements demand Type II"
+    canonical: Type I
+    weight: 2
+  - id: gap-4-pentest
+    description: Contract requires NDA for pentest results; requirements prohibit NDA requirement
+    canonical: NDA
+    weight: 1
+
+rubricWeights:
+  faithfulness: 0.45
+  completeness: 0.35
+  coherence: 0.1
+  actionability: 0.1
+
+passFail:
+  minFactualScore: 0.5
+  requiredFactIds: [gap-1-uptime, gap-2-support, gap-3-retention]
+  minJudgeComposite: 0.5
+  description: >-
+    Must identify the three primary gaps (uptime SLA, support response time,
+    data retention period) without hallucinating gaps that don't exist.
+
+expectedSkills:
+  - researcher

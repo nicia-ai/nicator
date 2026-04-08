@@ -1,0 +1,26 @@
+{
+  "name": "@nicator/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "cli": "tsx src/index.ts",
+    "lint": "eslint .",
+    "format:check": "prettier --check --ignore-path ../../.prettierignore .",
+    "fix": "eslint --fix . && prettier --write --ignore-path ../../.prettierignore ."
+  },
+  "dependencies": {
+    "@nicator/core": "workspace:*",
+    "@nicator/harness": "workspace:*",
+    "@nicator/tool-web-fetch": "workspace:*",
+    "@nicator/tool-web-search": "workspace:*",
+    "@nicator/workspace": "workspace:*",
+    "dotenv": "^17.4.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.2"
+  }
+}

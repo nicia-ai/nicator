@@ -1,0 +1,21 @@
+{
+  "name": "@nicator/sdk",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format:check": "prettier --check --ignore-path ../../.prettierignore .",
+    "fix": "eslint --fix . && prettier --write --ignore-path ../../.prettierignore ."
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.85.0",
+    "@nicator/core": "workspace:*",
+    "zod": "^4.3.6"
+  }
+}

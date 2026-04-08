@@ -1,0 +1,70 @@
+# HITL-004 · hitl
+#
+# Tests the denial path for require_hitl_approval policy. The human denies
+# the approval request. The run should fail gracefully with hitl_rejected
+# and not execute the gated skill.
+
+id: hitl-004
+category: hitl
+name: Policy-gated skill — HITL denial graceful failure
+description: >-
+  The researcher skill has a require_hitl_approval policy. The human denies
+  the request. Tests that the run fails gracefully without executing the
+  gated skill.
+
+hitlBehavior: deny
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 20
+    content: |
+      No source documents are provided. Use your tools to find the answer.
+
+question: |
+  Research the current market cap of NVIDIA and summarize the key drivers
+  of its recent stock performance.
+
+referenceFacts:
+  - id: fact-1
+    description: Mentions NVIDIA
+    canonical: "NVIDIA"
+    weight: 1
+
+passFail:
+  description: >-
+    The run must fail with hitl_rejected after the human denies approval.
+    The researcher skill must not execute.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a financial research assistant. Use available skills to research
+    questions about companies and markets.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: require_hitl_approval
+        approverPrompt: "The agent wants to research: {{task_input}}. Approve?"
+
+graphAssertions:
+  - type: task_exists
+    match:
+      operationType: hitl_response
+    description: "Policy enforcement must trigger a HITL operation"
+
+  - type: task_absent
+    match:
+      subagentName: researcher
+      status: completed
+    description: "Researcher skill must not complete after denial"
+
+  - type: run_status
+    status: failed
+    description: "Run should fail after HITL denial"
+
+  - type: artifact_content
+    task:
+      operationType: hitl_response
+    pattern: "rejected"
+    description: "HITL decision artifact should contain the rejection"

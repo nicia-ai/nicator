@@ -1,0 +1,706 @@
+# CTX-003 · context
+#
+# Discriminating context weight eval: asymmetric dependency chain.
+#
+# Six source documents (~3K tokens each) with fabricated canary statistics.
+# Token budget forces context trimming so that weight configurations
+# determine which artifacts the agent can access via read_artifact.
+# Early sources consumed by later tasks should survive with high
+# downstream weight but be dropped with recency-only scoring.
+#
+# Budget math: maxTokensPerRun 60K × CONTEXT_BUDGET_RATIO 0.4 = 24K
+# context budget. Six retrieve-document calls produce ~3K tokens each
+# as tool results. Total artifact output ~18K tokens. With researcher
+# skill overhead (~2K per activation) total approaches ~30K, exceeding
+# the 24K context budget and forcing tiering.
+
+id: ctx-003
+category: context
+name: Asymmetric dependency chain with canary facts
+description: >-
+  Six-step research task with fabricated canary statistics in source
+  documents (~3K tokens each). An asymmetric dependency graph means
+  some early tasks are consumed by multiple later tasks (high downstream
+  score) while others are orphans (low downstream score). A tight 60K
+  token budget forces context trimming, making the weight configuration
+  consequential for which canary facts survive into the final synthesis.
+
+sources:
+  - id: src-1
+    title: "Internal Report: Brine Extraction Efficiency Metrics (FY2024)"
+    tokenCount: 3000
+    content: |
+      CONFIDENTIAL — NovaMaterials Inc. Internal Memo
+      Division: Resource Extraction
+      Date: December 15, 2024
+      Classification: Internal Only — Do Not Distribute
+
+      Subject: Updated Kelvin-Strauss Efficiency Metrics for Lithium Brine
+      Extraction — Atacama Facility FY2024 Annual Review
+
+      1. EXECUTIVE SUMMARY
+
+      Following our Q4 field trials at the Atacama facility, we have completed
+      the annual update of the Kelvin-Strauss coefficient for our primary brine
+      extraction process. The measured coefficient is 0.847, representing a 12%
+      improvement over the FY2023 baseline of 0.756. This improvement is
+      attributed to the revised membrane configuration deployed in August 2024
+      and the optimization of the evaporation pond cycling schedule.
+
+      The Kelvin-Strauss methodology was developed internally by Dr. Elena
+      Vasquez and Dr. Marcus Thornton in 2019 as a composite efficiency metric
+      that accounts for both extraction yield and energy consumption per unit
+      of lithium carbonate equivalent (LCE). The coefficient ranges from 0 to 1,
+      where 1 represents theoretical maximum efficiency under ideal conditions.
+
+      2. METHODOLOGY AND MEASUREMENT PROTOCOL
+
+      The K-S coefficient is calculated quarterly using the following protocol:
+
+      a) Raw extraction yield is measured across all active evaporation ponds
+         over a 90-day period. For FY2024 Q4, this covered 47 active ponds
+         across three production zones (North Atacama, Central Salar, and
+         South Basin). Total brine volume processed: 2.3 million cubic meters.
+
+      b) Energy consumption is normalized to megajoules per metric ton of LCE.
+         FY2024 Q4 energy consumption: 4,280 MJ/t LCE, down from 4,890 MJ/t
+         in FY2023 Q4. The reduction is primarily attributable to the new
+         membrane configuration that reduces pumping requirements by 18%.
+
+      c) The raw yield and normalized energy figures are combined using the
+         proprietary K-S weighting function, which applies a logarithmic
+         penalty for energy consumption above the baseline threshold of
+         3,500 MJ/t LCE. The current penalty factor is 0.23, calibrated
+         against historical performance data from 2019-2023.
+
+      d) Environmental adjustment factor: a correction of -0.015 is applied
+         for each regulatory violation recorded during the measurement period.
+         FY2024 Q4 had zero violations, so no adjustment was applied.
+
+      3. HISTORICAL TREND ANALYSIS
+
+      The K-S coefficient has shown steady improvement since the methodology
+      was introduced:
+
+      | Fiscal Year | Q1    | Q2    | Q3    | Q4    | Annual Avg |
+      |-------------|-------|-------|-------|-------|------------|
+      | FY2020      | 0.612 | 0.634 | 0.621 | 0.645 | 0.628      |
+      | FY2021      | 0.658 | 0.672 | 0.689 | 0.701 | 0.680      |
+      | FY2022      | 0.710 | 0.718 | 0.725 | 0.734 | 0.722      |
+      | FY2023      | 0.741 | 0.749 | 0.752 | 0.756 | 0.750      |
+      | FY2024      | 0.788 | 0.812 | 0.831 | 0.847 | 0.820      |
+
+      The FY2024 improvement trajectory is steeper than previous years,
+      primarily due to the membrane upgrade deployed in August 2024. Before
+      the upgrade, the Q1-Q2 trajectory suggested an annual average of ~0.790.
+      The post-upgrade acceleration in Q3-Q4 pushed the annual average to 0.820.
+
+      4. DOWNSTREAM DEPENDENCIES
+
+      The K-S coefficient directly impacts our downstream cost models. The
+      adjusted figures appear in the Cost Projection report (src-4), and the
+      final integrated assessment (src-6) uses both the raw and adjusted K-S
+      values for capacity planning. All FY2025 projections should reference
+      the Q4 value of 0.847.
+
+      The procurement division has been notified but does NOT use the K-S
+      coefficient directly — their models use the TBDI-adjusted cost figure
+      from src-5 instead.
+
+      5. RISK FACTORS AND LIMITATIONS
+
+      - Seasonal variation: Q4 measurements benefit from lower ambient humidity
+        in the Atacama, which improves evaporation efficiency by ~3-5%. The Q1
+        measurement (January-March) typically shows a seasonal dip of 0.02-0.04.
+      - Membrane degradation: The new membranes are expected to maintain
+        performance for 18-24 months. Beyond that, the K-S coefficient may
+        plateau or decline without further capital investment.
+      - Regulatory risk: Chile's proposed water rights reform (expected vote
+        in March 2025) could impose additional extraction limits that would
+        reduce throughput and indirectly lower the K-S coefficient.
+
+      NOTE: The Kelvin-Strauss methodology is proprietary to NovaMaterials
+      and has not been published externally. Do not share this coefficient
+      or the calculation methodology outside the organization.
+
+      Prepared by: Resource Extraction Analytics Team
+      Reviewed by: Dr. Elena Vasquez, Chief Extraction Officer
+
+  - id: src-2
+    title: "Market Analysis: Thornfield Battery Demand Index"
+    tokenCount: 3000
+    content: |
+      CONFIDENTIAL — NovaMaterials Inc. Market Intelligence Brief
+      Division: Strategic Planning
+      Date: January 8, 2025
+      Classification: Internal Only — Do Not Distribute
+
+      Subject: Thornfield Battery Demand Index (TBDI) — Q4 2024 Update
+      and FY2025 Outlook
+
+      1. EXECUTIVE SUMMARY
+
+      The Thornfield Battery Demand Index (TBDI) for Q4 2024 has been
+      calculated at 23.4 points, up from 19.1 in Q3. The TBDI is our
+      proprietary composite of 14 demand indicators weighted by regional
+      manufacturing capacity. A TBDI above 20.0 historically correlates
+      with supply shortfall within 18 months. The current reading of 23.4
+      suggests accelerated procurement is warranted.
+
+      The Thornfield methodology was developed by our analytics team in 2021
+      under the direction of Dr. Sarah Thornfield (now VP of Market Strategy).
+      It synthesizes publicly available demand signals (EV production forecasts,
+      grid storage deployment announcements, consumer electronics battery
+      orders) with proprietary intelligence from our supplier network.
+
+      2. INDEX CONSTRUCTION METHODOLOGY
+
+      The TBDI aggregates 14 indicators across four categories:
+
+      A. Automotive demand (weight: 0.40)
+         - Global EV production forecasts (3 sources, averaged)
+         - Battery pack order backlog from top 10 OEMs
+         - Announced gigafactory capacity additions (next 24 months)
+         - EV subsidy policy changes (directional score: +1/0/-1)
+
+      B. Grid storage demand (weight: 0.25)
+         - Utility-scale storage project pipeline (MW announced)
+         - Residential storage installation rates (rolling 6-month)
+         - Government procurement mandates for grid resilience
+         - Interconnection queue depth for storage projects
+
+      C. Consumer electronics (weight: 0.15)
+         - Smartphone and laptop production forecasts
+         - Wearable device battery demand growth rate
+         - Portable power station market size estimates
+
+      D. Supply-side constraints (weight: 0.20, inverse contribution)
+         - Active lithium mine production (inverse: higher production = lower TBDI)
+         - DRC cobalt export restrictions (binary flag)
+         - Lithium spot price vs. contract price spread
+
+      Each indicator is normalized to a 0-5 scale based on historical
+      percentiles (2019-2024 baseline period). The weighted sum produces
+      the TBDI on a 0-35 theoretical maximum scale.
+
+      3. Q4 2024 DETAILED BREAKDOWN
+
+      | Category                 | Q3 Score | Q4 Score | Delta  |
+      |--------------------------|----------|----------|--------|
+      | Automotive demand        | 7.8      | 9.6      | +1.8   |
+      | Grid storage demand      | 5.2      | 6.4      | +1.2   |
+      | Consumer electronics     | 2.1      | 2.4      | +0.3   |
+      | Supply-side constraints  | 4.0      | 5.0      | +1.0   |
+      | **TBDI Total**           | **19.1** | **23.4** | **+4.3** |
+
+      The automotive demand surge is driven by three factors: (1) China's
+      extended NEV subsidy program through 2026, (2) EU CO2 fleet emission
+      penalties tightening in 2025, and (3) Tesla's announced Nevada
+      expansion adding 100 GWh of annual battery demand.
+
+      4. DOWNSTREAM DEPENDENCIES
+
+      This index feeds into the cost-adjusted procurement model (src-5)
+      and the integrated assessment (src-6). The procurement division uses
+      the TBDI to determine urgency of forward purchases. The strategic
+      planning team uses it for capacity investment timing decisions.
+
+      The resource extraction team (src-1) does NOT consume the TBDI — their
+      K-S coefficient is an operational metric independent of demand signals.
+
+      5. HISTORICAL READINGS AND THRESHOLD ANALYSIS
+
+      | Quarter    | TBDI | Subsequent 18-month supply outcome        |
+      |------------|------|-------------------------------------------|
+      | Q2 2021    | 21.2 | Lithium carbonate price doubled (+104%)   |
+      | Q4 2021    | 24.8 | Severe allocation shortages in H2 2022    |
+      | Q2 2022    | 18.3 | Prices stabilized, no shortfall           |
+      | Q4 2022    | 15.7 | Oversupply conditions in 2023             |
+      | Q2 2023    | 16.4 | Continued oversupply, prices declined 30% |
+      | Q4 2023    | 18.9 | Market balanced, prices stabilized         |
+      | Q2 2024    | 19.8 | Tightening supply, prices up 15%          |
+      | Q4 2024    | 23.4 | Forecast: supply shortfall by mid-2026    |
+
+      The current reading of 23.4 is the second-highest in the index's
+      history, behind only Q4 2021 (24.8), which preceded the most severe
+      lithium supply crisis in the past decade.
+
+      NOTE: The Thornfield methodology is proprietary to NovaMaterials
+      and has not been externally validated. Internal use only.
+
+      Prepared by: Market Intelligence Unit
+      Reviewed by: Dr. Sarah Thornfield, VP Market Strategy
+
+  - id: src-3
+    title: "R&D Update: Mercer Process Recycling Yields"
+    tokenCount: 3000
+    content: |
+      CONFIDENTIAL — NovaMaterials Inc. R&D Division
+      Date: November 30, 2024
+      Classification: Internal Only — Do Not Distribute
+
+      Subject: Mercer Process Pilot Results — Battery Recycling Yields
+      Dresden Facility FY2024 Year-End Report
+
+      1. EXECUTIVE SUMMARY
+
+      The Mercer Process pilot at our Dresden facility has achieved a cathode
+      material recovery yield of 61.2% in controlled conditions. This exceeds
+      our internal target of 55% but remains below the 70% threshold needed
+      for commercial viability at current lithium prices ($15,200/t LCE spot).
+
+      The Mercer Process is named after Dr. James Mercer, who led the initial
+      development from 2020-2022 before transitioning to an advisory role.
+      The process uses a novel hydrometallurgical approach combining selective
+      leaching with electrochemical precipitation to recover cathode-active
+      materials (primarily NMC 811 and LFP) from end-of-life battery cells.
+
+      2. PILOT PROGRAM DETAILS
+
+      The Dresden pilot has been operational since March 2024. Key parameters:
+
+      - Throughput: 340 battery modules processed (Sept-Nov 2024)
+      - Module sources: Automotive OEM returns (68%), consumer electronics (22%),
+        grid storage decommissions (10%)
+      - Cathode chemistries processed: NMC 811 (45%), NMC 622 (30%), LFP (25%)
+      - Average module age: 7.3 years (range: 3-12 years)
+      - Contamination rate: 3.8% by weight (target: <5%)
+
+      3. YIELD BREAKDOWN BY CATHODE CHEMISTRY
+
+      | Chemistry | Modules | Yield  | Target | Gap     |
+      |-----------|---------|--------|--------|---------|
+      | NMC 811   | 153     | 64.8%  | 70%    | -5.2pp  |
+      | NMC 622   | 102     | 59.3%  | 65%    | -5.7pp  |
+      | LFP       | 85      | 56.1%  | 60%    | -3.9pp  |
+      | **Avg**   | **340** | **61.2%** | **65%** | **-3.8pp** |
+
+      NMC 811 yields are closest to commercial viability due to the higher
+      nickel content providing better selectivity in the leaching stage.
+      LFP yields are lowest because the iron phosphate matrix is more
+      resistant to the Mercer Process's primary solvent system.
+
+      4. PROCESS ECONOMICS AT CURRENT YIELDS
+
+      At 61.2% average yield and current LCE spot prices:
+      - Revenue per module processed: $187
+      - Processing cost per module: $142
+      - Net margin per module: $45 (24% margin)
+      - Breakeven yield at current costs: 53.4%
+
+      At the 70% target yield:
+      - Revenue per module processed: $214
+      - Processing cost per module: $138 (lower waste handling)
+      - Net margin per module: $76 (36% margin)
+
+      The 70% threshold is not an absolute commercial requirement — the
+      process is already marginally profitable at 61.2%. However, the
+      internal hurdle rate of 30% margin requires yields above 65%.
+
+      5. COMPARISON TO COMPETING APPROACHES
+
+      | Process                  | Yield  | Cost/module | TRL |
+      |--------------------------|--------|-------------|-----|
+      | Mercer (NovaMaterials)   | 61.2%  | $142        | 6   |
+      | Li-Cycle spoke+hub      | ~55%   | ~$160       | 8   |
+      | Redwood Materials direct | ~70%   | ~$120       | 7   |
+      | BASF pyrometallurgical   | ~45%   | ~$95        | 9   |
+
+      The Mercer Process is competitive on yield but lags on technology
+      readiness level (TRL). Redwood Materials' direct recycling approach
+      achieves higher yields, but their process requires chemistry-specific
+      feedstock sorting that the Mercer Process does not.
+
+      6. STANDALONE STATUS
+
+      NOTE: This is a standalone R&D metric. No other internal reports
+      reference or depend on the Mercer yield figure. It is tracked
+      independently by the R&D division and does not feed into the cost
+      projections (src-4), procurement models (src-5), or integrated
+      assessment (src-6). The R&D team reports directly to the CTO.
+
+      7. NEXT STEPS
+
+      - Q1 2025: Test modified solvent system targeting LFP yield improvement
+      - Q2 2025: Scale pilot to 1,000 modules/quarter
+      - H2 2025: Decision gate for Dresden full-scale facility investment
+      - Target: 70% blended yield by Q4 2025
+
+      Prepared by: Dr. Maria Fernandez, Recycling R&D Lead
+      Reviewed by: Dr. James Mercer (Advisory), CTO Office
+
+  - id: src-4
+    title: "Cost Projection: Adjusted Extraction Economics"
+    tokenCount: 3000
+    content: |
+      CONFIDENTIAL — NovaMaterials Inc. Finance Division
+      Date: January 12, 2025
+      Classification: Internal Only — Do Not Distribute
+
+      Subject: FY2025 Extraction Cost Projections (K-S Adjusted)
+      Prepared for: Executive Committee Q1 2025 Planning Session
+
+      1. EXECUTIVE SUMMARY
+
+      Using the updated Kelvin-Strauss coefficient of 0.847 from the brine
+      extraction report (src-1), our finance team has recalculated the
+      adjusted K-S efficiency ratio at 0.912 when accounting for the FY2025
+      energy cost assumptions and membrane amortization schedule.
+
+      The adjustment from 0.847 to 0.912 reflects operating leverage: higher
+      extraction efficiency reduces per-unit energy consumption non-linearly.
+      This adjusted figure of 0.912 is used in the integrated assessment
+      (src-6) for all capacity and margin projections.
+
+      2. ADJUSTMENT METHODOLOGY
+
+      The raw K-S coefficient (0.847) measures operational extraction
+      efficiency. The adjusted ratio applies three additional factors:
+
+      a) Energy cost normalization: FY2025 energy contracts lock in rates
+         8% below FY2024 spot averages. When the K-S coefficient's energy
+         component is recalculated at contracted rates, the effective
+         efficiency improves. Contribution to adjustment: +0.031
+
+      b) Membrane amortization credit: The new membranes deployed in August
+         2024 have a 24-month useful life. The capital cost is amortized
+         over this period, but the efficiency benefit is front-loaded
+         (highest in the first 12 months). The amortization schedule credits
+         a declining efficiency bonus. FY2025 H1 credit: +0.022.
+         FY2025 H2 credit: +0.012. Average: +0.017
+
+      c) Scale adjustment: The Atacama facility is expanding from 47 to 52
+         active ponds in Q2 2025. Larger scale improves fixed-cost absorption.
+         Contribution to adjustment: +0.017
+
+      Combined adjustment: 0.847 + 0.031 + 0.017 + 0.017 = 0.912
+
+      3. COST IMPACT ANALYSIS
+
+      | Cost Category          | FY2024 (K-S 0.756) | FY2025 (K-S adj 0.912) | Change |
+      |------------------------|---------------------|------------------------|--------|
+      | Extraction $/t LCE     | $4,280              | $3,510                 | -18.0% |
+      | Processing $/t LCE     | $1,850              | $1,720                 | -7.0%  |
+      | Logistics $/t LCE      | $620                | $610                   | -1.6%  |
+      | Total COGS $/t LCE     | $6,750              | $5,840                 | -13.5% |
+
+      At the FY2025 projected LCE spot price of $16,400/t (per our market
+      team's base case), the COGS reduction improves gross margin from 59%
+      to 64%. This is the largest single-year margin improvement in the
+      company's history.
+
+      4. SENSITIVITY ANALYSIS
+
+      The adjusted K-S ratio is sensitive to energy prices and membrane
+      performance. Key scenarios:
+
+      | Scenario                    | Adj K-S | COGS $/t | Margin |
+      |-----------------------------|---------|----------|--------|
+      | Base case                   | 0.912   | $5,840   | 64.4%  |
+      | Energy +15% above contract  | 0.891   | $6,120   | 62.7%  |
+      | Membrane degradation -10%   | 0.897   | $6,010   | 63.4%  |
+      | Worst case (both)           | 0.876   | $6,290   | 61.6%  |
+      | Best case (energy -5%)      | 0.923   | $5,690   | 65.3%  |
+
+      Even in the worst case, the adjusted ratio remains above the FY2023
+      baseline of 0.756, ensuring positive year-over-year margin trajectory.
+
+      5. DOWNSTREAM DEPENDENCIES
+
+      This report consumes the raw K-S coefficient from src-1 (0.847) and
+      produces the adjusted ratio (0.912) consumed by the integrated
+      assessment (src-6). The procurement model (src-5) does NOT use the
+      adjusted K-S — it uses the TBDI-adjusted cost figure instead.
+
+      Prepared by: Finance Analytics Team
+      Reviewed by: CFO Office
+
+  - id: src-5
+    title: "Procurement Model: TBDI-Adjusted Lithium Costs"
+    tokenCount: 3000
+    content: |
+      CONFIDENTIAL — NovaMaterials Inc. Procurement Division
+      Date: January 15, 2025
+      Classification: Internal Only — Do Not Distribute
+
+      Subject: TBDI-Adjusted Lithium Procurement Cost Model — FY2025 Update
+
+      1. EXECUTIVE SUMMARY
+
+      Applying the Thornfield Battery Demand Index of 23.4 (from src-2) to
+      our procurement cost model yields a TBDI-adjusted spot cost of $284
+      per kilogram for battery-grade lithium carbonate, compared to the
+      unadjusted spot of $247/kg.
+
+      The $284 figure represents our best estimate of effective procurement
+      cost when demand-driven competition is factored in. This premium over
+      spot ($37/kg, or 15%) reflects the increased competition for available
+      supply that historically accompanies TBDI readings above 20.0.
+
+      2. COST MODEL CONSTRUCTION
+
+      The TBDI-adjusted cost model applies a demand premium to the base
+      lithium carbonate spot price:
+
+      a) Base price: Current lithium carbonate spot price ($247/kg as of
+         January 10, 2025, per Fastmarkets assessment)
+
+      b) TBDI premium calculation:
+         - For TBDI ≤ 15.0: no premium (market in balance or oversupply)
+         - For TBDI 15.0-20.0: linear premium of 0-5% on spot
+         - For TBDI 20.0-25.0: premium = 5% + (TBDI - 20.0) × 2%/point
+         - For TBDI > 25.0: premium = 15% + (TBDI - 25.0) × 3%/point
+
+         At TBDI = 23.4: premium = 5% + (23.4 - 20.0) × 2% = 5% + 6.8% = 11.8%
+         However, the model applies an additional "momentum premium" of 3.2%
+         because the quarter-over-quarter TBDI change (+4.3 points) exceeds
+         the historical average change (+1.1 points) by more than 2x.
+
+         Total premium: 11.8% + 3.2% = 15.0%
+         Adjusted cost: $247 × 1.15 = $284.05, rounded to $284/kg
+
+      c) Historical validation: The TBDI-adjusted cost model has tracked
+         actual procurement costs within 8% since its introduction in 2022.
+
+      3. PROCUREMENT STRATEGY IMPLICATIONS
+
+      | Scenario                    | TBDI  | Adj Cost | Strategy            |
+      |-----------------------------|-------|----------|---------------------|
+      | Current                     | 23.4  | $284/kg  | Accelerate forward  |
+      | TBDI rises to 25.0          | 25.0  | $303/kg  | Lock long-term contracts |
+      | TBDI falls to 18.0          | 18.0  | $256/kg  | Spot purchasing     |
+      | TBDI falls below 15.0       | <15.0 | $247/kg  | Defer commitments   |
+
+      At the current TBDI of 23.4, the procurement team recommends locking
+      in 60% of FY2025 volume through forward contracts at current spot plus
+      a 10% premium ($272/kg), which would save approximately $12/kg versus
+      the projected TBDI-adjusted cost of $284/kg.
+
+      4. FORWARD PURCHASE SCHEDULE
+
+      Based on the current TBDI and our consumption forecast:
+      - Q1 2025: Purchase 2,400t at $272/kg (forward) — $652M
+      - Q2 2025: Purchase 2,600t at market (est. $280/kg) — $728M
+      - Q3 2025: Purchase 2,800t at market (est. $290/kg) — $812M
+      - Q4 2025: Purchase 3,000t at market (est. $295/kg) — $885M
+      - Total FY2025: 10,800t at est. avg $285/kg — $3,078M
+
+      5. STANDALONE STATUS
+
+      NOTE: The $284 TBDI-adjusted cost is tracked by procurement but is
+      NOT referenced by the integrated assessment (src-6) — it is an
+      independent monitoring metric. The integrated assessment uses the
+      K-S adjusted extraction cost from src-4 instead.
+
+      The procurement model consumes the TBDI from src-2 but does NOT
+      consume the K-S coefficient from src-1 or the adjusted ratio from
+      src-4. It is an independent analytical pipeline.
+
+      Prepared by: Procurement Analytics Team
+      Reviewed by: Chief Procurement Officer
+
+  - id: src-6
+    title: "Integrated Assessment: FY2025 Strategic Position"
+    tokenCount: 3000
+    content: |
+      CONFIDENTIAL — NovaMaterials Inc. Executive Summary
+      Date: January 20, 2025
+      Classification: Board Distribution Only
+
+      Subject: Integrated FY2025 Strategic Assessment
+      Prepared for: Board of Directors Q1 2025 Meeting
+
+      1. EXECUTIVE SUMMARY
+
+      This assessment synthesizes inputs from extraction efficiency (K-S
+      coefficient 0.847 from src-1, adjusted to 0.912 in src-4), market
+      demand (TBDI 23.4 from src-2), and recycling R&D (Mercer Process
+      yield 61.2% from src-3). The Vandermeer Readiness Score for our
+      FY2025 strategic position is 7.3 out of 10.
+
+      The Vandermeer Readiness Score is our proprietary strategic assessment
+      framework, developed by our strategy team in consultation with
+      Professor Hans Vandermeer of ETH Zurich. It evaluates the company's
+      readiness across seven dimensions on a 0-10 scale.
+
+      2. VANDERMEER SCORE BREAKDOWN
+
+      | Dimension                      | Score | Weight | Wtd Score |
+      |--------------------------------|-------|--------|-----------|
+      | Extraction efficiency          | 8.5   | 0.20   | 1.70      |
+      | Market positioning             | 7.8   | 0.20   | 1.56      |
+      | Cost competitiveness           | 8.2   | 0.15   | 1.23      |
+      | Technology pipeline            | 6.1   | 0.15   | 0.92      |
+      | Supply chain resilience        | 6.8   | 0.10   | 0.68      |
+      | Regulatory preparedness        | 7.0   | 0.10   | 0.70      |
+      | Workforce readiness            | 7.4   | 0.10   | 0.74      |
+      | **Vandermeer Total**           |       | **1.00** | **7.53** |
+      | **Rounded**                    |       |        | **7.3**  |
+
+      Note: The score is rounded to one decimal place per the Vandermeer
+      methodology, which uses banker's rounding on the weighted sum.
+
+      3. KEY FINDINGS BY INPUT SOURCE
+
+      a) Extraction efficiency (from src-1 and src-4):
+         The raw K-S coefficient of 0.847 and adjusted ratio of 0.912
+         represent our strongest operational position in five years.
+         The 18% COGS reduction projected from the adjusted K-S ratio
+         drives the high extraction efficiency score (8.5/10).
+
+      b) Market demand (from src-2):
+         The TBDI of 23.4 signals strong demand growth but also supply
+         risk. This is a double-edged indicator: strong demand supports
+         pricing power, but supply shortfall risk threatens production
+         continuity. Net assessment: positive (7.8/10 market positioning).
+
+      c) Recycling R&D (from src-3):
+         The Mercer Process yield of 61.2% is promising but below
+         commercial targets. The technology pipeline score (6.1/10) is
+         the lowest dimension, reflecting the gap between current yields
+         and the 70% viability threshold. However, the 61.2% yield is
+         already marginally profitable, providing a foundation for scaling.
+
+      4. STRATEGIC RECOMMENDATIONS
+
+      Based on the Vandermeer score of 7.3 ("well-positioned with
+      identified gaps"), we recommend:
+
+      1. INVEST: Accelerate Atacama expansion (from 47 to 52 ponds) in Q2
+         to capitalize on the K-S improvement while demand (TBDI 23.4)
+         supports premium pricing.
+
+      2. HEDGE: Lock in 60% of FY2025 lithium procurement via forward
+         contracts. The TBDI at 23.4 historically precedes price increases.
+
+      3. DEVELOP: Continue Mercer Process R&D toward the 70% yield target.
+         The 61.2% baseline proves the approach works; the remaining gap
+         is an engineering optimization problem, not a fundamental barrier.
+
+      4. MONITOR: Track Chilean water rights reform (expected vote March 2025).
+         Prepare contingency plans for reduced extraction quotas.
+
+      5. CROSS-REFERENCE MATRIX
+
+      This assessment's data flow:
+      - Consumes: K-S coefficient (0.847 from src-1), adjusted K-S (0.912
+        from src-4), TBDI (23.4 from src-2), Mercer yield (61.2% from src-3)
+      - Does NOT consume: TBDI-adjusted cost ($284 from src-5) — that is an
+        independent procurement metric
+      - The K-S coefficient flows: src-1 (raw 0.847) → src-4 (adjusted 0.912)
+        → src-6 (this assessment). This is the primary quantitative chain.
+      - The Mercer yield (src-3) is consumed here but has no other downstream
+        dependencies — it is the only report that references it.
+
+      Prepared by: Strategic Planning Office
+      Reviewed by: CEO, CFO, CTO, Chief Strategy Officer
+
+question: |
+  You have six internal reports from NovaMaterials Inc. Use the
+  retrieve-document tool to fetch each document by source ID (src-1
+  through src-6), then produce a final synthesis using the summarizer
+  skill.
+
+  Your synthesis MUST reference the following specific figures from the
+  source documents:
+  - The Kelvin-Strauss coefficient from src-1
+  - The Thornfield Index value from src-2
+  - The Mercer Process yield from src-3
+  - The adjusted K-S ratio from src-4
+  - The TBDI-adjusted cost from src-5
+  - The Vandermeer Readiness Score from src-6
+  - How the K-S coefficient flows from src-1 → src-4 → src-6
+  - Whether the Mercer yield connects to any other reports
+
+referenceFacts:
+  - id: canary-ks
+    description: "Kelvin-Strauss coefficient from src-1 (high downstream: consumed by src-4 and src-6)"
+    canonical: "0.847"
+    pattern: "0\\.847"
+    weight: 2
+    canary: true
+  - id: canary-tbdi
+    description: "Thornfield Index from src-2 (high downstream: consumed by src-5 and src-6)"
+    canonical: "23.4"
+    pattern: "23\\.4"
+    weight: 2
+    canary: true
+  - id: canary-mercer
+    description: "Mercer yield from src-3 (zero downstream: orphan, not consumed)"
+    canonical: "61.2"
+    pattern: "61\\.2"
+    weight: 1
+    canary: true
+  - id: canary-adjusted-ks
+    description: "Adjusted K-S ratio from src-4 (medium downstream: consumed by src-6)"
+    canonical: "0.912"
+    pattern: "0\\.912"
+    weight: 1
+    canary: true
+  - id: canary-tbdi-cost
+    description: "TBDI-adjusted cost from src-5 (zero downstream: orphan, not consumed)"
+    canonical: "$284"
+    pattern: "\\$?284"
+    weight: 1
+    canary: true
+  - id: canary-vandermeer
+    description: "Vandermeer score from src-6 (final synthesis: always in context)"
+    canonical: "7.3"
+    pattern: "7\\.3"
+    weight: 1
+    canary: true
+  - id: chain-ks-flow
+    description: "References the K-S flow from src-1 through src-4 to src-6"
+    canonical: "0.847 to 0.912"
+    pattern: "0\\.847.*0\\.912|src-1.*src-4.*src-6|extraction.*adjust"
+    weight: 1
+  - id: orphan-mercer
+    description: "Notes that the Mercer yield is standalone / not referenced elsewhere"
+    canonical: "standalone"
+    pattern: "standalone|independent|not.*(reference|depend|connect|consum|use)"
+    weight: 1
+
+passFail:
+  description: >-
+    This task is designed to produce DIFFERENT scores across weight
+    configurations. A flat 100% across configs means the budget is too
+    generous. Expected: downstream-heavy configs preserve canary-ks,
+    canary-tbdi, and chain-ks-flow; recency-only configs may drop them.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a research analyst at NovaMaterials Inc. You are reviewing
+    internal reports. First, retrieve each source document using the
+    retrieve-document tool (call it once per source ID, in order from
+    src-1 through src-6). After retrieving all six, use the summarizer
+    skill to produce a synthesis that references the specific figures
+    requested. Do not skip any source. Do not invent figures — use
+    only the exact numbers from the documents.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+    - name: summarizer
+      version: "1.0.0"
+      policy:
+        type: always
+  limits:
+    maxTasksPerRun: 25
+    maxTokensPerRun: 60000
+
+graphAssertions:
+  - type: run_status
+    status: completed
+    description: "Run should complete within the tight budget"
+
+  - type: task_count
+    match:
+      subagentName: researcher
+    min: 6
+    description: "At least 6 researcher activations for the 6 source documents"
+
+  - type: task_exists
+    match:
+      subagentName: summarizer
+    description: "Summarizer should be activated to synthesize findings"

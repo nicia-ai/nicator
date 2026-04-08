@@ -1,0 +1,70 @@
+# DSP-002 · dispatch
+#
+# Multi-step research question that genuinely benefits from the researcher skill.
+# The agent should activate the researcher skill, not try to handle it with
+# individual tool calls.
+
+id: dsp-002
+category: dispatch
+name: Multi-step research — skill activation preferred
+description: >-
+  A complex research question requiring multiple searches, source evaluation,
+  and synthesis. Tests whether the agent correctly activates the researcher
+  skill instead of trying to answer with a single tool call.
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 20
+    content: |
+      No source documents are provided. Use your tools to find the answer.
+
+question: |
+  Compare the approaches to AI regulation taken by the EU, US, and China.
+  For each jurisdiction, identify the key legislation or executive orders,
+  their enforcement mechanisms, and how they differ on foundation model
+  oversight. Cite specific policy documents.
+
+referenceFacts:
+  - id: fact-1
+    description: Mentions EU AI Act
+    canonical: "AI Act"
+    weight: 1
+  - id: fact-2
+    description: Mentions at least one US policy
+    canonical: "executive order"
+    pattern: "executive order|EO 14110|NIST|Blueprint for an AI Bill of Rights"
+    weight: 1
+
+passFail:
+  description: >-
+    Must activate the researcher skill. A single web search cannot adequately
+    cover three jurisdictions with specific policy citations.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a general-purpose research assistant. Answer questions using the
+    tools and skills available to you. Use the simplest approach that answers
+    the question.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+
+graphAssertions:
+  - type: task_exists
+    match:
+      subagentName: researcher
+    description: "Agent should activate researcher skill for multi-step research"
+
+  - type: skill_invoked
+    match:
+      subagentName: researcher
+    skillName: researcher
+    skillVersion: "1.0.0"
+    description: "Researcher task should have invokes edge to researcher skill v1.0.0"
+
+  - type: run_status
+    status: completed
+    description: "Run should complete successfully"

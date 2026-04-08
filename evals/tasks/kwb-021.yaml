@@ -1,0 +1,112 @@
+# KWB-021 · decision-support
+#
+# Conflicting signals about whether to renew a vendor contract. The CFO
+# wants cost reduction, engineering wants to keep the vendor for technical
+# reasons, and there's a compliance deadline. The task tests the ability
+# to frame a decision with competing constraints rather than optimize for
+# one stakeholder.
+
+id: kwb-021
+category: decision-support
+name: Vendor renewal with competing stakeholder priorities
+description: >-
+  Recommend a course of action on a vendor renewal given conflicting stakeholder
+  priorities and a compliance deadline.
+
+sources:
+  - id: src-cfo
+    title: "CFO — Budget Review Notes (Internal)"
+    tokenCount: 160
+    content: |
+      VENDOR COST REVIEW — Q4 PLANNING
+
+      Vendor: StreamCore Analytics
+      Annual cost: $340K (up from $280K — 21% increase at last renewal)
+      CFO directive: All vendor contracts over $200K must demonstrate 10% cost
+      reduction or be re-competed. No exceptions. The board has specifically
+      asked about analytics spend in the next earnings prep.
+
+      Renewal deadline: January 31, 2025. If we do not renew or replace by
+      this date, our SOC 2 Type II audit report will flag a gap in continuous
+      monitoring controls (StreamCore provides our transaction monitoring).
+
+  - id: src-eng
+    title: "Engineering — StreamCore Assessment"
+    tokenCount: 190
+    content: |
+      STREAMCORE TECHNICAL ASSESSMENT — Engineering Team
+
+      StreamCore is deeply integrated into our data pipeline:
+      - Real-time transaction monitoring (latency-critical, <50ms p99)
+      - Custom ML models trained on 3 years of our transaction data
+      - 14 internal dashboards depend on StreamCore's API
+      - Estimated migration effort to an alternative: 4–6 months, 2 senior engineers
+
+      Alternatives evaluated:
+      - DataDog: Can handle monitoring but lacks the ML pipeline. We'd need to
+        rebuild models from scratch (~3 months).
+      - Grafana Cloud: Lower cost ($180K/year) but requires self-hosted ML.
+        Engineering estimates $120K/year in additional infra + headcount.
+
+      Our recommendation: Renew StreamCore. The switching cost exceeds the
+      annual savings from any alternative for at least 2 years.
+
+  - id: src-procurement
+    title: "Procurement — StreamCore Negotiation Intel"
+    tokenCount: 140
+    content: |
+      NEGOTIATION BRIEF — StreamCore
+
+      StreamCore's standard list price increased 15% this cycle. However, our
+      account rep indicated willingness to hold pricing flat ($280K) if we
+      commit to a 3-year term instead of annual renewal.
+
+      A 3-year lock at $280K/year saves $60K vs the current renewal quote of
+      $340K. Total commitment: $840K over 3 years.
+
+      Risk: 3-year commitment removes flexibility to switch if a better
+      alternative emerges. Cancellation penalty: 50% of remaining contract value.
+
+question: |
+  Should we renew StreamCore, switch to an alternative, or pursue a different
+  strategy? Consider the CFO's cost mandate, engineering's switching cost
+  assessment, the compliance deadline, and the 3-year deal option. Provide a
+  specific recommendation with next steps.
+
+referenceFacts:
+  - id: fact-1
+    description: "SOC 2 audit gap risk if not renewed by Jan 31"
+    canonical: SOC 2
+    pattern: "SOC.2|audit.*gap|compliance.*deadline|January.*31"
+    weight: 2
+  - id: fact-2
+    description: "3-year deal at $280K meets the 10% reduction mandate"
+    canonical: "280"
+    pattern: "280.*3.year|3.year.*280|flat.*pric|hold.*pric"
+    weight: 2
+  - id: fact-3
+    description: "Switching cost (4-6 months, 2 engineers) exceeds savings for 2 years"
+    canonical: "4"
+    pattern: "4.{0,5}6 month|switching cost|migration effort"
+    weight: 1
+  - id: fact-4
+    description: "Makes a specific recommendation (not just analysis)"
+    canonical: recommend
+    pattern: "recommend|should|advise|propose|our recommendation"
+    weight: 2
+
+rubricWeights:
+  faithfulness: 0.2
+  completeness: 0.25
+  coherence: 0.2
+  actionability: 0.35
+
+passFail:
+  requiredFactIds: [fact-1, fact-4]
+  minJudgeComposite: 0.5
+  description: >-
+    Must address the compliance deadline (non-negotiable constraint) and make a
+    specific recommendation. Ignoring the SOC 2 deadline is a fail.
+
+expectedSkills:
+  - researcher

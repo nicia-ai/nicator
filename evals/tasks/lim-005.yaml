@@ -1,0 +1,62 @@
+# LIM-005 - limits
+#
+# Tests max_calls_per_run policy. The researcher skill is limited to 1 call.
+# The question requires multiple research tasks. After the first researcher
+# completes, the second activation attempt is denied by the policy.
+
+id: lim-005
+category: limits
+name: max_calls_per_run policy — second call denied
+description: >-
+  Researcher has max_calls_per_run: 1. The question requires multiple
+  research tasks. The second activation should be denied.
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 20
+    content: |
+      No source documents provided. Use your tools to find the answer.
+
+question: |
+  Research two separate topics: (1) the current population of Japan, and
+  (2) the current GDP of Brazil. Use the researcher skill for each topic
+  separately. Do not combine them.
+
+referenceFacts: []
+
+passFail:
+  description: >-
+    Run must fail after the second researcher activation attempt is denied
+    by the max_calls_per_run policy.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a research assistant. You MUST activate the researcher skill
+    separately for each topic. Do NOT combine topics into a single research
+    task. Research the first topic, then research the second topic.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: max_calls_per_run
+        limit: 1
+  limits:
+    maxTasksPerRun: 10
+
+graphAssertions:
+  - type: run_status
+    status: failed
+    description: "Run must fail after second researcher attempt"
+
+  - type: run_error
+    pattern: "max_calls_per_run"
+    description: "Error must indicate policy denial"
+
+  - type: task_count
+    match:
+      subagentName: researcher
+      status: completed
+    min: 1
+    max: 1
+    description: "Exactly 1 researcher activation should complete"

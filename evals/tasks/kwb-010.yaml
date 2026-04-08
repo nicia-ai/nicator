@@ -1,0 +1,102 @@
+# KWB-010 · extraction
+#
+# A dense compliance document with specific thresholds, dates, and entity
+# names. The task requires extracting exactly the facts asked for — no more,
+# no less. Tests precision: fabricating an extra requirement is a faithfulness
+# failure.
+
+id: kwb-010
+category: extraction
+name: Compliance threshold extraction
+description: >-
+  Extract specific compliance thresholds and deadlines from a dense regulatory
+  document.
+
+sources:
+  - id: src-policy
+    title: "Global FinServ — Third-Party Risk Management Policy v4.2"
+    tokenCount: 420
+    content: |
+      THIRD-PARTY RISK MANAGEMENT POLICY
+      Global FinServ Inc. — Version 4.2, Effective: March 1, 2025
+      Approved by: Chief Risk Officer, Board Risk Committee
+
+      3. VENDOR CLASSIFICATION
+
+      3.1 Vendors are classified into three tiers based on data access and criticality:
+        - Tier 1 (Critical): Access to PII of >10,000 customers OR processes >$5M
+          in transactions per month. Subject to annual on-site audit and continuous
+          monitoring. Minimum insurance: $10M E&O, $5M cyber.
+        - Tier 2 (Important): Access to PII of 1,000–10,000 customers OR processes
+          $500K–$5M per month. Subject to biennial assessment and quarterly risk
+          reporting. Minimum insurance: $5M E&O, $2M cyber.
+        - Tier 3 (Standard): All other vendors. Subject to initial assessment and
+          annual self-attestation. No minimum insurance requirement.
+
+      4. ASSESSMENT TIMELINES
+
+      4.1 New vendor onboarding assessments must be completed within 45 business
+      days of contract execution. Extensions require CRO approval.
+      4.2 Annual reassessments for Tier 1 vendors are due within 60 calendar days
+      of the anniversary of the initial assessment.
+      4.3 For Tier 2 vendors, biennial reassessments are due within 90 calendar days.
+      4.4 Vendors that fail assessment are placed on a 30-day remediation plan. If
+      not remediated within 30 days, the vendor relationship is escalated to the
+      Board Risk Committee.
+
+      5. BREACH NOTIFICATION
+
+      5.1 Vendors must notify Global FinServ of any confirmed data breach within
+      24 hours of discovery. Suspected breaches must be reported within 72 hours.
+      5.2 Failure to meet notification timelines triggers automatic escalation to
+      Tier 1 classification regardless of current tier.
+
+question: |
+  Extract the following from the policy document:
+  1. The PII threshold that separates Tier 1 from Tier 2 vendors
+  2. The minimum cyber insurance requirement for Tier 1 vendors
+  3. The onboarding assessment deadline (in business days)
+  4. The breach notification deadline for confirmed breaches
+  5. The consequence of failing the remediation period
+
+referenceFacts:
+  - id: fact-1
+    description: "Tier 1 PII threshold is >10,000 customers"
+    canonical: "10,000"
+    pattern: "10[,.]?000"
+    weight: 2
+  - id: fact-2
+    description: "Tier 1 minimum cyber insurance is $5M"
+    canonical: "$5M cyber"
+    pattern: "\\$5[Mm].*cyber|cyber.*\\$5[Mm]"
+    weight: 2
+  - id: fact-3
+    description: "Onboarding assessment deadline is 45 business days"
+    canonical: "45 business days"
+    pattern: "45 business"
+    weight: 2
+  - id: fact-4
+    description: "Confirmed breach notification within 24 hours"
+    canonical: "24 hours"
+    weight: 2
+  - id: fact-5
+    description: "Failed remediation escalates to Board Risk Committee"
+    canonical: Board Risk Committee
+    pattern: "Board Risk|escalat"
+    weight: 2
+
+rubricWeights:
+  faithfulness: 0.45
+  completeness: 0.35
+  coherence: 0.1
+  actionability: 0.1
+
+passFail:
+  minFactualScore: 0.8
+  requiredFactIds: [fact-1, fact-3, fact-4]
+  description: >-
+    Must correctly extract at least 4 of 5 facts. PII threshold, assessment
+    deadline, and breach notification are required.
+
+expectedSkills:
+  - researcher

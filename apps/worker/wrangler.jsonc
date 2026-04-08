@@ -1,0 +1,45 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nicator",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-09-23",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "assets": {
+    "directory": "../ui/dist/client",
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nicator",
+      "database_id": "YOUR_D1_DATABASE_ID",
+    },
+  ],
+
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "HITL_DO",
+        "class_name": "HitlDurableObject",
+      },
+      {
+        "name": "RUN_EXECUTION_DO",
+        "class_name": "RunExecutionDurableObject",
+      },
+    ],
+  },
+
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_classes": ["HitlDurableObject"],
+    },
+    {
+      "tag": "v2",
+      "new_classes": ["RunExecutionDurableObject"],
+    },
+  ],
+
+  // ANTHROPIC_API_KEY set via: wrangler secret put ANTHROPIC_API_KEY
+}

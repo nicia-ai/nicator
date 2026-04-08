@@ -1,0 +1,279 @@
+# CRD-001 · coordination
+#
+# Adversarial research — debate topology. Three agents: bull (argues for),
+# bear (argues against), judge (synthesizes). Tests the core multi-agent
+# primitives: scoped visibility, DAG-based coordination, artifact
+# consumption across agent boundaries, and synthesis quality.
+#
+# The topology's reads/writes declare the data-flow DAG:
+#   bull (writes bull_findings)  ──┐
+#                                   ├──→ judge (reads both, writes synthesis)
+#   bear (writes bear_findings) ──┘
+#
+# Bull and bear have no reads from each other — they run concurrently
+# with scoped visibility. Judge blocks until both complete.
+
+id: crd-001
+category: coordination
+name: Adversarial research — LLM customer support adoption
+description: >-
+  Three-agent debate: bull agent argues for LLM adoption using favorable
+  evidence, bear agent argues against using risk evidence, judge agent
+  synthesizes both perspectives into a balanced executive briefing.
+  Tests scoped visibility (agents only see assigned sources), DAG-based
+  coordination (judge blocks on bull+bear), cross-agent artifact
+  consumption, and synthesis quality.
+
+sources:
+  - id: src-bull-1
+    title: "Case Study: AI-Powered Customer Support at RetailCo"
+    tokenCount: 280
+    content: |
+      RetailCo deployed LLM-powered customer support agents across its
+      e-commerce platform in Q2 2025. Key results after 6 months:
+      - Operating costs reduced by 40% ($12M annual savings)
+      - Average resolution time dropped from 18 minutes to 6 minutes (3x faster)
+      - 24/7 availability eliminated the overnight staffing gap
+      - Tier-1 ticket volume handled by AI increased from 0% to 73%
+      - Human agents reassigned to complex cases reported higher job satisfaction
+      The deployment used a phased rollout with human oversight during the
+      first 90 days. Post-deployment monitoring showed hallucination rates
+      below 0.3% on trained domains.
+
+  - id: src-bull-2
+    title: "Consumer Attitudes Toward AI Support — 2025 Survey"
+    tokenCount: 220
+    content: |
+      Survey of 4,200 consumers across North America and Europe (June 2025):
+      - 78% reported satisfaction with AI-assisted customer support
+      - 65% preferred AI for routine queries (password resets, order tracking)
+      - 82% valued instant response times over human interaction
+      - Net Promoter Score for AI-supported channels was +34 (vs +28 for
+        human-only channels)
+      - Primary complaints: inability to handle nuanced complaints (31%),
+        repetitive responses (22%), lack of empathy for emotional situations (18%)
+      Methodology: double-blind randomized assignment, 95% CI ±1.5pp.
+
+  - id: src-bear-1
+    title: "Incident Report: FinServ AI Support Failure"
+    tokenCount: 310
+    content: |
+      FinServ Corp's LLM customer support agent was involved in a critical
+      incident in March 2025. The AI hallucinated a refund policy that did
+      not exist, promising customers a "120-day unconditional refund" on
+      financial products. By the time the error was detected:
+      - 4,700 customers had been promised unauthorized refunds
+      - Total liability: $2.3M in refunds that had to be honored
+      - Regulatory investigation by the FTC for misleading consumers
+      - Brand trust index dropped 19 points in the following quarter
+      Root cause: the model interpolated between two real policies (30-day
+      and 90-day) and generated a plausible but fictional third policy.
+      The human oversight system had a 4-hour review lag that allowed
+      the hallucination to propagate.
+
+  - id: src-bear-2
+    title: "Regulatory & Workforce Impact Analysis"
+    tokenCount: 290
+    content: |
+      Analysis of regulatory and workforce implications (Q3 2025):
+
+      Regulatory landscape:
+      - EU AI Act (effective August 2025) classifies customer-facing AI as
+        "high-risk" requiring human oversight, bias auditing, and incident
+        reporting. Estimated compliance cost: $1.8M/year for mid-size firms.
+      - California SB-1047 requires disclosure when customers interact with AI.
+      - Pending UK legislation may require "meaningful human review" of all
+        AI-generated customer commitments.
+
+      Workforce impact:
+      - Companies deploying AI support reduced frontline staff by an average
+        of 30% within 18 months.
+      - Displaced workers faced average 8-month unemployment before retraining.
+      - Internal surveys show 67% of remaining support staff report increased
+        stress due to handling only escalated, complex cases.
+      - Labor unions in 3 EU countries have filed formal objections.
+
+question: |
+  TechCorp's board is considering deploying LLM-powered customer support.
+  Produce a balanced executive briefing that presents the strongest arguments
+  both for and against adoption, then synthesize a recommendation that
+  accounts for both perspectives. The briefing must reference specific
+  evidence from the available sources.
+
+referenceFacts:
+  # --- Bull-side facts (must survive into synthesis) ---
+  - id: fact-bull-cost
+    description: References 40% cost reduction from RetailCo case study
+    canonical: "40%"
+    pattern: "40%.*cost|cost.*40%|40.*percent.*reduc|reduc.*40"
+    weight: 2
+
+  - id: fact-bull-satisfaction
+    description: References 78% customer satisfaction from survey
+    canonical: "78%"
+    pattern: "78%|78.*percent.*satisf|satisf.*78"
+    weight: 1
+
+  - id: fact-bull-speed
+    description: References 3x faster resolution or 6-minute resolution time
+    canonical: "3x faster"
+    pattern: "3x.*fast|6.*minute|18.*minute.*to.*6|resolution.*time.*drop"
+    weight: 1
+
+  # --- Bear-side facts (must survive into synthesis) ---
+  - id: fact-bear-incident
+    description: References $2.3M hallucination incident
+    canonical: "$2.3M"
+    pattern: "\\$2\\.3[Mm]|2\\.3.*million.*refund|hallucin.*refund.*polic"
+    weight: 2
+
+  - id: fact-bear-regulatory
+    description: References EU AI Act or regulatory compliance requirements
+    canonical: "EU AI Act"
+    pattern: "EU AI Act|AI Act|high.risk.*classif|human.*oversight.*requir|\\$1\\.8[Mm].*compliance"
+    weight: 1
+
+  - id: fact-bear-workforce
+    description: References 30% workforce reduction impact
+    canonical: "30%"
+    pattern: "30%.*staff|30%.*workforce|staff.*30%|reduc.*30.*percent|30.*percent.*reduc"
+    weight: 1
+
+  # --- Synthesis quality ---
+  - id: fact-synthesis
+    description: Final recommendation explicitly acknowledges trade-offs
+    canonical: "both"
+    pattern: "trade.off|both.*side|balanc.*recommend|weigh.*against|risk.*reward|benefit.*risk|pro.*con"
+    weight: 2
+
+rubricWeights:
+  faithfulness: 0.30
+  completeness: 0.30
+  coherence: 0.15
+  actionability: 0.25
+
+passFail:
+  minFactualScore: 0.7
+  requiredFactIds: [fact-bull-cost, fact-bear-incident, fact-synthesis]
+  description: >-
+    Must include evidence from both the bull case (at minimum the 40% cost
+    reduction) and the bear case (at minimum the $2.3M incident), and must
+    explicitly acknowledge trade-offs. A one-sided recommendation fails.
+
+expectedSkills:
+  - researcher
+  - summarizer
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a multi-agent coordinator running a structured debate. You
+    manage three named agents: bull (argues FOR adoption), bear (argues
+    AGAINST adoption), and judge (synthesizes both perspectives).
+
+    Dispatch bull and bear concurrently — each receives only its assigned
+    source documents. Once both complete, dispatch the judge with both
+    sets of findings. The judge produces the final executive briefing.
+
+    Do not allow agents to see each other's sources or findings until the
+    judge phase. This isolation ensures genuinely independent analysis.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+    - name: summarizer
+      version: "1.0.0"
+      policy:
+        type: always
+  limits:
+    maxTasksPerRun: 30
+    maxOperationsPerTask: 5
+    maxTokensPerRun: 500000
+graphAssertions:
+  # --- Run completion ---
+  - type: run_status
+    status: completed
+    description: "Multi-agent debate run must complete successfully"
+
+  # --- Agent existence (3 agent-role tasks) ---
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: bull
+    description: "Bull agent task must exist"
+
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: bear
+    description: "Bear agent task must exist"
+
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: judge
+    description: "Judge agent task must exist"
+
+  - type: task_count
+    match:
+      role: subagent
+    min: 3
+    max: 3
+    description: "Exactly 3 agent-role tasks"
+
+  # --- DAG ordering: judge after both advocates ---
+  - type: task_order
+    first:
+      role: subagent
+      subagentName: bull
+    then:
+      role: subagent
+      subagentName: judge
+    description: "Bull must complete before judge"
+
+  - type: task_order
+    first:
+      role: subagent
+      subagentName: bear
+    then:
+      role: subagent
+      subagentName: judge
+    description: "Bear must complete before judge"
+
+  # --- Data flow: judge consumes both agents' artifacts ---
+  - type: consumes
+    consumer:
+      role: subagent
+      subagentName: judge
+    producer:
+      role: subagent
+      subagentName: bull
+    description: "Judge must consume bull agent's findings"
+
+  - type: consumes
+    consumer:
+      role: subagent
+      subagentName: judge
+    producer:
+      role: subagent
+      subagentName: bear
+    description: "Judge must consume bear agent's findings"
+
+  # --- Scoped visibility: advocates must not see each other's work ---
+  - type: consumes_absent
+    consumer:
+      role: subagent
+      subagentName: bull
+    producer:
+      role: subagent
+      subagentName: bear
+    description: "Bull must NOT consume bear's artifacts (scoped visibility)"
+
+  - type: consumes_absent
+    consumer:
+      role: subagent
+      subagentName: bear
+    producer:
+      role: subagent
+      subagentName: bull
+    description: "Bear must NOT consume bull's artifacts (scoped visibility)"

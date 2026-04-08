@@ -1,0 +1,97 @@
+# CTX-001 · context
+#
+# Long run where an early task's output is consumed by a later task.
+# With default weights (downstream: 0.35), the early task should survive
+# context trimming because its artifact is structurally load-bearing.
+# Tests that the scoring system preserves graph-connected information
+# over merely recent information.
+
+id: ctx-001
+category: context
+name: Downstream dependency survives context trimming
+description: >-
+  A multi-step research question that forces many skill activations.
+  An early researcher task produces findings that a later summarizer
+  task consumes. With enough tasks to trigger tiering, the downstream
+  weight should keep the early task in full or summary tier — not
+  metadata. The final output must reference the early findings.
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 20
+    content: |
+      No source documents provided. Use your tools to find the answer.
+
+question: |
+  First, research the environmental impact of lithium mining for EV batteries.
+  Then, research the economic growth projections for the EV battery market.
+  Then, research recycling technologies for lithium-ion batteries.
+  Finally, synthesize all three research areas into a comprehensive analysis
+  that explicitly references findings from each research step.
+
+referenceFacts:
+  - id: fact-1
+    description: References lithium mining environmental impact from early research
+    canonical: "lithium mining"
+    pattern: "lithium.*mining|mining.*lithium"
+    weight: 1
+  - id: fact-2
+    description: References EV battery market projections
+    canonical: "market"
+    pattern: "market.*growth|market.*project|billion"
+    weight: 1
+  - id: fact-3
+    description: References recycling technologies
+    canonical: "recycling"
+    pattern: "recycl|reclaim|recover"
+    weight: 1
+
+passFail:
+  minFactualScore: 1.0
+  requiredFactIds: [fact-1, fact-2, fact-3]
+  description: >-
+    All three research areas must appear in the final synthesis. If context
+    trimming drops the early research task, the model will lack those
+    findings and either omit them or hallucinate replacements.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a research assistant. Break complex questions into separate
+    research tasks. Use the researcher skill for each sub-topic, then
+    use the summarizer skill to synthesize findings. Do not skip steps.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+    - name: summarizer
+      version: "1.0.0"
+      policy:
+        type: always
+  limits:
+    maxTasksPerRun: 25
+    maxTokensPerRun: 500000
+
+graphAssertions:
+  - type: run_status
+    status: completed
+    description: "Run should complete successfully"
+
+  - type: task_count
+    match:
+      subagentName: researcher
+    min: 3
+    description: "At least 3 researcher activations for the 3 sub-topics"
+
+  - type: task_exists
+    match:
+      subagentName: summarizer
+    description: "Summarizer should be activated to synthesize findings"
+
+  - type: consumes
+    consumer:
+      subagentName: summarizer
+    producer:
+      subagentName: researcher
+    description: "Summarizer must consume artifacts from researcher tasks"

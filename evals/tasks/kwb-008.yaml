@@ -1,0 +1,99 @@
+# KWB-008 · gap-analysis
+#
+# An employee handbook and a state labor law summary. The handbook is mostly
+# compliant but has two gaps. One gap is obvious (wrong overtime threshold);
+# the other is subtle (missing meal break provision). The task tests both
+# detection accuracy and false-positive discipline — the handbook is compliant
+# on several other points that should NOT be flagged.
+
+id: kwb-008
+category: gap-analysis
+name: Employee handbook vs. labor law compliance
+description: >-
+  Identify compliance gaps between a company handbook and state labor law.
+  Do not flag areas where the handbook meets or exceeds the legal requirement.
+
+sources:
+  - id: src-handbook
+    title: "Brightline Corp — Employee Handbook (excerpt), Rev 2024-Q3"
+    tokenCount: 340
+    content: |
+      BRIGHTLINE CORP — EMPLOYEE HANDBOOK
+
+      5. COMPENSATION
+      5.1 Overtime. Non-exempt employees are entitled to overtime pay at 1.5× their
+      regular rate for hours worked in excess of 45 hours per workweek.
+      5.2 Minimum wage. Brightline pays all employees at least $16.50/hour, which
+      exceeds the current state minimum.
+
+      6. TIME OFF
+      6.1 Rest breaks. All employees are entitled to a paid 15-minute rest break for
+      every 4 hours worked.
+      6.2 Paid sick leave. Employees accrue 1 hour of paid sick leave for every 30
+      hours worked, up to a maximum of 80 hours per year.
+
+      7. WORKPLACE SAFETY
+      7.1 Brightline maintains all required OSHA postings and conducts quarterly
+      safety inspections. Incident reports must be filed within 24 hours.
+
+  - id: src-law
+    title: "State of Cascadia — Labor Standards Summary (2024)"
+    tokenCount: 310
+    content: |
+      STATE OF CASCADIA — LABOR STANDARDS SUMMARY
+
+      OVERTIME: Non-exempt employees must receive 1.5× pay for hours exceeding
+      40 hours per workweek. Daily overtime (>8 hours in a single day) applies
+      in manufacturing only.
+
+      MINIMUM WAGE: $15.75/hour, effective January 1, 2024. Tipped employees:
+      $13.50/hour minimum.
+
+      REST BREAKS: One paid 15-minute rest break per 4-hour work period. Required.
+
+      MEAL BREAKS: Employees working more than 5 consecutive hours must be provided
+      an uninterrupted 30-minute unpaid meal break. The break may be waived by
+      mutual written agreement if the shift is 6 hours or less.
+
+      PAID SICK LEAVE: Employees accrue 1 hour per 30 hours worked, capped at
+      40 hours per year. Unused sick leave must carry over to the following year.
+
+      WORKPLACE SAFETY: All employers must comply with Cascadia OSHA requirements
+      and maintain incident reporting within 24 hours of occurrence.
+
+question: |
+  Compare Brightline's employee handbook against Cascadia state labor law.
+  Identify any areas where the handbook does not meet the legal minimum.
+  Do not flag areas where the handbook meets or exceeds the requirement.
+
+referenceFacts:
+  - id: gap-1-overtime
+    description: "Handbook uses 45-hour overtime threshold; law requires 40 hours"
+    canonical: "45"
+    pattern: "45.hour|45-hour|forty.?five"
+    weight: 3
+  - id: gap-2-meal
+    description: "Handbook has no meal break provision; law requires 30-minute meal break after 5 hours"
+    canonical: meal
+    pattern: "meal.{0,10}break|no meal|missing meal|absent.*meal|omit.*meal"
+    weight: 3
+  - id: no-gap-minimum-wage
+    description: "Minimum wage is compliant ($16.50 > $15.75) — should NOT be flagged"
+    canonical: "16.50"
+    weight: 0
+
+rubricWeights:
+  faithfulness: 0.45
+  completeness: 0.35
+  coherence: 0.1
+  actionability: 0.1
+
+passFail:
+  minFactualScore: 0.8
+  requiredFactIds: [gap-1-overtime, gap-2-meal]
+  description: >-
+    Must find both gaps (overtime threshold and missing meal break). Must NOT
+    hallucinate gaps that don't exist (e.g., minimum wage is compliant).
+
+expectedSkills:
+  - researcher

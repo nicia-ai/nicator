@@ -1,0 +1,376 @@
+# KWB-041 · extraction
+#
+# A master services agreement with heavily cross-referenced definitions.
+# The document is structured like a real enterprise contract: defined terms
+# in Section 1 change the meaning of obligations in later sections, and
+# several provisions have exceptions-to-exceptions. Getting full marks
+# requires:
+#   1. Following the "Confidential Information" definition through two
+#      levels of exception (carve-out for Residuals, but Residuals
+#      excludes source code — so source code IS confidential)
+#   2. Reading the indemnification cap in Section 8 correctly: it says
+#      "12 months of Fees" but Fees is defined to exclude Implementation
+#      Fees, making the actual cap lower than it appears
+#   3. Noticing that the termination-for-convenience clause (Section 10.2)
+#      requires 90 days notice, but Section 10.4 says the notice period
+#      is "as set forth in the applicable Order Form" — and the Order Form
+#      excerpt sets it at 180 days
+#   4. Parsing the data processing clause where "Personal Data" follows
+#      the GDPR definition but the governing law is Delaware — creating
+#      a tension the model should flag
+#   5. Understanding that the SLA credit cap (Section 6.3) is "per
+#      calendar quarter" but the measurement period is "trailing 30 days"
+#      — so a month-long outage in the first month of a quarter still
+#      only earns one quarter's worth of credits
+#
+# Floor: Baseline extracts surface-level answers from each section header.
+# Ceiling: Full marks require tracing definitions across sections and
+# identifying where cross-references create unexpected results.
+
+id: kwb-041
+category: extraction
+name: Cross-referenced contract extraction
+description: >-
+  Extract specific provisions from a master services agreement where defined
+  terms, cross-references, and exceptions-to-exceptions change the plain
+  meaning of clauses. Tests multi-hop reading comprehension in legal text.
+
+sources:
+  - id: src-msa
+    title: "Master Services Agreement — CloudScale Inc. / Meridian Corp."
+    tokenCount: 4200
+    content: |
+      MASTER SERVICES AGREEMENT
+
+      This Master Services Agreement ("Agreement") is entered into as of
+      January 15, 2025, by and between CloudScale Inc., a Delaware corporation
+      ("Provider"), and Meridian Corp., a corporation organized under the laws
+      of the United Kingdom ("Customer").
+
+      SECTION 1. DEFINITIONS
+
+      1.1 "Confidential Information" means any information disclosed by either
+      party to the other that is marked as confidential or that a reasonable
+      person would understand to be confidential given the nature of the
+      information and circumstances of disclosure. Confidential Information
+      includes, without limitation, source code, algorithms, customer lists,
+      pricing, and technical specifications. Confidential Information does not
+      include information that: (a) is or becomes publicly available through
+      no fault of the receiving party; (b) was known to the receiving party
+      prior to disclosure; (c) is independently developed by the receiving
+      party without use of the disclosing party's Confidential Information;
+      or (d) constitutes Residuals (as defined in Section 1.8).
+
+      1.2 "Customer Data" means any data, content, or materials submitted by
+      Customer to the Platform, including Personal Data (as defined in
+      Section 1.7).
+
+      1.3 "Fees" means the recurring subscription fees set forth in the
+      applicable Order Form. For the avoidance of doubt, "Fees" does not
+      include Implementation Fees, Professional Services Fees, or usage-based
+      overage charges.
+
+      1.4 "Implementation Fees" means the one-time fees for onboarding,
+      configuration, data migration, and integration services as set forth
+      in the applicable Order Form.
+
+      1.5 "Order Form" means an ordering document executed by both parties
+      that references this Agreement and specifies the services, fees,
+      term, and service levels applicable to Customer's use of the Platform.
+
+      1.6 "Platform" means Provider's proprietary cloud-based software
+      platform, including all updates, upgrades, and modifications made
+      available to Customer during the Term.
+
+      1.7 "Personal Data" has the meaning given to it in Article 4(1) of
+      Regulation (EU) 2016/679 (General Data Protection Regulation), and
+      includes any analogous category of data under applicable data protection
+      laws.
+
+      1.8 "Residuals" means general ideas, concepts, know-how, methodologies,
+      processes, techniques, and skills retained in the unaided memory of
+      Provider's personnel who have had access to Customer's Confidential
+      Information. Residuals specifically excludes: (i) source code or
+      object code of Customer's software; (ii) Customer Data; and (iii) any
+      information subject to intellectual property protection.
+
+      1.9 "Service Credits" has the meaning set forth in Section 6.3.
+
+      1.10 "Term" means the initial term specified in the Order Form, plus
+      any renewal terms.
+
+      SECTION 2. SERVICES
+
+      2.1 Provider shall make the Platform available to Customer in accordance
+      with the service levels set forth in this Agreement and the applicable
+      Order Form.
+
+      2.2 Provider shall provide implementation services as described in the
+      Order Form. Implementation services are delivered on a time-and-materials
+      basis unless otherwise specified.
+
+      SECTION 3. CUSTOMER OBLIGATIONS
+
+      3.1 Customer shall: (a) provide timely access to Customer personnel and
+      systems as reasonably required for implementation; (b) maintain the
+      security of its account credentials; (c) comply with all applicable
+      laws in connection with its use of the Platform; and (d) ensure that
+      Customer Data does not violate third-party rights.
+
+      3.2 Customer acknowledges that the Platform is not designed or intended
+      for use in connection with high-risk activities including, without
+      limitation, life support, autonomous vehicle control, nuclear facility
+      management, or weapons systems.
+
+      SECTION 4. FEES AND PAYMENT
+
+      4.1 Customer shall pay all Fees and Implementation Fees as specified in
+      the applicable Order Form.
+
+      4.2 Fees are invoiced annually in advance. Implementation Fees are
+      invoiced upon completion of each implementation milestone.
+
+      4.3 Payment is due within 30 days of invoice date. Late payments accrue
+      interest at the lesser of 1.5% per month or the maximum rate permitted
+      by applicable law.
+
+      4.4 All Fees are non-refundable except as expressly provided in
+      Section 6.3 (Service Credits).
+
+      SECTION 5. DATA PROCESSING
+
+      5.1 To the extent Provider processes Personal Data on behalf of Customer,
+      Provider acts as a data processor and Customer acts as a data controller,
+      each as defined in the GDPR.
+
+      5.2 Provider shall process Personal Data only in accordance with
+      Customer's documented instructions and shall not process Personal Data
+      for any purpose other than performing the services under this Agreement.
+
+      5.3 Provider shall implement and maintain appropriate technical and
+      organizational measures to protect Personal Data, including encryption
+      at rest (AES-256) and in transit (TLS 1.2+).
+
+      5.4 In the event of a Personal Data Breach (as defined in Article 4(12)
+      of the GDPR), Provider shall notify Customer without undue delay and
+      in any event within 48 hours of becoming aware of the breach.
+
+      5.5 Provider currently processes Customer Data in data centers located
+      in the United States (us-east-1 and us-west-2). Customer consents to
+      such processing, subject to Provider maintaining appropriate safeguards
+      for international data transfers as required by applicable law.
+
+      SECTION 6. SERVICE LEVELS
+
+      6.1 Provider shall maintain Platform availability of at least 99.9%,
+      measured as the percentage of minutes in each calendar month during
+      which the Platform is operational, excluding scheduled maintenance
+      windows (Sundays 02:00–06:00 UTC).
+
+      6.2 Availability is measured over a trailing 30-day period using
+      Provider's monitoring systems. Customer may request monitoring data
+      upon reasonable notice.
+
+      6.3 Service Credits. If Platform availability falls below the thresholds
+      below in any measurement period, Customer shall receive a credit against
+      future Fees:
+        - 99.9% to 99.5%: 5% of quarterly Fees
+        - 99.5% to 99.0%: 10% of quarterly Fees
+        - Below 99.0%:    25% of quarterly Fees
+
+      Service Credits shall not exceed 25% of Fees for the applicable calendar
+      quarter. Service Credits are Customer's sole and exclusive remedy for
+      Provider's failure to meet the service levels in this Section 6. To
+      receive Service Credits, Customer must submit a written request within
+      30 days of the end of the calendar quarter in which the failure occurred.
+
+      SECTION 7. INTELLECTUAL PROPERTY
+
+      7.1 Provider retains all rights in the Platform and any improvements,
+      modifications, or derivative works thereof.
+
+      7.2 Customer retains all rights in Customer Data.
+
+      7.3 Subject to Section 1.8, Provider may use Residuals for any purpose,
+      including developing products and services that compete with Customer's
+      products, provided that Provider does not disclose Customer's
+      Confidential Information.
+
+      SECTION 8. LIMITATION OF LIABILITY
+
+      8.1 EXCEPT FOR (A) BREACHES OF SECTION 5 (DATA PROCESSING), (B)
+      INDEMNIFICATION OBLIGATIONS UNDER SECTION 9, AND (C) WILLFUL
+      MISCONDUCT OR FRAUD, NEITHER PARTY'S AGGREGATE LIABILITY UNDER THIS
+      AGREEMENT SHALL EXCEED THE TOTAL FEES PAID OR PAYABLE BY CUSTOMER IN
+      THE TWELVE (12) MONTHS PRECEDING THE EVENT GIVING RISE TO LIABILITY.
+
+      8.2 IN NO EVENT SHALL EITHER PARTY BE LIABLE FOR ANY INDIRECT,
+      INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING
+      LOSS OF PROFITS, DATA, OR BUSINESS OPPORTUNITY, REGARDLESS OF THE
+      THEORY OF LIABILITY.
+
+      SECTION 9. INDEMNIFICATION
+
+      9.1 Provider shall indemnify Customer against third-party claims that
+      the Platform infringes a valid patent, copyright, or trade secret,
+      subject to the limitations in Section 8.
+
+      9.2 Customer shall indemnify Provider against claims arising from
+      Customer Data or Customer's breach of Section 3.
+
+      SECTION 10. TERM AND TERMINATION
+
+      10.1 The initial term of this Agreement is as specified in the Order
+      Form.
+
+      10.2 Either party may terminate this Agreement for convenience by
+      providing 90 days' prior written notice to the other party.
+
+      10.3 Either party may terminate this Agreement immediately upon written
+      notice if the other party: (a) commits a material breach that remains
+      uncured 30 days after notice; or (b) becomes insolvent, files for
+      bankruptcy, or makes an assignment for the benefit of creditors.
+
+      10.4 Notwithstanding the foregoing, the notice period for termination
+      for convenience shall be as set forth in the applicable Order Form,
+      if different from Section 10.2.
+
+      10.5 Upon termination, Provider shall make Customer Data available for
+      export in a standard format for 60 days, after which Provider may
+      delete Customer Data.
+
+      SECTION 11. GOVERNING LAW
+
+      11.1 This Agreement shall be governed by and construed in accordance
+      with the laws of the State of Delaware, United States, without regard
+      to its conflict of laws principles.
+
+      11.2 Any dispute arising under this Agreement shall be resolved
+      exclusively in the state or federal courts located in Wilmington,
+      Delaware.
+
+      SECTION 12. GENERAL PROVISIONS
+
+      12.1 This Agreement, together with all Order Forms, constitutes the
+      entire agreement between the parties.
+
+      12.2 This Agreement may be amended only by a written instrument signed
+      by both parties.
+
+      12.3 If any provision of this Agreement is held unenforceable, the
+      remaining provisions shall continue in full force and effect.
+
+  - id: src-orderform
+    title: "Order Form #001 — CloudScale / Meridian"
+    tokenCount: 650
+    content: |
+      ORDER FORM #001
+
+      This Order Form is entered into pursuant to the Master Services
+      Agreement dated January 15, 2025 (the "Agreement") between CloudScale
+      Inc. ("Provider") and Meridian Corp. ("Customer").
+
+      SERVICES
+
+      Platform: CloudScale Enterprise Platform — Growth Tier
+      Users: Up to 500 named users
+
+      TERM
+
+      Initial Term: 36 months, commencing February 1, 2025
+      Renewal: Auto-renews for successive 12-month periods unless either
+      party provides written notice of non-renewal at least 180 days
+      prior to the end of the then-current term.
+
+      FEES
+
+      Annual Subscription Fee:      $480,000 ($40,000/month)
+      Implementation Fee:           $125,000 (one-time)
+      Professional Services:        $250/hour (as requested)
+
+      TERMINATION FOR CONVENIENCE
+
+      Notwithstanding Section 10.2 of the Agreement, either party may
+      terminate this Order Form for convenience by providing not less
+      than 180 days' prior written notice.
+
+      SERVICE LEVEL ADDENDUM
+
+      The service levels in Section 6 of the Agreement apply to this
+      Order Form. The quarterly Fee basis for Service Credit calculations
+      under Section 6.3 shall be $120,000 (i.e., one quarter of the
+      Annual Subscription Fee).
+
+question: |
+  Review the Master Services Agreement and Order Form, then answer these
+  specific questions:
+
+  1. Is source code shared by Meridian with CloudScale treated as
+     confidential? Trace the definition through any relevant exceptions.
+  2. What is the actual dollar cap on CloudScale's liability (excluding
+     the carve-outs), based on the Fee definition?
+  3. What is the effective notice period for termination for convenience?
+  4. The contract uses GDPR definitions for data processing but specifies
+     Delaware governing law — is there a potential conflict? What is it?
+  5. What is the maximum Service Credit Meridian can receive in a quarter,
+     in dollars?
+
+referenceFacts:
+  - id: fact-1
+    description: >-
+      Source code IS confidential: Residuals are excluded from Confidential
+      Information, but Residuals itself excludes source code, so the
+      exception doesn't apply to source code
+    canonical: "source code"
+    pattern: "(?:source code).*(?:confidential|protected|not.*Residual|exclud.*Residual)|(?:Residual).*(?:exclud|not.*include).*(?:source code)"
+    weight: 3
+  - id: fact-2
+    description: >-
+      Liability cap is based on Fees ($480K/yr), NOT total contract value.
+      Fees excludes Implementation Fees ($125K). So cap = $480K, not $605K.
+    canonical: "480"
+    pattern: "\\$?480|(?:cap|liab).*(?:exclud|not.*includ).*(?:implement|one.time|professional)|(?:Fees).*(?:exclud|not.*includ).*(?:implement)"
+    weight: 3
+  - id: fact-3
+    description: >-
+      Termination for convenience requires 180 days notice (Order Form
+      overrides the MSA's 90 days per Section 10.4)
+    canonical: "180"
+    pattern: "180.*(?:day|notice)|(?:Order Form|overrid).*(?:termination|convenience|notice).*180"
+    weight: 3
+  - id: fact-4
+    description: >-
+      GDPR definitions + Delaware law creates a conflict: GDPR obligations
+      may not be enforceable under Delaware law, or Delaware courts may
+      not apply GDPR standards to breach claims
+    canonical: "conflict"
+    pattern: "(?:GDPR|data protection).*(?:Delaware|governing law|conflict|tension|jurisdiction)|(?:conflict|tension).*(?:GDPR.*Delaware|Delaware.*GDPR)"
+    weight: 2
+  - id: fact-5
+    description: >-
+      Maximum quarterly Service Credit is $30,000 (25% of $120,000
+      quarterly Fees)
+    canonical: "30,000"
+    pattern: "\\$?30[,.]?000|\\$?30K|25%.*\\$?120"
+    weight: 2
+
+rubricWeights:
+  faithfulness: 0.45
+  completeness: 0.30
+  coherence: 0.10
+  actionability: 0.15
+
+passFail:
+  minFactualScore: 0.60
+  requiredFactIds: [fact-1, fact-2, fact-3]
+  minJudgeComposite: 0.5
+  description: >-
+    Must correctly trace the source code → Confidential Information →
+    Residuals → Residuals-excludes-source-code chain. Must identify that
+    the liability cap uses the defined term "Fees" which excludes
+    Implementation Fees. Must identify that the Order Form overrides the
+    MSA's 90-day notice period to 180 days. These three require multi-hop
+    reasoning through cross-references — surface-level reading gives the
+    wrong answer for each.
+
+expectedSkills: []

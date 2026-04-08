@@ -1,0 +1,123 @@
+# KWB-020 · decision-support
+#
+# Three vendor proposals for a cloud migration. Each has different strengths
+# and weaknesses against stated requirements. The task requires a specific
+# recommendation with reasoning, not just a comparison table.
+#
+# Floor: Baseline can list pros/cons of each vendor.
+# Ceiling: Makes a specific recommendation tied to the stated priorities,
+# acknowledges the main risk of the chosen vendor, and proposes a mitigation.
+
+id: kwb-020
+category: decision-support
+name: Cloud migration vendor selection
+description: >-
+  Recommend a vendor for cloud migration based on three proposals and stated
+  organizational priorities.
+
+sources:
+  - id: src-req
+    title: "Internal Memo — Cloud Migration Priorities"
+    tokenCount: 150
+    content: |
+      TO: Evaluation Committee
+      FROM: VP Engineering
+
+      Our priorities for the cloud migration vendor, in order:
+      1. Data sovereignty — all data must remain in EU regions. Non-negotiable.
+      2. Migration timeline — we need to complete migration within 6 months.
+      3. Cost — budget is $800K for the migration phase. Ongoing costs will be
+         evaluated separately.
+      4. Support — 24/7 support with <1 hour P1 response during migration.
+
+      We are willing to pay more for a faster timeline. We are NOT willing to
+      compromise on data sovereignty under any circumstances.
+
+  - id: src-vendor-a
+    title: "Proposal — CloudShift (Vendor A)"
+    tokenCount: 180
+    content: |
+      CLOUDSHIFT MIGRATION PROPOSAL
+
+      Timeline: 4 months (aggressive but achievable based on similar migrations)
+      Cost: $720K fixed-price. No overrun risk.
+      Data sovereignty: Full EU region support. All data processed and stored
+      in Frankfurt and Dublin data centers. SOC 2 Type II certified for EU operations.
+      Support: 24/7 during migration. P1 response: 30 minutes. Dedicated migration
+      lead assigned.
+      Risk: CloudShift has limited experience with legacy Oracle database migrations.
+      Our team has completed 3 Oracle-to-PostgreSQL migrations in the last 2 years.
+
+  - id: src-vendor-b
+    title: "Proposal — DataLift (Vendor B)"
+    tokenCount: 185
+    content: |
+      DATALIFT MIGRATION SERVICES PROPOSAL
+
+      Timeline: 8 months (includes 2-month parallel-run period for validation)
+      Cost: $650K fixed-price for migration. $50K/month during parallel-run.
+      Total: $750K.
+      Data sovereignty: All data in EU regions (Amsterdam, Frankfurt). However,
+      our management tooling currently routes through a US-based control plane.
+      We are developing an EU-only control plane expected Q2 2025.
+      Support: Business hours (CET) with on-call for P1 during migration.
+      P1 response: 2 hours. No dedicated lead — pooled support model.
+      Strength: Deep Oracle migration expertise. 14 successful Oracle-to-PostgreSQL
+      migrations completed in 2024.
+
+  - id: src-vendor-c
+    title: "Proposal — Nimbus Cloud (Vendor C)"
+    tokenCount: 170
+    content: |
+      NIMBUS CLOUD — MIGRATION PROPOSAL
+
+      Timeline: 5 months
+      Cost: $950K. Includes full validation suite and 30 days post-migration support.
+      Data sovereignty: EU-only processing. Frankfurt, London, and Paris regions.
+      All tooling, including management plane, operates within EU. GDPR-certified.
+      Support: 24/7 with <30 minute P1 response. Named account team of 3 engineers.
+      Strength: Only vendor with a fully EU-resident management plane today.
+      Risk: Cost exceeds your stated budget.
+
+question: |
+  Based on the migration priorities and the three vendor proposals, which vendor
+  should we select? Explain your reasoning, identify the main risk of your
+  recommendation, and suggest how to mitigate it.
+
+referenceFacts:
+  - id: fact-1
+    description: "DataLift (B) has a US control plane — sovereignty issue"
+    canonical: control plane
+    pattern: "US.{0,20}control.plane|control.plane.{0,20}US|sovereignty.{0,40}DataLift|DataLift.{0,40}sovereignty"
+    weight: 3
+  - id: fact-2
+    description: "Nimbus (C) exceeds the $800K budget"
+    canonical: "950"
+    pattern: "\\$?950|exceed.*budget|over.*budget|budget.*exceed"
+    weight: 2
+  - id: fact-3
+    description: "CloudShift (A) has limited Oracle migration experience"
+    canonical: Oracle
+    pattern: "limited.*Oracle|Oracle.*limited|Oracle.{0,30}experience|CloudShift.*risk"
+    weight: 2
+  - id: fact-4
+    description: "Makes a specific vendor recommendation (not just a comparison)"
+    canonical: recommend
+    pattern: "recommend|select|choose|should go with|best option"
+    weight: 2
+
+rubricWeights:
+  faithfulness: 0.25
+  completeness: 0.25
+  coherence: 0.15
+  actionability: 0.35
+
+passFail:
+  requiredFactIds: [fact-1, fact-4]
+  minJudgeComposite: 0.5
+  description: >-
+    Must identify DataLift's sovereignty issue (non-negotiable disqualifier) and
+    make a specific recommendation. A comparison table without a decision is a fail.
+
+expectedSkills:
+  - researcher

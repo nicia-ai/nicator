@@ -1,0 +1,471 @@
+# KWB-042 · gap-analysis
+#
+# Two long documents: an enterprise security policy and an implementation
+# audit report. The task is to identify gaps between what the policy
+# requires and what the audit found. The difficulty:
+#
+#   1. Some "gaps" are red herrings — the audit describes the requirement
+#      differently but actually satisfies it (e.g., policy says "annual
+#      penetration testing," audit says "red team exercises conducted
+#      quarterly" which exceeds the requirement)
+#   2. One real gap is buried in a footnote: the policy requires MFA for
+#      all privileged access, but the audit's footnote 4 reveals that
+#      service accounts used by the CI/CD pipeline are exempted
+#   3. Another gap requires cross-referencing two sections: the policy
+#      mandates 90-day key rotation, the audit says keys are rotated
+#      "per schedule" — but the key inventory table shows the TLS
+#      wildcard cert was last rotated 14 months ago
+#   4. A subtle compliance gap: the policy requires "encryption at rest
+#      using AES-256 or equivalent" for all data stores, but the audit
+#      reveals that the search index (Elasticsearch) uses AES-128,
+#      which the audit report itself calls "acceptable" — but it doesn't
+#      meet the policy's stated threshold
+#   5. An apparent gap that's actually not: the policy requires "SOC 2
+#      Type II" but the audit mentions only "SOC 2" — however, further
+#      down, the audit states the Type II report was issued in September
+#
+# Floor: Baseline identifies obvious gaps but may flag false positives
+# (the red herrings) and miss the subtle ones buried in footnotes/tables.
+# Ceiling: Full marks require distinguishing real gaps from apparent ones
+# and citing specific evidence from both documents.
+
+id: kwb-042
+category: gap-analysis
+name: Security policy gap analysis with buried findings
+description: >-
+  Compare a 60-page enterprise security policy (excerpted) against an
+  implementation audit report. Real gaps are buried in footnotes and
+  tables. Apparent gaps turn out to be satisfied when you read carefully.
+  Tests ability to distinguish signal from noise in long compliance docs.
+
+sources:
+  - id: src-policy
+    title: "Vertex Financial — Enterprise Information Security Policy v7.1"
+    tokenCount: 3800
+    content: |
+      ENTERPRISE INFORMATION SECURITY POLICY
+      Vertex Financial Services, Inc.
+      Version 7.1 — Effective: January 1, 2025
+      Classification: INTERNAL — CONTROLLED DISTRIBUTION
+      Approved by: CISO, Board Audit Committee
+
+      1. SCOPE AND APPLICABILITY
+
+      This policy applies to all information systems, data assets, and
+      personnel (including contractors and third parties) that access, process,
+      store, or transmit Vertex Financial data. Compliance is mandatory and
+      subject to annual audit by Internal Audit and periodic assessment by
+      external auditors.
+
+      2. ACCESS CONTROL
+
+      2.1 Identity Management
+      All employees and contractors shall be provisioned unique identifiers
+      in the enterprise identity management system (currently Okta).
+      Shared accounts are prohibited except for documented break-glass
+      procedures approved by the CISO.
+
+      2.2 Multi-Factor Authentication (MFA)
+      MFA shall be required for:
+        (a) All remote access to corporate networks
+        (b) All access to production environments
+        (c) All privileged access (administrator, root, service owner)
+        (d) All access to systems processing PII or financial data
+      No exceptions to the MFA requirement are permitted without written
+      approval from the CISO, documented in the Exception Register, and
+      subject to compensating controls approved by the Security Architecture
+      Review Board (SARB).
+
+      2.3 Privileged Access Management
+      Privileged accounts shall be:
+        (a) Managed through the enterprise PAM solution (currently CyberArk)
+        (b) Subject to session recording for all interactive sessions
+        (c) Rotated every 90 days or upon personnel change, whichever is
+            sooner
+        (d) Reviewed quarterly by the access governance team
+
+      2.4 Service Accounts
+      Service accounts shall be:
+        (a) Registered in the service account inventory with a designated
+            owner
+        (b) Subject to the same authentication requirements as human
+            privileged accounts (see Section 2.2(c))
+        (c) Credentials rotated every 90 days
+        (d) Reviewed semi-annually for continued necessity
+
+      3. CRYPTOGRAPHIC CONTROLS
+
+      3.1 Encryption at Rest
+      All data stores containing Vertex Financial data (including but not
+      limited to databases, file systems, object stores, caches, and search
+      indices) shall implement encryption at rest using AES-256 or an
+      equivalent algorithm approved by the Cryptographic Standards Board.
+
+      3.2 Encryption in Transit
+      All network communications shall use TLS 1.2 or higher. TLS 1.0 and
+      1.1 are prohibited. Certificate pinning is recommended for
+      service-to-service communication.
+
+      3.3 Key Management
+      (a) Cryptographic keys shall be managed through a centralized key
+          management system (currently AWS KMS for cloud workloads,
+          Thales HSM for on-premises).
+      (b) Keys shall be rotated according to the following schedule:
+          - Data encryption keys (DEKs): every 90 days
+          - Key encryption keys (KEKs): every 365 days
+          - TLS certificates: every 90 days or upon compromise
+          - Code signing certificates: every 365 days
+      (c) Key rotation events shall be logged and auditable.
+      (d) Expired or compromised keys shall be revoked within 24 hours.
+
+      4. VULNERABILITY MANAGEMENT
+
+      4.1 Scanning
+      All internet-facing systems shall be scanned for vulnerabilities at
+      least weekly. Internal systems shall be scanned at least monthly.
+      Critical vulnerabilities (CVSS ≥ 9.0) shall be remediated within 72
+      hours. High vulnerabilities (CVSS 7.0-8.9) shall be remediated within
+      14 days.
+
+      4.2 Penetration Testing
+      External penetration testing shall be conducted at least annually by
+      an independent third party. Results shall be reported to the CISO and
+      Board Audit Committee. Critical findings shall be remediated before
+      the next quarterly board meeting.
+
+      4.3 Bug Bounty
+      Vertex Financial shall maintain a managed bug bounty program for
+      internet-facing applications. Bounty payouts are governed by the
+      Bug Bounty Policy (reference: SEC-POL-024).
+
+      5. SECURITY MONITORING AND INCIDENT RESPONSE
+
+      5.1 Security Information and Event Management (SIEM)
+      All production systems shall forward security-relevant logs to the
+      enterprise SIEM (currently Splunk). Log retention: minimum 13 months
+      for security events, 7 years for access logs to regulated systems.
+
+      5.2 Incident Response
+      Security incidents shall be classified and responded to per the
+      Incident Response Plan (reference: SEC-IRP-001). Mean time to detect
+      (MTTD) target: < 4 hours. Mean time to respond (MTTR) target: < 1
+      hour for critical incidents.
+
+      6. THIRD-PARTY AND VENDOR SECURITY
+
+      6.1 Vendor Assessments
+      All third-party vendors with access to Vertex Financial data shall
+      complete a security assessment prior to onboarding and annually
+      thereafter. Vendors processing PII or financial data shall maintain
+      SOC 2 Type II certification.
+
+      6.2 Data Processing Agreements
+      Data processing agreements shall be executed with all vendors that
+      process Vertex Financial data, specifying data handling, breach
+      notification (within 24 hours), and audit rights.
+
+      7. BUSINESS CONTINUITY
+
+      7.1 Disaster Recovery
+      Critical systems shall maintain Recovery Time Objective (RTO) of
+      4 hours and Recovery Point Objective (RPO) of 1 hour. DR plans
+      shall be tested semi-annually.
+
+      7.2 Backup
+      All production data shall be backed up at least daily. Backups shall
+      be encrypted (per Section 3.1) and stored in a geographically
+      separate location. Backup restoration shall be tested quarterly.
+
+      8. COMPLIANCE AND AUDIT
+
+      8.1 Internal Audit
+      The Internal Audit team shall conduct an annual review of compliance
+      with this policy. Findings shall be tracked in the GRC platform
+      (currently ServiceNow GRC) with remediation deadlines.
+
+      8.2 External Certification
+      Vertex Financial shall maintain the following certifications:
+        - SOC 2 Type II (annual)
+        - ISO 27001 (triennial with annual surveillance audits)
+        - PCI DSS (annual, for payment processing systems)
+
+  - id: src-audit
+    title: "Implementation Audit Report — Q4 2024"
+    tokenCount: 3400
+    content: |
+      INFORMATION SECURITY IMPLEMENTATION AUDIT
+      Vertex Financial Services, Inc.
+      Audit Period: October 1 — December 15, 2024
+      Prepared by: Internal Audit — Information Security Practice
+      Report Date: January 10, 2025
+      Classification: CONFIDENTIAL
+
+      EXECUTIVE SUMMARY
+
+      This report presents the findings of the Q4 2024 information security
+      implementation audit conducted against the Enterprise Information
+      Security Policy v7.1. The audit covered 14 control domains across
+      production infrastructure, corporate systems, and third-party
+      integrations. Overall compliance posture: SATISFACTORY WITH FINDINGS.
+
+      METHODOLOGY
+
+      The audit team reviewed system configurations, interviewed control
+      owners, sampled access records (N=240), tested encryption
+      configurations across all production data stores (N=31), and reviewed
+      key management logs. Testing was performed on a sample basis; results
+      may not capture all non-conformities.
+
+      DETAILED FINDINGS
+
+      1. ACCESS CONTROL
+
+      1.1 Identity Management — COMPLIANT
+      All 1,247 active accounts map to unique individuals. No shared
+      accounts were identified. Break-glass accounts (N=3) are documented
+      and approved by the CISO.
+
+      1.2 Multi-Factor Authentication — COMPLIANT WITH EXCEPTION
+      MFA is enforced for all human users across remote access, production,
+      and privileged access paths. Authentication events sampled (N=240)
+      showed 100% MFA completion for interactive sessions.
+
+      Footnote 4: Eighteen (18) service accounts used by the CI/CD pipeline
+      (Jenkins, ArgoCD, Terraform) authenticate to production systems using
+      long-lived API tokens without MFA. These accounts are registered in
+      the service account inventory and their credentials are stored in
+      HashiCorp Vault. The DevOps team states that MFA is "not technically
+      feasible" for automated pipeline accounts. This exception has not been
+      reviewed by the SARB and is not documented in the Exception Register.
+      See Finding F-2024-017.
+
+      1.3 Privileged Access Management — COMPLIANT
+      CyberArk manages 89 privileged accounts. Session recording is active
+      for all interactive sessions. Quarterly access reviews are conducted
+      on schedule (last review: November 2024).
+
+      2. CRYPTOGRAPHIC CONTROLS
+
+      2.1 Encryption at Rest — COMPLIANT WITH EXCEPTION
+
+      Data Store Inventory (31 stores audited):
+
+      | Store              | Type          | Encryption  | Algorithm | Status    |
+      |--------------------|---------------|-------------|-----------|-----------|
+      | Primary DB         | PostgreSQL    | Enabled     | AES-256   | Compliant |
+      | Replica DB         | PostgreSQL    | Enabled     | AES-256   | Compliant |
+      | Object Storage     | S3            | Enabled     | AES-256   | Compliant |
+      | Document Store     | MongoDB       | Enabled     | AES-256   | Compliant |
+      | Cache              | Redis         | Enabled     | AES-256   | Compliant |
+      | Message Queue      | Kafka         | Enabled     | AES-256   | Compliant |
+      | Search Index       | Elasticsearch | Enabled     | AES-128   | Acceptable|
+      | Analytics DW       | Redshift      | Enabled     | AES-256   | Compliant |
+      | Log Archive        | S3 Glacier    | Enabled     | AES-256   | Compliant |
+      | Config Store       | Consul        | Enabled     | AES-256   | Compliant |
+      | ... (21 additional)| Various       | Enabled     | AES-256   | Compliant |
+
+      Note: The Elasticsearch cluster uses AES-128 encryption at rest. The
+      Elasticsearch team reports that AES-256 is not supported by their
+      current deployment configuration (v7.17 on self-managed nodes).
+      AES-128 provides adequate cryptographic strength for the data
+      classification level (INTERNAL). This has been assessed as acceptable
+      risk by the platform engineering team. No formal exception has been
+      filed with the Cryptographic Standards Board.
+
+      2.2 Encryption in Transit — COMPLIANT
+      All sampled connections (N=150) use TLS 1.2 or 1.3. No instances of
+      TLS 1.0 or 1.1 were detected.
+
+      2.3 Key Management — COMPLIANT WITH EXCEPTION
+
+      Key Inventory and Rotation Status:
+
+      | Key Type            | Managed By | Last Rotated   | Schedule  | Status      |
+      |---------------------|------------|----------------|-----------|-------------|
+      | DEK — Primary DB    | AWS KMS    | Nov 12, 2024   | 90 days   | Compliant   |
+      | DEK — MongoDB       | AWS KMS    | Oct 28, 2024   | 90 days   | Compliant   |
+      | DEK — S3            | AWS KMS    | Dec 1, 2024    | 90 days   | Compliant   |
+      | DEK — Redis         | AWS KMS    | Nov 5, 2024    | 90 days   | Compliant   |
+      | KEK — Master        | Thales HSM | Mar 15, 2024   | 365 days  | Compliant   |
+      | TLS — API Gateway   | DigiCert   | Oct 20, 2024   | 90 days   | Compliant   |
+      | TLS — *.vertex.io   | DigiCert   | Nov 3, 2023    | 90 days   | OVERDUE     |
+      | Code Signing        | Internal   | Aug 22, 2024   | 365 days  | Compliant   |
+      | SAML Signing        | Okta       | Sep 14, 2024   | 365 days  | Compliant   |
+
+      Finding F-2024-019: The TLS wildcard certificate for *.vertex.io was
+      last rotated on November 3, 2023 — 14 months ago, exceeding the 90-day
+      rotation requirement by 11 months. The certificate is valid until
+      November 2025 (2-year certificate from DigiCert), but policy requires
+      rotation regardless of certificate validity. The infrastructure team
+      states the wildcard cert is used for internal service-to-service
+      communication and rotation was "deprioritized due to the microservices
+      migration." Severity: HIGH.
+
+      3. VULNERABILITY MANAGEMENT
+
+      3.1 Scanning — COMPLIANT
+      Weekly external scans and monthly internal scans are running on
+      schedule. CVSS ≥ 9.0 remediation SLA was met for all 4 critical
+      vulnerabilities identified in the period (average remediation: 48
+      hours). High vulnerabilities: 12 identified, 11 remediated within 14
+      days, 1 remediated at day 16 (documented exception approved by CISO).
+
+      3.2 Penetration Testing — EXCEEDS REQUIREMENTS
+      In addition to the required annual third-party penetration test
+      (conducted by CrowdStrike in September 2024), the Red Team conducts
+      quarterly adversarial exercises. The most recent exercise (November
+      2024) resulted in 2 findings, both remediated within the reporting
+      period. Annual third-party pen test report was presented to the Board
+      Audit Committee in October 2024.
+
+      3.3 Bug Bounty — COMPLIANT
+      HackerOne managed program active. 47 reports received in the audit
+      period; 3 valid findings (all medium severity), resolved within SLA.
+
+      4. SECURITY MONITORING
+
+      4.1 SIEM — COMPLIANT
+      All 31 production systems forward logs to Splunk. Retention: 13
+      months for security events (verified), 7 years for regulated system
+      access logs (verified for 3 of 4 regulated systems; the fourth —
+      the payment processing gateway — retains 5 years due to a storage
+      migration in progress; see Finding F-2024-022).
+
+      4.2 Incident Response — COMPLIANT
+      Three incidents in the audit period. MTTD ranged from 12 minutes to
+      3.2 hours (all within 4-hour target). MTTR for the one critical
+      incident: 38 minutes (within 1-hour target).
+
+      5. THIRD-PARTY AND VENDOR SECURITY
+
+      5.1 Vendor Assessments — COMPLIANT
+      All 23 vendors with data access completed annual assessments.
+      Assessment completion rate: 100%.
+
+      5.2 Vendor Certifications — COMPLIANT
+      All vendors processing PII or financial data (N=8) maintain current
+      SOC 2 certification. Type II reports were obtained and reviewed for
+      all 8 vendors. Most recent report dates range from March 2024 to
+      September 2024.
+
+      6. BUSINESS CONTINUITY
+
+      6.1 Disaster Recovery — COMPLIANT
+      DR test conducted in November 2024. RTO achieved: 2.5 hours (target:
+      4 hours). RPO achieved: 22 minutes (target: 1 hour). Next test
+      scheduled: May 2025.
+
+      6.2 Backup — COMPLIANT
+      Daily backups confirmed for all production systems. Quarterly
+      restoration tests: all passed. Backups encrypted with AES-256 and
+      replicated to us-west-2.
+
+      7. CERTIFICATIONS
+
+      7.1 SOC 2 — CURRENT
+      SOC 2 Type II report issued September 2024 by Deloitte. No
+      exceptions noted. Next audit period: January — June 2025.
+
+      7.2 ISO 27001 — CURRENT
+      Surveillance audit completed October 2024. No non-conformities.
+      Recertification due: October 2026.
+
+      7.3 PCI DSS — CURRENT
+      Annual assessment completed August 2024. Compliant at Level 1.
+
+      SUMMARY OF FINDINGS
+
+      | Finding      | Severity | Domain            | Status      |
+      |--------------|----------|-------------------|-------------|
+      | F-2024-017   | HIGH     | Access Control    | Open        |
+      | F-2024-019   | HIGH     | Key Management    | Open        |
+      | F-2024-022   | MEDIUM   | Log Retention     | In Progress |
+
+      CONCLUSION
+
+      Vertex Financial maintains a strong security posture with effective
+      controls across most domains. Three findings require management
+      attention, two at HIGH severity. The overall compliance posture is
+      assessed as SATISFACTORY WITH FINDINGS.
+
+question: |
+  Compare the Enterprise Information Security Policy v7.1 against the
+  Q4 2024 Implementation Audit Report. Identify:
+
+  1. Genuine gaps where the implementation does not meet policy requirements
+  2. Any areas where the audit report's own assessment may understate a
+     finding (i.e., the audit says "acceptable" but the policy is stricter)
+  3. Whether the penetration testing requirement is met (the policy says
+     "at least annually by an independent third party")
+
+  For each gap you identify, cite the specific policy section and audit
+  finding. Do NOT flag areas where the implementation meets or exceeds the
+  policy requirement.
+
+referenceFacts:
+  - id: fact-1
+    description: >-
+      CI/CD service accounts lack MFA — policy Section 2.2(c) and 2.4(b)
+      require it, no SARB exception filed
+    canonical: "service account"
+    pattern: "(?:service account|CI.?CD|Jenkins|ArgoCD|Terraform).*(?:MFA|multi.factor|exception|SARB|F.2024.017)|(?:MFA|multi.factor).*(?:service account|CI.?CD|pipeline)"
+    weight: 3
+  - id: fact-2
+    description: >-
+      Elasticsearch uses AES-128, not the policy-required AES-256. Audit
+      calls it "acceptable" but policy Section 3.1 requires AES-256 with
+      no discretionary exception — needs Cryptographic Standards Board
+      approval.
+    canonical: "AES-128"
+    pattern: "(?:AES.128|Elasticsearch).*(?:policy|AES.256|gap|non.compliant|exception|Crypto)|(?:policy|Section 3\\.1).*(?:AES.128|Elasticsearch)"
+    weight: 3
+  - id: fact-3
+    description: >-
+      TLS wildcard cert *.vertex.io last rotated 14 months ago, exceeding
+      90-day policy requirement (Finding F-2024-019)
+    canonical: "wildcard"
+    pattern: "(?:wildcard|\\*\\.vertex|TLS cert).*(?:14 month|90.day|overdue|rotat|F.2024.019)|(?:14 month|overdue|F.2024.019).*(?:wildcard|\\*\\.vertex|TLS)"
+    weight: 2
+  - id: fact-4
+    description: >-
+      Penetration testing EXCEEDS the policy requirement — audit confirms
+      annual third-party test plus quarterly red team. This is NOT a gap.
+    canonical: "exceeds"
+    pattern: "(?:penetration|pen test|red team).*(?:exceed|meet|compli|satisf|not.*gap)|(?:not.*gap|exceed|compli).*(?:penetration|pen test)"
+    weight: 2
+  - id: fact-5
+    description: >-
+      Log retention for payment processing gateway is 5 years vs required
+      7 years (Finding F-2024-022)
+    canonical: "log retention"
+    pattern: "(?:log retention|payment.*gateway|5 year|F.2024.022).*(?:7 year|gap|non.compliant|finding)|(?:7 year|gap).*(?:log|payment|5 year)"
+    weight: 2
+  - id: fact-6
+    description: >-
+      Correctly identifies that SOC 2 Type II IS maintained (audit Section
+      7.1 confirms Type II report) — this is NOT a gap despite the audit
+      executive summary only saying "SOC 2"
+    canonical: "Type II"
+    pattern: "(?:SOC 2|Type II).*(?:compliant|current|maintained|confirmed|not.*gap|meet)|(?:not.*gap|meet|compli).*(?:SOC 2 Type II)"
+    weight: 1
+
+rubricWeights:
+  faithfulness: 0.40
+  completeness: 0.30
+  coherence: 0.10
+  actionability: 0.20
+
+passFail:
+  minFactualScore: 0.55
+  requiredFactIds: [fact-1, fact-2, fact-4]
+  minJudgeComposite: 0.5
+  description: >-
+    Must identify the two genuine gaps that the audit understates: CI/CD
+    service accounts without MFA (footnote 4) and Elasticsearch AES-128
+    vs policy-required AES-256 (audit calls it "acceptable" but policy
+    has no discretionary exception). Must also correctly recognize that
+    penetration testing exceeds requirements (not flag it as a gap).
+    Flagging false positives (pen testing, SOC 2) is a faithfulness
+    failure.
+
+expectedSkills: []

@@ -1,0 +1,53 @@
+# LIM-004 - limits
+#
+# Tests the "never" policy. The researcher skill is configured with
+# policy: never, which filters it from the tool catalog entirely.
+# The agent must complete without it.
+
+id: lim-004
+category: limits
+name: Never policy — skill filtered from catalog
+description: >-
+  The researcher skill has a "never" policy. It should not appear in the
+  agent's capabilities and should not be invoked.
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 20
+    content: |
+      No source documents provided. Use your tools to find the answer.
+
+question: |
+  Research the current market cap of Apple and provide a detailed analysis.
+
+referenceFacts:
+  - id: fact-1
+    description: Mentions Apple
+    canonical: "Apple"
+    weight: 1
+
+passFail:
+  description: >-
+    The researcher skill must not be invoked. The agent should use direct
+    tool calls or answer from its knowledge.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a financial research assistant. Use available skills and tools
+    to research the question.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: never
+
+graphAssertions:
+  - type: task_absent
+    match:
+      subagentName: researcher
+    description: "Researcher skill must not be invoked with never policy"
+
+  - type: run_status
+    status: completed
+    description: "Run should complete without the blocked skill"

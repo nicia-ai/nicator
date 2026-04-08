@@ -1,0 +1,63 @@
+# DSP-006 - dispatch
+#
+# Tests that the agent uses the bash tool when asked to perform file
+# manipulation. The prompt explicitly requests creating and processing
+# a file, which should trigger bash tool dispatch rather than trying
+# to answer from knowledge alone.
+
+id: dsp-006
+category: dispatch
+name: Bash tool — file creation and processing
+description: >-
+  A task requiring the agent to create a file and process it with shell
+  commands. Tests whether the agent dispatches to the bash tool when the
+  prompt requires filesystem interaction.
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 20
+    content: |
+      No external sources needed. Use the bash tool to complete this task.
+
+question: |
+  Using the bash tool, create a file called "numbers.txt" containing the
+  numbers 1 through 10 (one per line), then use shell commands to compute
+  the sum of all numbers in the file. Report the final sum.
+
+referenceFacts:
+  - id: fact-1
+    description: The sum of 1 through 10 is 55
+    canonical: "55"
+    pattern: "55"
+    weight: 1
+
+passFail:
+  description: >-
+    Must use the bash tool to create and process a file. The answer must
+    include 55 (the sum of 1-10).
+
+definitionOverrides:
+  systemPrompt: >-
+    You are an assistant with access to a virtual bash shell. Use the bash
+    tool for any task that involves files, data processing, or shell commands.
+    The bash environment includes standard Unix tools: cat, grep, sed, awk,
+    sort, uniq, wc, jq, and more. Files persist across bash calls.
+
+graphAssertions:
+  - type: task_exists
+    match:
+      role: tool
+      operationType: tool_call
+    description: "Agent must call the bash tool"
+
+  - type: task_count
+    match:
+      role: tool
+      operationType: tool_call
+    min: 1
+    description: "At least one bash tool dispatch"
+
+  - type: run_status
+    status: completed
+    description: "Run should complete successfully"

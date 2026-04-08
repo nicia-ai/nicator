@@ -1,0 +1,47 @@
+# LIM-003 - limits
+#
+# Tests maxTokensPerRun limit. With an extremely low budget (1000 tokens),
+# the first LLM call's token usage will exceed the limit, causing the
+# check on the next iteration to fail.
+
+id: lim-003
+category: limits
+name: maxTokensPerRun limit hit
+description: >-
+  Force the maxTokensPerRun limit with an extremely low budget (1000 tokens).
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 20
+    content: |
+      No source documents provided. Use your tools to find the answer.
+
+question: |
+  What is the population of Tokyo? Search the web for the answer.
+
+referenceFacts: []
+
+passFail:
+  description: >-
+    Run must fail with limit_exceeded due to token budget exhaustion.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a research assistant. Always search the web before answering.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+  limits:
+    maxTokensPerRun: 1000
+
+graphAssertions:
+  - type: run_status
+    status: failed
+    description: "Run must fail due to token limit"
+
+  - type: run_error
+    pattern: "max tokens per run"
+    description: "Error must indicate token limit exceeded"

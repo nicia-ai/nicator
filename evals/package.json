@@ -1,0 +1,21 @@
+{
+  "name": "evals",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.85.0",
+    "@nicator/core": "workspace:*",
+    "@nicator/harness": "workspace:*",
+    "@nicator/tool-web-fetch": "workspace:*",
+    "@nicator/tool-web-search": "workspace:*",
+    "@nicator/workspace": "workspace:*",
+    "dotenv": "^17.4.1",
+    "yaml": "^2.8.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.2"
+  }
+}

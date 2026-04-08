@@ -1,0 +1,50 @@
+# LIM-002 - limits
+#
+# Tests maxOperationsPerTask limit on the root task. With the limit set to 1
+# and no skills available, the first direct tool call succeeds but the second
+# triggers the operation limit.
+
+id: lim-002
+category: limits
+name: maxOperationsPerTask limit hit
+description: >-
+  Force the maxOperationsPerTask limit by setting it to 1 with no skills.
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 20
+    content: |
+      No source documents provided. Use your tools to find the answer.
+
+question: |
+  First search for the population of France, then search for the population
+  of Germany. Report both figures.
+
+referenceFacts: []
+
+passFail:
+  description: >-
+    Run must fail with limit_exceeded after the first tool operation.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a research assistant. Use the web-search tool directly for each
+    question. Do not use skills. Search for each country separately.
+  skills: []
+  limits:
+    maxOperationsPerTask: 1
+
+graphAssertions:
+  - type: run_status
+    status: failed
+    description: "Run must fail due to operation limit"
+
+  - type: run_error
+    pattern: "max operations per task"
+    description: "Error must indicate operation limit exceeded"
+
+  - type: operation_count
+    task: {}
+    max: 1
+    description: "Root task must have at most 1 operation"

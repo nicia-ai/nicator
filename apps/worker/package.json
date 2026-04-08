@@ -1,0 +1,33 @@
+{
+  "name": "@nicator/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format:check": "prettier --check --ignore-path ../../.prettierignore .",
+    "fix": "eslint --fix . && prettier --write --ignore-path ../../.prettierignore ."
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.7.6",
+    "@nicator/core": "workspace:*",
+    "@nicator/harness": "workspace:*",
+    "@nicator/hitl": "workspace:*",
+    "@nicator/sdk": "workspace:*",
+    "@nicator/tool-web-fetch": "workspace:*",
+    "@nicator/tool-web-search": "workspace:*",
+    "@nicator/workspace": "workspace:*",
+    "@nicia-ai/typegraph": "^0.19.0",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.12.12",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260405.1",
+    "wrangler": "^4.81.0"
+  }
+}

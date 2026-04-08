@@ -1,0 +1,100 @@
+# CTX-002 · context
+#
+# Same scenario as CTX-001 but with contextWeights override that zeros out
+# the downstream dimension. This proves:
+#   1. The contextWeights override mechanism works end-to-end
+#   2. The downstream weight is load-bearing — without it, early tasks
+#      with consumed artifacts may be demoted to metadata tier
+#
+# This is expected to score LOWER than CTX-001 on faithfulness/completeness
+# because the model loses access to early research findings. The eval
+# doesn't fail on low scores — it tests that the override is applied
+# and that weight changes produce measurable differences.
+
+id: ctx-002
+category: context
+name: Downstream weight zeroed — degraded context quality
+description: >-
+  Identical to CTX-001 but with downstream weight set to 0 and recency
+  boosted to 0.65. Early research tasks whose artifacts are consumed by
+  the summarizer will score lower, potentially landing in metadata tier.
+  Tests that contextWeights overrides flow through to scoring.
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 20
+    content: |
+      No source documents provided. Use your tools to find the answer.
+
+question: |
+  First, research the environmental impact of lithium mining for EV batteries.
+  Then, research the economic growth projections for the EV battery market.
+  Then, research recycling technologies for lithium-ion batteries.
+  Finally, synthesize all three research areas into a comprehensive analysis
+  that explicitly references findings from each research step.
+
+referenceFacts:
+  - id: fact-1
+    description: References lithium mining environmental impact from early research
+    canonical: "lithium mining"
+    pattern: "lithium.*mining|mining.*lithium"
+    weight: 1
+  - id: fact-2
+    description: References EV battery market projections
+    canonical: "market"
+    pattern: "market.*growth|market.*project|billion"
+    weight: 1
+  - id: fact-3
+    description: References recycling technologies
+    canonical: "recycling"
+    pattern: "recycl|reclaim|recover"
+    weight: 1
+
+passFail:
+  description: >-
+    This task tests that the contextWeights override is applied, not that
+    the output is high quality. The run should complete, and the graph
+    should show the override affected which tasks were preserved. Compare
+    factual scores against CTX-001 to measure the impact of the
+    downstream weight.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a research assistant. Break complex questions into separate
+    research tasks. Use the researcher skill for each sub-topic, then
+    use the summarizer skill to synthesize findings. Do not skip steps.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+    - name: summarizer
+      version: "1.0.0"
+      policy:
+        type: always
+  limits:
+    maxTasksPerRun: 25
+    maxTokensPerRun: 500000
+    contextWeights:
+      recency: 0.65
+      downstream: 0.0
+      artifactType: 0.15
+      retry: 0.1
+      skillType: 0.1
+
+graphAssertions:
+  - type: run_status
+    status: completed
+    description: "Run should complete even with degraded context"
+
+  - type: task_count
+    match:
+      subagentName: researcher
+    min: 3
+    description: "At least 3 researcher activations"
+
+  - type: task_exists
+    match:
+      subagentName: summarizer
+    description: "Summarizer should still be activated"

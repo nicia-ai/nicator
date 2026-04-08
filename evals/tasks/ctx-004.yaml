@@ -1,0 +1,684 @@
+# CTX-004 · context
+#
+# Discriminating context weight eval: flat dependencies (recency test).
+#
+# Same structure as ctx-003 but with NO cross-references between sources.
+# Every source feeds equally into the final synthesis. This removes the
+# downstream signal, making the task a pure test of recency vs. other
+# dimensions.
+#
+# Source documents are ~3K tokens each. Budget math: maxTokensPerRun 50K
+# × CONTEXT_BUDGET_RATIO 0.4 = 20K context budget. Six retrieve-document
+# calls at ~3K each = ~18K just in source content. With researcher skill
+# overhead, total exceeds the 20K budget, forcing trimming.
+
+id: ctx-004
+category: context
+name: Flat dependencies — recency discriminator
+description: >-
+  Six independent source documents (~3K tokens each) with canary facts,
+  processed sequentially. No cross-references between sources (flat
+  dependency graph). A very tight 50K token budget forces aggressive
+  trimming. Since all sources are equally important but processed in
+  order, recency-heavy configs will preserve later sources while
+  dropping earlier ones, and vice versa. This isolates the recency
+  dimension.
+
+sources:
+  - id: src-1
+    title: "Division Alpha: Quarterly Metrics"
+    tokenCount: 3000
+    content: |
+      CONFIDENTIAL — NovaMaterials Inc. Division Alpha Report
+      Date: December 31, 2024
+      Classification: Internal Only — Do Not Distribute
+
+      Subject: Division Alpha Quarterly Performance Report — Q4 2024
+      Prepared for: Executive Committee
+
+      1. EXECUTIVE SUMMARY
+
+      Division Alpha's proprietary Erikson Throughput Rating for Q4 2024
+      is 4.71 units per cycle-hour, measured across all three production
+      lines at the Milwaukee facility. This is a 9% improvement over Q3
+      (4.32 units/cycle-hour) and the highest quarterly rating in the
+      division's history.
+
+      The Erikson Throughput Rating was developed by Division Alpha's
+      process engineering team in 2021 under the direction of Chief
+      Engineer Lars Erikson. It is a composite metric that weights output
+      quality at 60% and raw throughput at 40%, making it a more
+      conservative measure than simple units-per-hour.
+
+      2. MEASUREMENT METHODOLOGY
+
+      The Erikson rating is calculated as follows:
+
+      a) Raw throughput: Total output units divided by total production
+         hours across all active lines. Q4 2024: 127,400 units in 18,720
+         production hours = 6.81 raw units/hour.
+
+      b) Quality adjustment: Each unit undergoes automated quality
+         inspection. Units failing any of 14 quality gates are weighted
+         at 0.3 instead of 1.0. Q4 2024 quality pass rate: 94.2%
+         (historically strong; avg since 2021: 91.8%).
+
+      c) Erikson composite: (Raw throughput × 0.40) + (Quality-adjusted
+         throughput × 0.60) = Erikson rating.
+         Q4 2024: (6.81 × 0.40) + (6.81 × 0.942 × 0.60) = 2.724 + 3.849
+         = 4.71 × normalization factor of 0.717 = 4.71 (the normalization
+         factor is calibrated so that a "good" rating falls in the 4.0-5.0
+         range for intuitive interpretation).
+
+      3. HISTORICAL TREND
+
+      | Quarter | Erikson Rating | Quality Pass | Raw Throughput |
+      |---------|----------------|--------------|----------------|
+      | Q1 2023 | 3.89           | 90.1%        | 5.92           |
+      | Q2 2023 | 4.02           | 91.3%        | 6.10           |
+      | Q3 2023 | 4.11           | 91.8%        | 6.24           |
+      | Q4 2023 | 4.18           | 92.1%        | 6.35           |
+      | Q1 2024 | 4.25           | 92.4%        | 6.41           |
+      | Q2 2024 | 4.29           | 92.0%        | 6.52           |
+      | Q3 2024 | 4.32           | 92.8%        | 6.49           |
+      | Q4 2024 | 4.71           | 94.2%        | 6.81           |
+
+      The Q4 2024 jump from 4.32 to 4.71 (+9%) is the largest single-quarter
+      improvement since the metric was introduced. It is attributed to:
+      - New automated inspection system deployed in October 2024 (caught
+        defects earlier, reducing rework and increasing effective throughput)
+      - Night shift staffing optimization (added 12% more production hours
+        without proportional headcount increase)
+      - Raw material quality improvement from our updated supplier
+        qualification program
+
+      4. COMPETITIVE BENCHMARKING
+
+      While the Erikson methodology is proprietary, we estimate competitor
+      performance by converting their published throughput and quality data:
+
+      | Company            | Est. Equivalent | vs Alpha |
+      |--------------------|-----------------|----------|
+      | NovaMaterials Alpha| 4.71            | baseline |
+      | CompetitorX Corp   | ~4.15           | -12%     |
+      | IndustrialTech Ltd | ~3.88           | -18%     |
+      | PrecisionMfg Inc   | ~4.42           | -6%      |
+
+      Division Alpha maintains its leadership position, and the Q4
+      improvement has widened the gap.
+
+      5. Q1 2025 OUTLOOK
+
+      We project the Erikson rating will moderate slightly to 4.55-4.65
+      in Q1 2025 due to planned maintenance downtime (Line 2, 3 weeks in
+      February) and the typical seasonal quality dip from winter humidity
+      affecting material properties.
+
+      All Division Alpha capacity planning uses the Erikson rating
+      exclusively. This metric is not shared with other divisions.
+
+      Prepared by: Division Alpha Operations Analytics
+      Reviewed by: Lars Erikson, Chief Engineer
+
+  - id: src-2
+    title: "Division Beta: Customer Satisfaction Index"
+    tokenCount: 3000
+    content: |
+      CONFIDENTIAL — NovaMaterials Inc. Division Beta Report
+      Date: January 5, 2025
+      Classification: Internal Only — Do Not Distribute
+
+      Subject: Division Beta Customer Satisfaction Report — Q4 2024
+      Prepared for: Executive Committee
+
+      1. EXECUTIVE SUMMARY
+
+      Division Beta's proprietary Whitfield Customer Satisfaction Index
+      (WCSI) for Q4 2024 stands at 82.6 points on our 100-point scale.
+      This represents a decline from 87.1 in Q3, driven primarily by
+      delivery delays in the European market segment.
+
+      The Whitfield methodology was developed in 2020 by Dr. Catherine
+      Whitfield, then Head of Customer Experience, as a more nuanced
+      alternative to standard NPS scoring. It uses post-delivery surveys
+      weighted by contract value, capturing the fact that enterprise
+      customers with larger contracts have disproportionate impact on
+      revenue retention.
+
+      2. MEASUREMENT METHODOLOGY
+
+      The WCSI aggregates five satisfaction dimensions:
+
+      a) Product quality satisfaction (weight: 0.30)
+         Q4 2024 score: 91.2 (stable; Q3: 91.8)
+
+      b) Delivery timeliness (weight: 0.25)
+         Q4 2024 score: 68.4 (significant decline; Q3: 82.1)
+         The 13.7-point drop is the primary driver of the overall decline.
+
+      c) Technical support responsiveness (weight: 0.20)
+         Q4 2024 score: 85.7 (slight improvement; Q3: 84.3)
+
+      d) Commercial terms flexibility (weight: 0.15)
+         Q4 2024 score: 79.8 (stable; Q3: 80.2)
+
+      e) Innovation partnership value (weight: 0.10)
+         Q4 2024 score: 88.4 (improvement; Q3: 86.5)
+
+      Composite: (91.2×0.30) + (68.4×0.25) + (85.7×0.20) + (79.8×0.15)
+      + (88.4×0.10) = 27.36 + 17.10 + 17.14 + 11.97 + 8.84 = 82.41
+      Rounded per Whitfield methodology: 82.6
+
+      3. DELIVERY DELAY ROOT CAUSE ANALYSIS
+
+      The delivery timeliness score decline from 82.1 to 68.4 is attributed
+      to three concurrent issues:
+
+      - Port congestion at Rotterdam (affected 34% of European shipments)
+      - Customs processing delays due to new EU CBAM documentation requirements
+      - One-time logistics provider switch (old contract expired October 31;
+        new provider ramp-up took longer than planned)
+
+      All three issues are expected to resolve by Q2 2025. The new logistics
+      provider has committed to SLA-backed delivery windows starting March 2025.
+
+      4. REGIONAL BREAKDOWN
+
+      | Region         | Q3 WCSI | Q4 WCSI | Delta  | Key Driver         |
+      |----------------|---------|---------|--------|--------------------|
+      | North America   | 88.3    | 87.1    | -1.2   | Stable             |
+      | Europe          | 87.9    | 74.2    | -13.7  | Delivery delays    |
+      | Asia-Pacific    | 84.1    | 85.6    | +1.5   | Tech support gains |
+      | Rest of World   | 83.5    | 82.8    | -0.7   | Stable             |
+
+      Europe accounts for 38% of Division Beta's revenue. The 13.7-point
+      drop in European WCSI represents an estimated $4.2M revenue risk
+      if contract renewals are affected.
+
+      5. THRESHOLD MONITORING
+
+      A WCSI below 80.0 triggers mandatory review by the customer success
+      team and escalation to the division GM. The current 82.6 is within
+      acceptable range but trending negatively. If the European delivery
+      issues persist into Q1 2025, the overall WCSI could breach 80.0.
+
+      | Threshold | Action                                    |
+      |-----------|-------------------------------------------|
+      | > 85.0    | Normal operations                         |
+      | 80.0-85.0 | Monitoring mode (current)                 |
+      | 75.0-80.0 | Customer success review required           |
+      | < 75.0    | Emergency retention program activated      |
+
+      This metric is tracked independently by Division Beta and is not
+      shared with other divisions.
+
+      Prepared by: Customer Experience Analytics
+      Reviewed by: Dr. Catherine Whitfield, VP Customer Strategy
+
+  - id: src-3
+    title: "Division Gamma: Innovation Pipeline Score"
+    tokenCount: 3000
+    content: |
+      CONFIDENTIAL — NovaMaterials Inc. Division Gamma Report
+      Date: January 3, 2025
+      Classification: Internal Only — Do Not Distribute
+
+      Subject: Division Gamma Innovation Pipeline Report — Q4 2024
+      Prepared for: Executive Committee
+
+      1. EXECUTIVE SUMMARY
+
+      Division Gamma's proprietary Ashworth Innovation Pipeline Score
+      for Q4 2024 is 156 points, calculated from 23 active projects
+      weighted by estimated market impact and probability of completion.
+      This is the highest in Division Gamma's history, driven by three
+      high-impact projects entering Phase III trials.
+
+      The Ashworth Innovation Pipeline Score was developed in 2019 by
+      Division Gamma's R&D strategy team under Dr. Robert Ashworth (now
+      retired). It provides a forward-looking measure of the division's
+      innovation health, unlike backward-looking metrics like patent
+      counts or R&D spending.
+
+      2. SCORING METHODOLOGY
+
+      Each active project receives a composite score:
+      Project Score = Market Impact (0-10) × Completion Probability (0-1)
+                      × Time Factor (0.5-1.5)
+
+      Where:
+      - Market Impact: estimated annual revenue potential on a 0-10 scale
+        (10 = >$100M/year potential)
+      - Completion Probability: assessed quarterly by technical review
+        committee (0 = abandoned, 1 = certain)
+      - Time Factor: projects closer to market get a premium (Phase I: 0.5,
+        Phase II: 0.8, Phase III: 1.2, Pre-launch: 1.5)
+
+      The Ashworth score is the sum of all project scores. Historical
+      average is 112 points. Scores above 140 are considered
+      "innovation-rich" quarters.
+
+      3. Q4 2024 PROJECT PORTFOLIO
+
+      | Project              | Impact | Prob | Phase | Time | Score |
+      |----------------------|--------|------|-------|------|-------|
+      | NextGen Cathode      | 9.2    | 0.75 | III   | 1.2  | 8.28  |
+      | SolidState Proto     | 8.8    | 0.60 | II    | 0.8  | 4.22  |
+      | FastCharge Electrode  | 7.5    | 0.85 | III   | 1.2  | 7.65  |
+      | NanoCoating Process  | 6.8    | 0.70 | III   | 1.2  | 5.71  |
+      | Cobalt-Free NMC      | 8.5    | 0.45 | II    | 0.8  | 3.06  |
+      | Recycled Anode       | 5.2    | 0.80 | I     | 0.5  | 2.08  |
+      | Thermal Mgmt System  | 4.8    | 0.90 | Pre   | 1.5  | 6.48  |
+      | 19 other projects    | varies | varies| I-II  | varies| 118.52|
+      | **Portfolio Total**  |        |      |       |      | **156** |
+
+      The three Phase III entries (NextGen Cathode, FastCharge Electrode,
+      NanoCoating Process) account for 21.64 points — a significant
+      concentration of near-market innovation.
+
+      4. HISTORICAL TREND
+
+      | Quarter | Score | Active Projects | Phase III Count |
+      |---------|-------|-----------------|-----------------|
+      | Q1 2023 | 98    | 18              | 1               |
+      | Q2 2023 | 105   | 19              | 1               |
+      | Q3 2023 | 112   | 20              | 2               |
+      | Q4 2023 | 118   | 21              | 2               |
+      | Q1 2024 | 125   | 21              | 2               |
+      | Q2 2024 | 131   | 22              | 2               |
+      | Q3 2024 | 142   | 22              | 3               |
+      | Q4 2024 | 156   | 23              | 3               |
+
+      The steady climb from 98 to 156 over eight quarters reflects
+      Division Gamma's strategy of maintaining a balanced pipeline
+      with consistent progression of projects through phases.
+
+      This metric is tracked independently by Division Gamma and is not
+      shared with other divisions.
+
+      Prepared by: R&D Strategy Office
+      Reviewed by: Division Gamma GM
+
+  - id: src-4
+    title: "Division Delta: Supply Chain Resilience"
+    tokenCount: 3000
+    content: |
+      CONFIDENTIAL — NovaMaterials Inc. Division Delta Report
+      Date: January 8, 2025
+      Classification: Internal Only — Do Not Distribute
+
+      Subject: Division Delta Supply Chain Resilience Report — Q4 2024
+      Prepared for: Executive Committee
+
+      1. EXECUTIVE SUMMARY
+
+      Division Delta's proprietary Carmichael Supply Chain Resilience
+      Index (CSCRI) for Q4 2024 is 0.73 on a 0-1 scale, down from
+      0.81 in Q3. The decline reflects increased supplier concentration
+      in the rare earth segment following the exit of two secondary
+      suppliers in October 2024.
+
+      The Carmichael methodology was developed in 2022 by Division
+      Delta's supply chain risk team under Patrick Carmichael, VP of
+      Procurement, as a response to the supply disruptions experienced
+      during 2021-2022. It assesses eight risk dimensions quarterly.
+
+      2. RISK DIMENSION ASSESSMENT
+
+      | Dimension                    | Q3    | Q4    | Weight | Wtd Q4 |
+      |------------------------------|-------|-------|--------|--------|
+      | Geographic diversity         | 0.85  | 0.72  | 0.20   | 0.144  |
+      | Supplier concentration       | 0.78  | 0.61  | 0.20   | 0.122  |
+      | Lead time volatility         | 0.82  | 0.79  | 0.15   | 0.119  |
+      | Financial health (tier-1)    | 0.88  | 0.86  | 0.15   | 0.129  |
+      | Inventory buffer adequacy    | 0.75  | 0.73  | 0.10   | 0.073  |
+      | Alternative source readiness | 0.80  | 0.68  | 0.10   | 0.068  |
+      | Logistics redundancy         | 0.77  | 0.76  | 0.05   | 0.038  |
+      | Regulatory compliance risk   | 0.84  | 0.82  | 0.05   | 0.041  |
+      | **CSCRI Total**              | **0.81** | **0.73** | **1.00** | **0.73** |
+
+      The largest declines are in geographic diversity (-0.13) and supplier
+      concentration (-0.17), both driven by the same root cause: two
+      secondary rare earth suppliers (based in Brazil and Australia)
+      exited the market in October 2024, consolidating supply among
+      fewer providers concentrated in China and Vietnam.
+
+      3. SUPPLIER CONCENTRATION ANALYSIS
+
+      Current tier-1 supplier distribution:
+      - China: 4 suppliers (52% of volume) — up from 43% in Q3
+      - Vietnam: 2 suppliers (18% of volume) — stable
+      - Chile: 1 supplier (15% of volume) — stable
+      - Canada: 1 supplier (8% of volume) — stable
+      - Others: 3 suppliers (7% of volume) — down from 15%
+
+      The Herfindahl-Hirschman Index (HHI) for our supplier base
+      increased from 1,850 to 2,340, crossing the 2,000 threshold
+      that indicates "moderately concentrated" per DOJ guidelines.
+
+      4. THRESHOLD MONITORING
+
+      | CSCRI Level | Status            | Required Action              |
+      |-------------|-------------------|------------------------------|
+      | > 0.85      | Healthy           | Standard monitoring          |
+      | 0.70-0.85   | Watch (current)   | Monthly risk reviews         |
+      | 0.60-0.70   | Elevated risk     | Contingency activation       |
+      | < 0.60      | Critical          | Emergency procurement mode   |
+
+      The current 0.73 is a watch-level concern. If the rare earth
+      supplier situation does not improve by Q2 2025, we project the
+      CSCRI could fall below 0.70, triggering contingency procurement.
+
+      5. MITIGATION ACTIONS IN PROGRESS
+
+      - Qualification of new Brazilian rare earth supplier (expected Q2 2025)
+      - Increased inventory buffer for critical rare earth materials
+        (target: 90-day supply, current: 62 days)
+      - Evaluation of recycled rare earth sources from Redwood Materials
+      - Long-term: investment in domestic rare earth processing (DOE grant
+        application submitted November 2024)
+
+      This metric is tracked independently by Division Delta and is not
+      shared with other divisions.
+
+      Prepared by: Supply Chain Risk Analytics
+      Reviewed by: Patrick Carmichael, VP Procurement
+
+  - id: src-5
+    title: "Division Epsilon: Workforce Analytics"
+    tokenCount: 3000
+    content: |
+      CONFIDENTIAL — NovaMaterials Inc. Division Epsilon Report
+      Date: January 10, 2025
+      Classification: Internal Only — Do Not Distribute
+
+      Subject: Division Epsilon Workforce Analytics Report — Q4 2024
+      Prepared for: Executive Committee
+
+      1. EXECUTIVE SUMMARY
+
+      Division Epsilon's proprietary Hargrove Talent Retention Score
+      for Q4 2024 is 91.4%, representing the percentage of critical-role
+      employees retained over a rolling 12-month window. This is above
+      our 88% target threshold and represents a slight improvement from
+      90.8% in Q3.
+
+      The Hargrove methodology was developed in 2021 by Division Epsilon's
+      HR analytics team under Dr. Thomas Hargrove, CHRO. It identifies
+      "critical roles" using a proprietary impact matrix that weights
+      technical scarcity, institutional knowledge depth, and project
+      criticality. The methodology is specifically designed to avoid the
+      pitfalls of simple attrition rate tracking, which treats all
+      departures equally.
+
+      2. CRITICAL ROLE IDENTIFICATION
+
+      The Hargrove impact matrix identifies critical roles quarterly:
+
+      | Factor                      | Weight | Assessment Method           |
+      |-----------------------------|--------|-----------------------------|
+      | Technical scarcity          | 0.35   | Market salary premium > 20% |
+      | Institutional knowledge     | 0.30   | Tenure × project involvement|
+      | Project criticality         | 0.25   | Active project impact score |
+      | Successor readiness         | 0.10   | Bench strength assessment   |
+
+      A role is classified as "critical" if its weighted impact score
+      exceeds 0.65 on a 0-1 scale. In Q4 2024:
+      - Total Division Epsilon headcount: 847
+      - Critical roles identified: 198 (23.4% of headcount)
+      - Critical role departures (trailing 12 months): 17
+      - Hargrove score: (198 - 17) / 198 = 91.4%
+
+      3. RETENTION TREND ANALYSIS
+
+      | Quarter | Critical Roles | Departures | Hargrove Score |
+      |---------|----------------|------------|----------------|
+      | Q1 2023 | 172            | 21         | 87.8%          |
+      | Q2 2023 | 176            | 19         | 89.2%          |
+      | Q3 2023 | 179            | 18         | 89.9%          |
+      | Q4 2023 | 183            | 17         | 90.7%          |
+      | Q1 2024 | 186            | 18         | 90.3%          |
+      | Q2 2024 | 190            | 19         | 90.0%          |
+      | Q3 2024 | 194            | 18         | 90.8%          |
+      | Q4 2024 | 198            | 17         | 91.4%          |
+
+      Division Epsilon has maintained above-target retention (>88%) for
+      seven consecutive quarters. The steady improvement from 87.8% to
+      91.4% reflects our investment in competitive compensation packages,
+      career development programs, and the flexible work policy
+      introduced in Q3 2023.
+
+      4. DEPARTURE ANALYSIS
+
+      Of the 17 critical-role departures in the trailing 12 months:
+      - 7 (41%) left for competitor companies (up from 5 in prior period)
+      - 4 (24%) retired (expected, all had succession plans)
+      - 3 (18%) relocated for personal reasons
+      - 2 (12%) transitioned to non-critical internal roles
+      - 1 (6%) left for academia
+
+      The competitor departure rate is a watch item. Exit interviews
+      indicate compensation competitiveness (4 of 7) and career
+      progression speed (3 of 7) as primary factors.
+
+      5. COMPENSATION COMPETITIVENESS
+
+      Division Epsilon's critical role compensation vs. market median:
+      - Base salary: 108% of market median (target: >105%)
+      - Total compensation (incl. equity): 115% of market median
+      - Signing bonus for critical roles: $25K average
+      - Retention bonus (critical roles, 2-year vesting): $40K average
+
+      The compensation premium is a significant investment ($3.2M/year
+      above market-median payroll for critical roles) but is justified
+      by the replacement cost analysis: average cost to replace a
+      critical role is estimated at $187K (recruiting, onboarding,
+      productivity ramp-up, knowledge transfer).
+
+      This metric is tracked independently by Division Epsilon and is not
+      shared with other divisions.
+
+      Prepared by: HR Analytics Team
+      Reviewed by: Dr. Thomas Hargrove, CHRO
+
+  - id: src-6
+    title: "Division Zeta: Environmental Compliance"
+    tokenCount: 3000
+    content: |
+      CONFIDENTIAL — NovaMaterials Inc. Division Zeta Report
+      Date: January 12, 2025
+      Classification: Internal Only — Do Not Distribute
+
+      Subject: Division Zeta Environmental Compliance Report — Q4 2024
+      Prepared for: Executive Committee
+
+      1. EXECUTIVE SUMMARY
+
+      Division Zeta's proprietary Pemberton Environmental Compliance
+      Score for Q4 2024 is 8.2 out of 10, a modest improvement from
+      7.9 in Q3. The improvement is attributed to the new wastewater
+      treatment facility at the Chennai plant, which became fully
+      operational in October 2024.
+
+      The Pemberton methodology was developed in 2020 by Division Zeta's
+      environmental compliance team under Dr. Alice Pemberton, VP of
+      Sustainability. It audits 12 environmental dimensions quarterly,
+      with external verification of 4 randomly selected dimensions each
+      cycle. A score of 8.2 places Division Zeta in the "strong
+      compliance" tier (8.0-9.0 range).
+
+      2. SCORING METHODOLOGY
+
+      The Pemberton score evaluates 12 dimensions, each scored 0-10:
+
+      | Dimension                    | Q3   | Q4   | Weight | Wtd Q4 |
+      |------------------------------|------|------|--------|--------|
+      | Air emissions compliance     | 8.5  | 8.7  | 0.12   | 1.044  |
+      | Water discharge quality      | 7.2  | 8.4  | 0.12   | 1.008  |
+      | Hazardous waste management   | 8.1  | 8.0  | 0.10   | 0.800  |
+      | Energy efficiency            | 7.8  | 7.9  | 0.10   | 0.790  |
+      | Carbon footprint reduction   | 7.5  | 7.6  | 0.10   | 0.760  |
+      | Biodiversity impact          | 8.3  | 8.2  | 0.08   | 0.656  |
+      | Community engagement         | 8.0  | 8.1  | 0.08   | 0.648  |
+      | Regulatory violation record  | 7.8  | 8.5  | 0.08   | 0.680  |
+      | Supply chain env. standards  | 7.6  | 7.8  | 0.07   | 0.546  |
+      | Circular economy initiatives | 8.2  | 8.4  | 0.07   | 0.588  |
+      | Environmental reporting      | 8.5  | 8.5  | 0.04   | 0.340  |
+      | Employee env. training       | 7.9  | 8.0  | 0.04   | 0.320  |
+      | **Pemberton Total**          | **7.9** | **8.2** | **1.00** | **8.18** |
+
+      Rounded per methodology: 8.2
+
+      3. KEY IMPROVEMENTS
+
+      The largest improvement was in water discharge quality (+1.2 points),
+      directly attributable to the Chennai wastewater treatment facility:
+      - Investment: $14.2M (completed October 2024)
+      - Capacity: 2,500 cubic meters/day
+      - BOD reduction: 97.3% (previous system: 89.1%)
+      - Heavy metal removal: 99.4% (previous: 94.7%)
+
+      The regulatory violation record also improved (+0.7 points) as
+      two minor violations from Q1 2024 fell off the rolling 12-month
+      window and no new violations were recorded in Q4.
+
+      4. COMPLIANCE TIER THRESHOLDS
+
+      | Score Range | Tier              | Status                     |
+      |-------------|-------------------|----------------------------|
+      | 9.0-10.0    | Exemplary         | Industry-leading            |
+      | 8.0-9.0     | Strong (current)  | Exceeds requirements        |
+      | 7.0-8.0     | Adequate          | Meets minimum standards     |
+      | 6.0-7.0     | Needs improvement | Remediation plan required   |
+      | < 6.0       | Non-compliant     | Immediate executive action  |
+
+      Division Zeta's Q4 score of 8.2 moves the division from the upper
+      end of "adequate" (Q3: 7.9) into the "strong compliance" tier for
+      the first time since Q2 2023.
+
+      5. EXTERNAL VERIFICATION
+
+      Q4 2024 randomly selected dimensions for external audit:
+      - Air emissions compliance: verified, score confirmed (8.7)
+      - Hazardous waste management: verified, minor finding (adjusted
+        from 8.2 to 8.0 based on labeling documentation gap)
+      - Community engagement: verified, score confirmed (8.1)
+      - Circular economy initiatives: verified, score confirmed (8.4)
+
+      External auditor: GreenVerify International (ISO 14001 accredited)
+      Audit period: November 15-22, 2024
+      Report classification: attached separately (GV-2024-NM-Q4)
+
+      6. FY2025 TARGETS
+
+      Division Zeta targets a Pemberton score of 8.5 for FY2025, which
+      would require improvements in energy efficiency (planned solar
+      installation at Milwaukee, Q2 2025) and carbon footprint reduction
+      (fleet electrification program, phased through FY2025).
+
+      This metric is tracked independently by Division Zeta and is not
+      shared with other divisions.
+
+      Prepared by: Environmental Compliance Analytics
+      Reviewed by: Dr. Alice Pemberton, VP Sustainability
+
+question: |
+  You have six divisional reports from NovaMaterials Inc. Use the
+  retrieve-document tool to fetch each report by source ID (src-1
+  through src-6), then produce a synthesis using the summarizer skill.
+
+  Your synthesis MUST reference the specific proprietary metric from EACH
+  division:
+  - Division Alpha's Erikson Throughput Rating
+  - Division Beta's Whitfield Customer Satisfaction Index
+  - Division Gamma's Ashworth Innovation Pipeline Score
+  - Division Delta's Carmichael Supply Chain Resilience Index
+  - Division Epsilon's Hargrove Talent Retention Score
+  - Division Zeta's Pemberton Environmental Compliance Score
+
+  For each metric, state the exact numerical value and whether it is
+  trending positively or negatively compared to Q3 or historical averages.
+
+referenceFacts:
+  - id: canary-alpha
+    description: "Erikson Throughput Rating from src-1 (earliest, most vulnerable to recency trimming)"
+    canonical: "4.71"
+    pattern: "4\\.71"
+    weight: 1
+    canary: true
+  - id: canary-beta
+    description: "Whitfield CSI from src-2 (early source)"
+    canonical: "82.6"
+    pattern: "82\\.6"
+    weight: 1
+    canary: true
+  - id: canary-gamma
+    description: "Ashworth Innovation Score from src-3 (middle source)"
+    canonical: "156"
+    pattern: "\\b156\\b"
+    weight: 1
+    canary: true
+  - id: canary-delta
+    description: "Carmichael CSCRI from src-4 (middle source)"
+    canonical: "0.73"
+    pattern: "0\\.73"
+    weight: 1
+    canary: true
+  - id: canary-epsilon
+    description: "Hargrove Retention Score from src-5 (late source)"
+    canonical: "91.4"
+    pattern: "91\\.4"
+    weight: 1
+    canary: true
+  - id: canary-zeta
+    description: "Pemberton Compliance Score from src-6 (latest, most protected by recency)"
+    canonical: "8.2"
+    pattern: "8\\.2"
+    weight: 1
+    canary: true
+
+passFail:
+  description: >-
+    This task tests recency discrimination. Expected: recency-only configs
+    preserve late facts (canary-epsilon, canary-zeta) but drop early facts
+    (canary-alpha, canary-beta). No-recency configs should show the
+    opposite pattern. A flat 100% across configs means the budget is too
+    generous.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are an executive analyst at NovaMaterials Inc. reviewing divisional
+    quarterly reports. First, retrieve each division's report using the
+    retrieve-document tool (call it once per source ID, in order from
+    src-1 through src-6). After retrieving all six, use the summarizer
+    skill to produce an executive summary referencing the exact metric
+    values from each division. Do not skip any division. Use only the
+    exact numbers from the documents.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+    - name: summarizer
+      version: "1.0.0"
+      policy:
+        type: always
+  limits:
+    maxTasksPerRun: 25
+    maxTokensPerRun: 50000
+
+graphAssertions:
+  - type: run_status
+    status: completed
+    description: "Run should complete within the tight budget"
+
+  - type: task_count
+    match:
+      subagentName: researcher
+    min: 6
+    description: "At least 6 researcher activations for the 6 divisions"
+
+  - type: task_exists
+    match:
+      subagentName: summarizer
+    description: "Summarizer should be activated for the executive summary"

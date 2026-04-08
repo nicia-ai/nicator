@@ -1,0 +1,7 @@
+dist
+.wrangler
+.turbo
+node_modules
+pnpm-lock.yaml
+*.db
+evals/results

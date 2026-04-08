@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+
+# Turbo
+.turbo/
+
+# Cloudflare
+.wrangler/
+.dev.vars
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# SQLite
+*.db
+*.db-wal
+*.db-shm
+
+# Eval results — raw JSON is large and machine-generated; track the
+# human-readable .report.md summaries produced by `pnpm eval:report --write`.
+evals/results/*.json
+!evals/results/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Claude Code
+.claude/
+
+# Editor
+*.swp
+*.swo
+.idea/
+.vscode/
+!.vscode/settings.json

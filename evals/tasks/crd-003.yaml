@@ -1,0 +1,418 @@
+# CRD-003 · coordination
+#
+# Blackboard — competitive vendor analysis with partial ordering.
+# Four agents in a diamond-shaped DAG: pricing and technical run
+# concurrently, compliance reads pricing (because tier determines
+# HIPAA-eligible cost), strategist reads all three.
+#
+# The topology's reads/writes declare a partial-order DAG:
+#   pricing ──────────────┐
+#     │                   │
+#     ▼                   ▼
+#   compliance ──────→ strategist
+#     ▲                   ▲
+#     │                   │
+#   technical ────────────┘
+#
+# This tests a more complex DAG than debate (fan-in) or pipeline
+# (chain): concurrent segments, mid-DAG dependencies between
+# producers, and fan-in from 3 sources into the final consumer.
+
+id: crd-003
+category: coordination
+name: Blackboard — healthcare vendor analysis with partial ordering
+description: >-
+  Four-agent diamond DAG: pricing and technical analysts run concurrently,
+  compliance analyst reads pricing output (HIPAA-eligible tier affects
+  cost), strategist reads all three to produce a unified recommendation.
+  Tests partial ordering, mid-DAG producer dependency, fan-in from 3
+  agents, and information flow through a non-trivial DAG shape.
+
+sources:
+  - id: src-pricing
+    title: "Vendor Pricing Comparison — Cloud Database Platforms"
+    tokenCount: 380
+    content: |
+      Pricing analysis for Meridian Corp's healthcare data platform RFP.
+      Three vendors shortlisted. All prices are monthly, billed annually.
+
+      VENDOR A — DataVault
+
+      | Tier       | Price/mo | Included Features                        |
+      |------------|----------|------------------------------------------|
+      | Standard   | $2,400   | Encryption at rest, 99.95% SLA, 5TB      |
+      | Business   | $4,200   | + Read replicas, auto-scaling to 20TB     |
+      | Enterprise | $6,800   | + Audit logging, field-level encryption,  |
+      |            |          |   dedicated tenancy, BAA, 50TB            |
+
+      Notes: Standard tier encrypts data at rest with AES-256 but does
+      not include audit logging of data access events. Audit logging and
+      BAA (Business Associate Agreement) are Enterprise-only features.
+      Field-level encryption allows column-level PHI protection.
+
+      VENDOR B — CloudBase
+
+      | Tier    | Price/mo | Included Features                          |
+      |---------|----------|--------------------------------------------|
+      | Unified | $4,200   | All features included: encryption at rest  |
+      |         |          | + in transit, audit logging, BAA, field-   |
+      |         |          | level encryption, 99.99% SLA, 100TB,       |
+      |         |          | global distribution, dedicated tenancy      |
+
+      Notes: Single-tier pricing. No feature gating. BAA included at
+      base price. All compliance features are standard.
+
+      VENDOR C — NexusDB
+
+      | Tier       | Price/mo | Included Features                        |
+      |------------|----------|------------------------------------------|
+      | Developer  | $1,800   | Basic encryption, 99.9% SLA, 2TB         |
+      | Business   | $3,600   | + Encryption at rest, 10TB, read replicas |
+      | Enterprise | $7,200   | + Audit logging, BAA, dedicated tenancy,  |
+      |            |          |   field-level encryption, 25TB            |
+
+      Notes: Developer tier encryption is TLS in-transit only — no
+      encryption at rest. Audit logging and BAA require Enterprise.
+      All tiers are single-region (US-East-1 only).
+
+  - id: src-technical
+    title: "Technical Architecture Comparison"
+    tokenCount: 340
+    content: |
+      Technical evaluation of three database platforms for Meridian Corp.
+
+      DATAVAULT
+      - Query language: PostgreSQL-compatible (standard SQL)
+      - SLA: 99.95% (Standard/Business), 99.99% (Enterprise)
+      - Auto-scaling: up to 50TB (Enterprise)
+      - Replication: read replicas in 3 US regions
+      - Migration path: pg_dump/pg_restore, logical replication
+      - Median query latency P50: 12ms, P95: 45ms, P99: 120ms
+      - Backup: continuous with 35-day point-in-time recovery
+      - Known limitation: no cross-region writes (active-passive only)
+
+      CLOUDBASE
+      - Query language: CloudBase Query Language (CQL) — proprietary
+        SQL-like syntax with extensions for distributed queries.
+        Not compatible with PostgreSQL or MySQL wire protocol.
+        Requires application-level query rewrite for migration.
+      - SLA: 99.99%
+      - Auto-scaling: up to 100TB
+      - Replication: global active-active across 12 regions
+      - Migration path: custom ETL via CloudBase Migration Toolkit
+        (estimated 6-8 weeks for schema + data migration)
+      - Median query latency P50: 8ms, P95: 28ms, P99: 85ms
+      - Backup: continuous with 90-day point-in-time recovery
+      - Known limitation: proprietary lock-in, no standard SQL export
+
+      NEXUSDB
+      - Query language: MySQL-compatible
+      - SLA: 99.9%
+      - Scaling: manual provisioning, max 25TB (Enterprise)
+      - Replication: single-region only (US-East-1)
+      - Migration path: mysqldump, standard replication
+      - Median query latency P50: 15ms, P95: 62ms, P99: 180ms
+      - Backup: daily snapshots, 7-day retention
+      - Known limitation: single-region only, no auto-scaling,
+        manual failover (estimated 15-minute RTO)
+
+      Meridian's current stack: PostgreSQL 15 on self-managed EC2.
+      Application uses standard SQL extensively. Estimated 2,400
+      queries/second at peak. Current dataset: 8TB, projected
+      growth to 18TB over 3 years.
+
+  - id: src-compliance
+    title: "HIPAA Compliance Requirements Matrix"
+    tokenCount: 360
+    content: |
+      Meridian Corp — Healthcare Data Platform Compliance Requirements
+      Regulatory basis: HIPAA Security Rule (45 CFR Part 164)
+
+      MANDATORY CONTROLS (all must be satisfied):
+
+      1. Encryption
+         - Data at rest: AES-256 encryption required for all PHI storage
+         - Data in transit: TLS 1.2+ required for all PHI transmission
+         - Field-level: recommended for high-sensitivity fields (SSN,
+           diagnosis codes) but not mandatory
+
+      2. Audit Logging
+         - All access to PHI must be logged with timestamp, user identity,
+           action performed, and records accessed
+         - Logs must be retained for minimum 6 years
+         - Logs must be tamper-evident (append-only or cryptographic chain)
+
+      3. Business Associate Agreement (BAA)
+         - Vendor must execute a BAA before any PHI is stored or processed
+         - BAA must specify breach notification obligations
+         - Without a signed BAA, the vendor CANNOT store PHI regardless
+           of technical controls
+
+      4. Breach Notification
+         - Vendor must notify covered entity within 60 days of discovering
+           a breach affecting PHI
+         - Notification must include: nature of breach, types of PHI
+           involved, steps taken, mitigation recommendations
+         - SLA on notification timeline is required — "best effort" or
+           unspecified timelines do not satisfy the HIPAA Breach
+           Notification Rule (45 CFR §164.410)
+
+      5. Access Controls
+         - Role-based access control (RBAC) required
+         - Minimum: admin, read-write, read-only roles
+         - Multi-factor authentication for administrative access
+
+      6. Physical Safeguards
+         - Dedicated tenancy or equivalent logical isolation required
+         - Data must not be co-mingled with non-healthcare workloads
+
+      7. Disaster Recovery
+         - RTO ≤ 4 hours, RPO ≤ 1 hour
+         - Documented and tested DR plan required annually
+
+      COMPLIANCE ASSESSMENT NOTE:
+      A vendor that satisfies all technical controls but cannot execute
+      a BAA is non-compliant. A vendor that executes a BAA but lacks
+      audit logging is non-compliant. ALL mandatory controls must be
+      met simultaneously.
+
+question: |
+  Meridian Corp needs to select a cloud database vendor for its healthcare
+  data platform. HIPAA compliance is non-negotiable — any vendor that
+  cannot satisfy all mandatory HIPAA controls is disqualified regardless
+  of pricing or technical merit. Produce a vendor recommendation that
+  evaluates pricing (at the HIPAA-compliant tier, not the base tier),
+  technical fit, and compliance posture for each vendor, then makes a
+  specific selection with reasoning.
+
+referenceFacts:
+  # --- Compliance: disqualification ---
+  - id: fact-nexus-disqualified
+    description: NexusDB disqualified — breach notification has no SLA
+    canonical: "NexusDB disqualified"
+    pattern: "NexusDB.*disqualif|disqualif.*NexusDB|NexusDB.*non.compliant|NexusDB.*breach.*notif|NexusDB.*fail.*HIPAA|NexusDB.*best.effort|NexusDB.*not.*satisf"
+    weight: 3
+
+  # --- Pricing × compliance: tier determination ---
+  - id: fact-datavault-enterprise-required
+    description: DataVault requires Enterprise tier ($6,800/mo) for HIPAA compliance
+    canonical: "$6,800"
+    pattern: "DataVault.*Enterprise.*\\$6[,.]?800|DataVault.*\\$6[,.]?800.*HIPAA|\\$6[,.]?800.*audit.*log|Enterprise.*tier.*HIPAA.*DataVault|DataVault.*HIPAA.*Enterprise"
+    weight: 3
+
+  - id: fact-cloudbase-compliant-at-base
+    description: CloudBase is HIPAA-compliant at its single tier ($4,200/mo)
+    canonical: "$4,200"
+    pattern: "CloudBase.*\\$4[,.]?200.*HIPAA|CloudBase.*compliant.*\\$4[,.]?200|CloudBase.*all.*feature.*includ|\\$4[,.]?200.*all.*compliance|CloudBase.*single.*tier.*compliant|CloudBase.*unified.*HIPAA"
+    weight: 2
+
+  # --- Technical: trade-off ---
+  - id: fact-cloudbase-proprietary
+    description: CloudBase uses proprietary query language (CQL), not PostgreSQL-compatible
+    canonical: "proprietary"
+    pattern: "CQL|proprietary.*query|CloudBase.*not.*PostgreSQL|not.*compatible.*SQL|query.*rewrite|migration.*6.*8.*week|lock.in"
+    weight: 2
+
+  # --- Technical: Meridian's current stack matters ---
+  - id: fact-migration-risk
+    description: Meridian currently runs PostgreSQL — CloudBase requires query rewrite
+    canonical: "PostgreSQL migration"
+    pattern: "PostgreSQL.*current|current.*PostgreSQL|migration.*rewrite|application.*rewrite|query.*rewrite.*migrat"
+    weight: 1
+
+  # --- Strategist: recommendation ---
+  - id: fact-recommend-cloudbase
+    description: Recommends CloudBase (or DataVault Enterprise) with reasoning
+    canonical: "recommend CloudBase"
+    pattern: "recommend.*CloudBase|CloudBase.*recommend|select.*CloudBase|CloudBase.*best|recommend.*DataVault.*Enterprise|DataVault.*Enterprise.*recommend"
+    weight: 2
+
+  # --- Strategist: cost comparison at compliant tiers ---
+  - id: fact-compliant-cost-comparison
+    description: Compares vendors at HIPAA-compliant tier prices, not base prices
+    canonical: "compliant tier comparison"
+    pattern: "\\$6[,.]?800.*vs.*\\$4[,.]?200|\\$4[,.]?200.*vs.*\\$6[,.]?800|compliant.*tier.*cost|HIPAA.*tier.*pric|Enterprise.*\\$6[,.]?800.*Unified.*\\$4[,.]?200"
+    weight: 2
+
+rubricWeights:
+  faithfulness: 0.30
+  completeness: 0.25
+  coherence: 0.15
+  actionability: 0.30
+
+passFail:
+  minFactualScore: 0.6
+  requiredFactIds:
+    - fact-nexus-disqualified
+    - fact-datavault-enterprise-required
+    - fact-recommend-cloudbase
+  description: >-
+    Must disqualify NexusDB on HIPAA grounds (breach notification SLA),
+    identify that DataVault requires Enterprise tier for compliance,
+    and make a specific vendor recommendation. Evaluating vendors at
+    base-tier pricing without considering HIPAA tier requirements is
+    a fail.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a multi-agent coordinator running a vendor evaluation with
+    four specialist agents. The agents have a partial ordering:
+
+    1. pricing and technical can run concurrently (no dependencies)
+    2. compliance must run AFTER pricing (it needs tier information to
+       determine HIPAA-compliant costs)
+    3. strategist runs last, after all three specialists complete
+
+    Dispatch pricing with the vendor pricing source. Dispatch technical
+    with the architecture comparison source. Once pricing completes,
+    dispatch compliance with the HIPAA requirements source and pricing
+    analysis. Once all three specialists complete, dispatch strategist
+    with all findings.
+
+    Each agent receives only its assigned source documents plus any
+    declared upstream outputs.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+    - name: summarizer
+      version: "1.0.0"
+      policy:
+        type: always
+  limits:
+    maxTasksPerRun: 30
+    maxOperationsPerTask: 5
+    maxTokensPerRun: 500000
+graphAssertions:
+  # --- Run completion ---
+  - type: run_status
+    status: completed
+    description: "Diamond DAG run must complete successfully"
+
+  # --- Agent existence ---
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: pricing
+    description: "Pricing agent task must exist"
+
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: technical
+    description: "Technical agent task must exist"
+
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: compliance
+    description: "Compliance agent task must exist"
+
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: strategist
+    description: "Strategist agent task must exist"
+
+  - type: task_count
+    match:
+      role: subagent
+    min: 4
+    max: 4
+    description: "Exactly 4 agent-role tasks"
+
+  # --- Partial ordering: compliance after pricing ---
+  - type: task_order
+    first:
+      role: subagent
+      subagentName: pricing
+    then:
+      role: subagent
+      subagentName: compliance
+    description: "Compliance must run after pricing (needs tier info)"
+
+  # --- Strategist after all three specialists ---
+  - type: task_order
+    first:
+      role: subagent
+      subagentName: pricing
+    then:
+      role: subagent
+      subagentName: strategist
+    description: "Strategist must run after pricing"
+
+  - type: task_order
+    first:
+      role: subagent
+      subagentName: technical
+    then:
+      role: subagent
+      subagentName: strategist
+    description: "Strategist must run after technical"
+
+  - type: task_order
+    first:
+      role: subagent
+      subagentName: compliance
+    then:
+      role: subagent
+      subagentName: strategist
+    description: "Strategist must run after compliance"
+
+  # --- Mid-DAG dependency: compliance reads pricing ---
+  - type: consumes
+    consumer:
+      role: subagent
+      subagentName: compliance
+    producer:
+      role: subagent
+      subagentName: pricing
+    description: "Compliance must consume pricing analysis (tier → HIPAA cost)"
+
+  # --- Fan-in: strategist reads all three ---
+  - type: consumes
+    consumer:
+      role: subagent
+      subagentName: strategist
+    producer:
+      role: subagent
+      subagentName: pricing
+    description: "Strategist must consume pricing analysis"
+
+  - type: consumes
+    consumer:
+      role: subagent
+      subagentName: strategist
+    producer:
+      role: subagent
+      subagentName: technical
+    description: "Strategist must consume technical analysis"
+
+  - type: consumes
+    consumer:
+      role: subagent
+      subagentName: strategist
+    producer:
+      role: subagent
+      subagentName: compliance
+    description: "Strategist must consume compliance analysis"
+
+  # --- Concurrent producer isolation ---
+  - type: consumes_absent
+    consumer:
+      role: subagent
+      subagentName: pricing
+    producer:
+      role: subagent
+      subagentName: technical
+    description: "Pricing must NOT consume technical output"
+
+  - type: consumes_absent
+    consumer:
+      role: subagent
+      subagentName: technical
+    producer:
+      role: subagent
+      subagentName: pricing
+    description: "Technical must NOT consume pricing output"

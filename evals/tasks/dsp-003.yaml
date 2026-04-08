@@ -1,0 +1,63 @@
+# DSP-003 · dispatch
+#
+# A question answerable by fetching a single known URL.
+# The agent should call web-fetch directly.
+
+id: dsp-003
+category: dispatch
+name: Single URL fetch — direct tool preferred
+description: >-
+  A question that can be answered by fetching a specific URL. Tests whether
+  the agent uses web-fetch directly instead of searching or activating a skill.
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 30
+    content: |
+      The Anthropic API documentation is at https://docs.anthropic.com/en/api/getting-started.
+      Use it to answer the question.
+
+question: |
+  What is the base URL for the Anthropic Messages API? Fetch the documentation
+  page at https://docs.anthropic.com/en/api/getting-started and report the
+  base URL.
+
+referenceFacts:
+  - id: fact-1
+    description: Returns the API base URL
+    canonical: "api.anthropic.com"
+    pattern: "api\\.anthropic\\.com"
+    weight: 1
+
+passFail:
+  description: >-
+    Must use web-fetch as a direct tool call to retrieve the specified URL.
+    Should not need to search or activate a skill.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a general-purpose research assistant. Answer questions using the
+    tools and skills available to you. Use the simplest approach that answers
+    the question.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+
+graphAssertions:
+  - type: task_exists
+    match:
+      role: tool
+      operationType: tool_call
+    description: "Agent should call a tool directly (not activate a skill)"
+
+  - type: task_absent
+    match:
+      subagentName: researcher
+    description: "Agent should NOT activate researcher skill for a single URL fetch"
+
+  - type: run_status
+    status: completed
+    description: "Run should complete successfully"

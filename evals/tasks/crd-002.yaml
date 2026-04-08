@@ -1,0 +1,360 @@
+# CRD-002 · coordination
+#
+# Pipeline — sequential due diligence processing. Three agents in a chain:
+# extractor → analyst → advisor. Each stage reads the previous stage's
+# output and adds a layer of processing.
+#
+# The topology's reads/writes declare a sequential DAG:
+#   extractor (writes raw_financials)
+#     → analyst (reads raw_financials, writes discrepancy_report)
+#       → advisor (reads discrepancy_report, writes recommendation)
+#
+# This tests multi-hop artifact routing: the advisor's recommendation
+# quality depends on the analyst's discrepancy analysis, which depends
+# on the extractor's structured output. If any stage drops information,
+# the final output degrades — and provenance traces the failure back.
+
+id: crd-002
+category: coordination
+name: Pipeline — sequential due diligence processing
+description: >-
+  Three-agent pipeline: extractor pulls structured financial data from
+  a dense CIM, analyst cross-references extracted data against a QoE
+  report to flag discrepancies, advisor synthesizes the analysis against
+  deal terms into a board recommendation. Tests sequential DAG ordering,
+  multi-hop artifact routing, and information preservation through a
+  processing chain.
+
+sources:
+  - id: src-cim
+    title: "Confidential Information Memorandum — Apex SaaS Holdings"
+    tokenCount: 420
+    content: |
+      Apex SaaS Holdings ("Apex" or "the Company") is a leading provider
+      of vertical SaaS solutions for the property management industry.
+
+      Financial Highlights (Trailing Twelve Months ending Q3 2025):
+      - Revenue: $42.3M (23% YoY growth, driven by enterprise upsell)
+      - Adjusted EBITDA: $11.8M (28% margin)
+        - Add-backs: $1.4M restructuring charges (facility consolidation),
+          $0.8M strategic consulting fees (Pinnacle Advisory Group),
+          $0.3M one-time litigation settlement
+      - Gross margin: 68% (up from 64% prior year)
+      - Net revenue retention: 112%
+      - ARR: $44.1M
+
+      Customer Base:
+      - 340 enterprise accounts, 2,100+ SMB accounts
+      - Top 3 customers represent 47% of revenue:
+        - Greystone Properties: $8.2M (19%)
+        - National Realty Corp: $7.1M (17%)
+        - Pacific Housing Partners: $4.6M (11%)
+      - Average contract length: 2.4 years
+      - Churn rate: 6% annual (enterprise), 14% annual (SMB)
+
+      Growth Drivers:
+      Management believes the $1.4M restructuring charge is fully
+      non-recurring — the facility consolidation from three offices to
+      one was completed in Q2 2025. The $0.8M consulting engagement with
+      Pinnacle Advisory Group supported the ERP migration, which is now
+      in maintenance mode.
+
+  - id: src-qoe
+    title: "Quality of Earnings Report — Prepared by Whitfield & Associates"
+    tokenCount: 480
+    content: |
+      Independent Quality of Earnings Analysis
+      Prepared for: Buyer Group
+      Subject: Apex SaaS Holdings
+      Date: October 2025
+
+      1. EBITDA Adjustments
+
+      Management presents adjusted EBITDA of $11.8M. Our analysis
+      identifies the following concerns:
+
+      1a. Restructuring charges ($1.4M add-back): Management
+      characterizes these as one-time. However, Apex has recorded
+      restructuring charges in 4 of the last 5 fiscal years (FY21:
+      $0.9M, FY22: $1.1M, FY23: $0.6M, FY25: $1.4M). The pattern
+      suggests these are recurring operational costs, not one-time
+      events. We recommend removing this add-back.
+
+      1b. Consulting fees ($0.8M add-back): The Pinnacle Advisory
+      engagement is described as ERP migration support. However, per
+      Footnote 7 of the audited financials, Pinnacle Advisory Group
+      is 40% owned by Apex's CEO. Additionally, we note that Pinnacle
+      has provided services to Apex in every year since FY20, with fees
+      ranging from $0.5M to $0.8M annually. We classify this as a
+      related-party recurring expense and recommend removing this
+      add-back.
+
+      Adjusted EBITDA (Whitfield basis): $9.6M (22.7% margin)
+        Management EBITDA:    $11.8M
+        Remove restructuring: -$1.4M
+        Remove Pinnacle fees: -$0.8M
+        Whitfield EBITDA:      $9.6M
+
+      2. Customer Concentration
+
+      Management reports top-3 concentration at 47%. This figure excludes
+      Pacific Housing Partners' affiliated entity, Coastal Living Group,
+      which is a separate Apex customer ($2.1M annual revenue). Pacific
+      Housing acquired Coastal Living in Q1 2025. Treating these as a
+      single economic relationship:
+        - Greystone Properties:      $8.2M  (19%)
+        - National Realty Corp:       $7.1M  (17%)
+        - Pacific Housing + Coastal:  $6.7M  (16%)
+        - Top-3 adjusted:            $22.0M  (52%)
+
+      3. Revenue Recognition
+
+      $1.2M in Q4 2025 revenue relates to contracts with January 2026
+      start dates where Apex recognized revenue upon contract signing
+      rather than service commencement. Under ASC 606, this revenue
+      should be deferred to Q1 2026. Restated trailing revenue: $41.1M.
+
+  - id: src-terms
+    title: "Indicative Term Sheet — Project Alpine Acquisition"
+    tokenCount: 350
+    content: |
+      INDICATIVE TERM SHEET
+      Project Alpine — Acquisition of Apex SaaS Holdings
+      Date: November 2025
+      Status: Non-binding
+
+      Purchase Price:
+      - 8.0x Adjusted EBITDA (as mutually agreed during confirmatory
+        due diligence)
+      - Management's indicated price: $94.4M (8.0x × $11.8M)
+      - Subject to customary purchase price adjustments for net working
+        capital, debt, and cash
+
+      Closing Conditions:
+      (a) Trailing twelve-month adjusted EBITDA (Buyer's basis) must
+          exceed $10.5M at closing. If EBITDA falls below this threshold,
+          Buyer may terminate or renegotiate.
+      (b) Customer concentration: no single customer or affiliated group
+          may represent more than 15% of trailing revenue, and top-3
+          concentration must be below 50%.
+      (c) No material restatements of revenue in the trailing twelve
+          months, defined as any restatement affecting more than 2% of
+          reported revenue.
+      (d) Completion of Whitfield Quality of Earnings review with no
+          unresolved Category A findings.
+
+      Indemnification:
+      - Seller indemnifies for pre-closing liabilities, tax exposures,
+        and undisclosed related-party transactions.
+      - Basket: $500K; Cap: 15% of purchase price.
+      - Survival period: 24 months (36 months for tax and related-party).
+
+      Exclusivity: 60-day exclusivity period from execution of LOI.
+
+      Timeline:
+      - Confirmatory due diligence: 45 days
+      - Definitive agreement: 30 days post DD completion
+      - Target close: Q1 2026
+
+question: |
+  You are advising the Buyer Group on Project Alpine (acquisition of Apex
+  SaaS Holdings). Based on the available materials, produce a due diligence
+  summary that extracts the key financial metrics, identifies discrepancies
+  between management's figures and the independent QoE findings, and
+  assesses whether the deal terms can be met. Conclude with a clear
+  recommendation on whether to proceed, renegotiate, or walk away.
+
+referenceFacts:
+  # --- Extraction: raw numbers from CIM ---
+  - id: fact-mgmt-ebitda
+    description: Identifies management's adjusted EBITDA of $11.8M
+    canonical: "$11.8M"
+    pattern: "\\$11\\.8[Mm]|11\\.8.*million.*EBITDA|management.*EBITDA.*11\\.8"
+    weight: 1
+
+  # --- Analysis: discrepancies found by cross-referencing ---
+  - id: fact-adjusted-ebitda
+    description: Identifies Whitfield-adjusted EBITDA of $9.6M
+    canonical: "$9.6M"
+    pattern: "\\$9\\.6[Mm]|9\\.6.*million.*EBITDA|adjust.*EBITDA.*9\\.6|Whitfield.*9\\.6"
+    weight: 2
+
+  - id: fact-recurring-restructuring
+    description: Restructuring charges are recurring (4 of 5 years), not one-time
+    canonical: "recurring restructuring"
+    pattern: "recurr.*restructur|restructur.*recurr|4.*of.*5.*year|not.*one.time|pattern.*restructur"
+    weight: 2
+
+  - id: fact-related-party
+    description: Pinnacle Advisory is a related party (40% owned by CEO)
+    canonical: "related party"
+    pattern: "related.party|Pinnacle.*CEO|CEO.*own.*Pinnacle|40%.*own|conflict.*interest.*Pinnacle"
+    weight: 2
+
+  - id: fact-concentration-adjusted
+    description: Top-3 customer concentration is 52% when including Coastal Living affiliate
+    canonical: "52%"
+    pattern: "52%|52.*percent.*concentrat|concentrat.*52|Pacific.*Coastal|affiliat.*concentrat"
+    weight: 2
+
+  - id: fact-revenue-restatement
+    description: "$1.2M revenue recognized prematurely (Q4 from Q1 contracts)"
+    canonical: "$1.2M"
+    pattern: "\\$1\\.2[Mm].*revenue|revenue.*\\$1\\.2[Mm]|premature.*recogni|defer.*Q1|ASC 606|restat.*revenue"
+    weight: 1
+
+  # --- Recommendation: requires full pipeline to assess ---
+  - id: fact-ebitda-condition-fails
+    description: QoE-adjusted EBITDA ($9.6M) fails the $10.5M closing condition
+    canonical: "below $10.5M"
+    pattern: "9\\.6.*below.*10\\.5|fail.*EBITDA.*condition|closing.*condition.*EBITDA|10\\.5[Mm].*threshold.*not.*met|EBITDA.*condition.*fail"
+    weight: 3
+
+  - id: fact-concentration-condition-fails
+    description: Adjusted top-3 concentration (52%) fails the 50% closing condition
+    canonical: "exceeds 50%"
+    pattern: "52%.*exceed.*50|concentrat.*condition.*fail|fail.*concentrat.*condition|above.*50%.*threshold|50%.*condition.*not.*met"
+    weight: 3
+
+  - id: fact-recommendation
+    description: Clear recommendation (renegotiate or walk away, not proceed as-is)
+    canonical: "renegotiate"
+    pattern: "renegotiat|walk.*away|not.*proceed|do not.*close|terminate|restructure.*deal|reprice|reject.*current.*terms"
+    weight: 2
+
+rubricWeights:
+  faithfulness: 0.35
+  completeness: 0.30
+  coherence: 0.10
+  actionability: 0.25
+
+passFail:
+  minFactualScore: 0.6
+  requiredFactIds:
+    - fact-adjusted-ebitda
+    - fact-ebitda-condition-fails
+    - fact-recommendation
+  description: >-
+    Must trace the full pipeline: extract management EBITDA, identify QoE
+    adjustment to $9.6M, and conclude that the $10.5M closing condition
+    fails. A recommendation to proceed at management's terms is a fail.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a multi-agent coordinator running a sequential due diligence
+    pipeline. You manage three agents that must run in order:
+
+    1. extractor — pulls structured financial data from the CIM
+    2. analyst — cross-references extracted data against the QoE report
+       to identify discrepancies
+    3. advisor — synthesizes the analysis against deal terms into a
+       board recommendation
+
+    Dispatch extractor first with the CIM source. Once extractor completes,
+    dispatch analyst with the QoE source and extractor's findings. Once
+    analyst completes, dispatch advisor with the term sheet source and
+    analyst's discrepancy report.
+
+    Each agent receives only its assigned source documents plus the
+    previous agent's output. Do not skip stages or combine agents.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+    - name: summarizer
+      version: "1.0.0"
+      policy:
+        type: always
+  limits:
+    maxTasksPerRun: 30
+    maxOperationsPerTask: 5
+    maxTokensPerRun: 500000
+graphAssertions:
+  # --- Run completion ---
+  - type: run_status
+    status: completed
+    description: "Pipeline run must complete successfully"
+
+  # --- Agent existence ---
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: extractor
+    description: "Extractor agent task must exist"
+
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: analyst
+    description: "Analyst agent task must exist"
+
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: advisor
+    description: "Advisor agent task must exist"
+
+  - type: task_count
+    match:
+      role: subagent
+    min: 3
+    max: 3
+    description: "Exactly 3 agent-role tasks"
+
+  # --- Sequential ordering: extractor → analyst → advisor ---
+  - type: task_order
+    first:
+      role: subagent
+      subagentName: extractor
+    then:
+      role: subagent
+      subagentName: analyst
+    description: "Extractor must complete before analyst"
+
+  - type: task_order
+    first:
+      role: subagent
+      subagentName: analyst
+    then:
+      role: subagent
+      subagentName: advisor
+    description: "Analyst must complete before advisor"
+
+  # --- Multi-hop artifact routing ---
+  - type: consumes
+    consumer:
+      role: subagent
+      subagentName: analyst
+    producer:
+      role: subagent
+      subagentName: extractor
+    description: "Analyst must consume extractor's raw financials"
+
+  - type: consumes
+    consumer:
+      role: subagent
+      subagentName: advisor
+    producer:
+      role: subagent
+      subagentName: analyst
+    description: "Advisor must consume analyst's discrepancy report"
+
+  # --- Upstream isolation: later stages don't leak back ---
+  - type: consumes_absent
+    consumer:
+      role: subagent
+      subagentName: extractor
+    producer:
+      role: subagent
+      subagentName: analyst
+    description: "Extractor must NOT consume analyst's output"
+
+  - type: consumes_absent
+    consumer:
+      role: subagent
+      subagentName: extractor
+    producer:
+      role: subagent
+      subagentName: advisor
+    description: "Extractor must NOT consume advisor's output"

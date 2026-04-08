@@ -1,0 +1,62 @@
+# DSP-001 · dispatch
+#
+# Simple factual question answerable with a single web search.
+# The agent should call web-search directly, NOT activate the researcher skill.
+# Tests the system prompt's guidance: "prefer a direct tool call over a skill
+# activation when a single tool invocation would accomplish the same thing."
+
+id: dsp-001
+category: dispatch
+name: Single search — direct tool preferred
+description: >-
+  A simple factual question that requires one web search. Tests whether the
+  agent dispatches directly to the web-search tool instead of activating the
+  researcher skill unnecessarily.
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 20
+    content: |
+      No source documents are provided. Use your tools to find the answer.
+
+question: |
+  What is the current population of Iceland?
+
+referenceFacts:
+  - id: fact-1
+    description: Returns a population figure for Iceland
+    canonical: "Iceland"
+    weight: 1
+
+passFail:
+  description: >-
+    Must use web-search as a direct tool call. Should NOT activate the
+    researcher skill for a single-search question.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a general-purpose research assistant. Answer questions using the
+    tools and skills available to you. Use the simplest approach that answers
+    the question.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+
+graphAssertions:
+  - type: task_exists
+    match:
+      role: tool
+      operationType: tool_call
+    description: "Agent should call a tool directly (not activate a skill)"
+
+  - type: task_absent
+    match:
+      subagentName: researcher
+    description: "Agent should NOT activate researcher skill for a single search"
+
+  - type: run_status
+    status: completed
+    description: "Run should complete successfully"

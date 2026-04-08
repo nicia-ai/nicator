@@ -1,0 +1,38 @@
+{
+  "name": "web-fetch",
+  "version": "1.0.0",
+  "description": "Fetch a URL and return its content as markdown. Extracts article content from HTML pages using readability, converts to markdown preserving headings, links, lists, tables, and code blocks. Supports PDF text extraction. Truncates at 8,000 tokens.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "description": "The URL to fetch."
+      }
+    },
+    "required": ["url"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "content": {
+        "type": "string",
+        "description": "The extracted content in markdown (HTML pages) or plain text (PDFs, text files)."
+      },
+      "url": {
+        "type": "string",
+        "description": "The final URL after redirects."
+      },
+      "tokenCount": {
+        "type": "integer",
+        "description": "Estimated token count of the content."
+      },
+      "truncated": {
+        "type": "boolean",
+        "description": "Whether the content was truncated."
+      }
+    },
+    "required": ["content", "url", "tokenCount", "truncated"]
+  }
+}

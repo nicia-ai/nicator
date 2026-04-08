@@ -1,0 +1,68 @@
+# DSP-005 - dispatch
+#
+# Tests that the skill sub-loop makes multiple inner tool calls. The
+# question requires searching for three distinct data points, which should
+# produce at least 3 operations within the researcher task.
+
+id: dsp-005
+category: dispatch
+name: Skill sub-loop — multiple inner tool calls
+description: >-
+  A research question requiring multiple searches within the researcher
+  skill's sub-loop. Tests inner tool iteration.
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 20
+    content: |
+      No source documents provided. Use your tools to find the answer.
+
+question: |
+  Research the following three specific data points and report all three:
+  (1) the current CEO of Microsoft,
+  (2) the current CEO of Google/Alphabet,
+  (3) the current CEO of Amazon.
+
+referenceFacts:
+  - id: fact-1
+    description: Microsoft CEO
+    canonical: "Satya Nadella"
+    pattern: "Nadella"
+    weight: 1
+  - id: fact-2
+    description: Google CEO
+    canonical: "Sundar Pichai"
+    pattern: "Pichai"
+    weight: 1
+
+passFail:
+  description: >-
+    Researcher skill must make multiple tool calls within its sub-loop.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a research assistant. Use the researcher skill to find the answer.
+    The researcher should search for each data point separately.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+
+graphAssertions:
+  - type: task_exists
+    match:
+      subagentName: researcher
+      status: completed
+    description: "Researcher skill must complete"
+
+  - type: operation_count
+    task:
+      subagentName: researcher
+    min: 3
+    description: "Researcher must make at least 3 operations (primary + 2+ tool calls)"
+
+  - type: run_status
+    status: completed
+    description: "Run should complete successfully"

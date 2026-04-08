@@ -1,0 +1,406 @@
+# KWB-040 · synthesis
+#
+# Multi-hop financial due diligence across three long documents. The headline
+# figures look clean, but footnotes qualify them, an appendix restates a key
+# number, and one source's assumptions silently contradict another's. Getting
+# full marks requires:
+#   1. Noticing that "adjusted EBITDA" in the CIM uses a non-standard add-back
+#      (stock-based comp + restructuring) that inflates the margin by ~4pp
+#   2. Cross-referencing the QoE report's footnote 3 (which flags $2.8M of
+#      the add-back as non-recurring vs management's claim of recurring savings)
+#   3. Reconciling the bank model's revenue projection with the CIM's pipeline
+#      data (the bank assumes 92% conversion; the CIM buries a 74% historical
+#      win rate in an appendix table)
+#   4. Identifying that the net working capital in the CIM excludes a $4.1M
+#      related-party receivable disclosed only in QoE footnote 7
+#
+# Floor: Baseline will extract headline numbers and produce a reasonable-
+# sounding summary. It will likely miss the footnote contradictions.
+# Ceiling: Full marks require multi-hop reconciliation across documents and
+# explicit identification of where sources disagree.
+
+id: kwb-040
+category: synthesis
+name: Due diligence reconciliation with footnote contradictions
+description: >-
+  Three due diligence documents for a mid-market acquisition. Headline figures
+  appear consistent, but footnotes and appendices contain contradictions that
+  materially affect the deal thesis. Requires multi-hop reasoning across
+  documents to identify where sources silently disagree.
+
+sources:
+  - id: src-cim
+    title: "Confidential Information Memorandum — NovaBridge Technologies"
+    tokenCount: 3200
+    content: |
+      CONFIDENTIAL INFORMATION MEMORANDUM
+      NovaBridge Technologies, Inc.
+      Prepared by Granite Peak Advisors — January 2025
+
+      EXECUTIVE SUMMARY
+
+      NovaBridge Technologies is a vertical SaaS platform serving mid-market
+      property management companies across the United States. Founded in 2017,
+      the company has grown revenue from $8.2M (FY2021) to $47.3M (FY2024, LTM
+      ending September 30), representing a 4-year CAGR of 55%. NovaBridge is
+      offered for sale as a platform investment for a growth-oriented private
+      equity sponsor.
+
+      FINANCIAL HIGHLIGHTS (LTM ending September 30, 2024)
+
+      Revenue:                $47.3M
+      Gross Profit:           $34.9M (73.8% gross margin)
+      Adjusted EBITDA:        $11.8M (24.9% margin)
+      Net Revenue Retention:  118%
+      Customers:              412 (up from 287 in FY2023)
+      ARR:                    $51.6M (as of Oct 1, 2024)
+
+      Adjusted EBITDA is calculated as GAAP operating income plus stock-based
+      compensation ($3.2M), depreciation and amortization ($1.4M), one-time
+      restructuring charges ($2.8M), and non-recurring professional fees ($0.6M).
+
+      REVENUE COMPOSITION
+
+      NovaBridge generates revenue from three streams:
+        - Platform subscriptions: $38.1M (80.6% of total)
+        - Implementation services: $5.4M (11.4%)
+        - Marketplace transaction fees: $3.8M (8.0%)
+
+      Platform subscriptions are annual contracts with an average contract value
+      (ACV) of $125K. The company's top 10 customers account for 23% of ARR.
+      Customer concentration has improved from 34% (FY2022) to 23% (FY2024).
+
+      GROWTH TRAJECTORY
+
+      Management projects FY2025 revenue of $62.0M based on:
+        - Existing customer expansion (NRR of 118%): $8.4M
+        - New logo pipeline: $6.3M from 48 qualified opportunities
+
+      The sales pipeline as of October 2024 contains 48 qualified opportunities
+      with a weighted pipeline value of $9.2M. Management applies a 92%
+      conversion factor to qualified opportunities based on internal pipeline
+      staging criteria.
+
+      MARKET POSITION
+
+      The property management SaaS market is estimated at $4.8B (2024) and
+      growing at 12% annually. NovaBridge holds approximately 1% market share
+      with significant room for expansion. The company competes with Yardi
+      (enterprise), AppFolio (SMB), and Buildium (SMB) but differentiates on
+      mid-market-specific workflows.
+
+      TECHNOLOGY PLATFORM
+
+      The platform is cloud-native (AWS), multi-tenant, with SOC 2 Type II
+      certification. The engineering team of 52 (42% of headcount) maintains a
+      monthly deployment cadence. Technical debt is manageable; the company
+      completed a core architecture migration from monolith to microservices in
+      H1 2024.
+
+      NET WORKING CAPITAL
+
+      Net working capital (excluding cash) at September 30, 2024 was $6.2M,
+      comprising:
+        - Accounts receivable: $7.8M (DSO: 60 days)
+        - Prepaid expenses: $1.9M
+        - Accounts payable: ($2.3M)
+        - Accrued liabilities: ($1.2M)
+
+      Working capital has been stable as a percentage of revenue (13-14%)
+      over the past three fiscal years.
+
+      APPENDIX C — HISTORICAL WIN RATES
+
+      The following table shows historical new-logo conversion rates by
+      pipeline stage:
+
+      | Stage              | FY2022 | FY2023 | FY2024 (YTD) | Wtd Avg |
+      |--------------------|--------|--------|--------------|---------|
+      | Qualified → Closed | 81%    | 76%    | 68%          | 74%     |
+      | Proposal → Closed  | 89%    | 85%    | 83%          | 85%     |
+      | Verbal → Closed    | 96%    | 94%    | 91%          | 93%     |
+
+      Note: "Qualified" stage represents opportunities that have completed
+      discovery and received a formal proposal. Win rates are calculated on a
+      dollar-weighted basis.
+
+  - id: src-qoe
+    title: "Quality of Earnings Report — Prepared by Whitfield & Associates"
+    tokenCount: 2800
+    content: |
+      QUALITY OF EARNINGS — NOVABRIDGE TECHNOLOGIES, INC.
+      Draft Report — Whitfield & Associates LLP
+      Engagement Period: November 2024
+      Scope: LTM Financial Review (Oct 2023 — Sep 2024)
+
+      1. REVENUE QUALITY
+
+      1.1 We confirmed LTM revenue of $47.3M through customer-level contract
+      analysis. Revenue recognition follows ASC 606 and is materially compliant.
+
+      1.2 Implementation revenue ($5.4M) includes $1.1M of deferred revenue
+      recognized in the period from contracts signed in FY2023. This is
+      non-recurring in nature — the deferred balance was drawn down and current
+      period signings generate implementation revenue recognized ratably over
+      the implementation period (typically 60-90 days). Future-period
+      implementation revenue will be lower absent acceleration.
+
+      1.3 Marketplace transaction fees ($3.8M) are volume-dependent and showed
+      Q3 seasonality (Q3 = $1.3M vs $0.8M average for Q1/Q2/Q4). We estimate
+      normalized run-rate marketplace revenue of $3.2M annually.
+
+      2. EBITDA ADJUSTMENTS
+
+      2.1 Management presents Adjusted EBITDA of $11.8M. We have reviewed each
+      adjustment:
+
+      Adjustment                          Amount    QoE Assessment
+      ─────────────────────────────────────────────────────────────
+      Stock-based compensation            $3.2M     Standard add-back.
+                                                    However, NovaBridge
+                                                    expects to continue
+                                                    granting SBC at $2.8-
+                                                    3.5M annually. A
+                                                    replacement buyer should
+                                                    treat this as recurring
+                                                    operating expense.
+
+      Restructuring charges               $2.8M     See footnote 3.
+
+      Depreciation & amortization         $1.4M     Standard. No adjustment.
+
+      Non-recurring professional fees     $0.6M     Confirmed one-time
+                                                    (SOC 2 initial cert +
+                                                    patent filing).
+
+      GAAP Operating Income               $3.8M
+
+      Footnote 3: Restructuring charges of $2.8M relate to (a) severance for
+      the former CRO and two VPs ($1.1M), (b) lease termination for the Austin
+      office ($0.9M), and (c) a vendor contract exit for the legacy analytics
+      platform ($0.8M). Items (a) and (b) are non-recurring. Item (c) is
+      contested: management characterizes the analytics platform exit as a
+      one-time cost, but Whitfield notes that NovaBridge has exited a vendor
+      platform in each of the past three fiscal years ($0.6M in FY2022, $0.7M
+      in FY2023, $0.8M in FY2024). We recommend treating $0.8M of the
+      restructuring as recurring, reducing Adjusted EBITDA to $11.0M.
+
+      3. BALANCE SHEET OBSERVATIONS
+
+      3.1 Cash and equivalents: $14.2M (unrestricted).
+
+      3.2 Accounts receivable of $7.8M includes $4.1M due from PropVenture
+      Holdings LLC, a related party (PropVenture's CEO is a board observer at
+      NovaBridge). The receivable has been outstanding for 94 days. Management
+      states it will be collected in Q1 2025 but has not provided a payment
+      plan. If excluded, DSO on third-party receivables improves to 29 days.
+
+      Footnote 7: The $4.1M PropVenture receivable is not separately identified
+      in the CIM's working capital schedule. The CIM presents total AR of $7.8M
+      and DSO of 60 days without disclosing that 53% of the receivable balance
+      is a single related-party amount. Buyers should consider whether this
+      receivable is collectible and whether net working capital should be
+      adjusted to exclude it, which would reduce NWC from $6.2M to $2.1M.
+
+      4. CUSTOMER METRICS
+
+      4.1 Net revenue retention of 118% is confirmed. However, the calculation
+      includes implementation revenue in the expansion numerator. Excluding
+      implementation (subscription + marketplace only), NRR is 112%.
+
+      4.2 Customer count of 412 includes 38 accounts classified as "suspended"
+      (no billing activity in 90+ days). Active paying customers: 374.
+
+      5. FORWARD PROJECTIONS
+
+      5.1 Management's FY2025 revenue projection of $62.0M assumes:
+        - NRR-driven expansion: $8.4M (applied to subscription base only)
+        - New logo revenue: $6.3M (48 opportunities × $131K ACV × 100%)
+
+      5.2 The new logo assumption implicitly assumes 100% conversion of the
+      current qualified pipeline. Historical qualified-to-closed rates have
+      averaged 74% (see CIM Appendix C). Applying the historical rate yields
+      new logo revenue of $4.7M, reducing the FY2025 projection to $60.4M.
+
+      5.3 Additionally, if implementation revenue normalizes (§1.2) and
+      marketplace revenue normalizes (§1.3), recurring revenue may be $1.8M
+      lower than management projects. Combined with the pipeline adjustment,
+      we estimate FY2025 revenue of $58.6M vs management's $62.0M.
+
+  - id: src-bank
+    title: "Indicative Financing Term Sheet — Summit Ridge Capital"
+    tokenCount: 1800
+    content: |
+      INDICATIVE TERM SHEET — SENIOR SECURED CREDIT FACILITY
+      Summit Ridge Capital — November 2024
+      Borrower: [Acquisition Vehicle TBD]
+      Target: NovaBridge Technologies, Inc.
+
+      This term sheet is indicative and non-binding.
+
+      FACILITY STRUCTURE
+
+      Term Loan A:        $45.0M (4.0x LTM Adjusted EBITDA)
+      Revolver:           $10.0M (undrawn at close)
+      Total Facility:     $55.0M
+
+      PRICING
+
+      Term Loan A:        SOFR + 475 bps (1.00% floor)
+      Revolver:           SOFR + 425 bps
+      Commitment Fee:     0.50% on undrawn revolver
+
+      KEY FINANCIAL COVENANTS
+
+      1. Total Net Leverage Ratio: ≤ 4.5x at close, stepping down to:
+         - ≤ 4.0x by Q4 2025
+         - ≤ 3.5x by Q4 2026
+         - ≤ 3.0x by Q4 2027
+
+      2. Fixed Charge Coverage Ratio: ≥ 1.25x
+         Calculated as (Adjusted EBITDA – CapEx – Cash Taxes) / (Interest +
+         Scheduled Amortization)
+
+      3. Minimum Liquidity: $5.0M (cash + undrawn revolver availability)
+
+      EBITDA DEFINITION
+
+      "Adjusted EBITDA" for covenant purposes is defined as GAAP net income
+      plus interest, taxes, depreciation, amortization, and:
+
+      Permitted add-backs (capped):
+        - Stock-based compensation (capped at 6% of revenue)
+        - Transaction and restructuring costs incurred within 12 months of
+          closing (capped at $3.0M aggregate)
+        - Non-recurring professional fees (capped at $1.0M per fiscal year)
+        - Cost savings from completed restructuring actions, provided
+          savings are realized within 6 months (capped at $2.0M)
+
+      Specifically excluded from add-backs:
+        - Projected cost savings not yet realized
+        - Revenue synergies
+        - Add-backs exceeding the caps above
+
+      NOTE: The Term Loan A of $45.0M is sized at 4.0x LTM Adjusted EBITDA,
+      implying an EBITDA of $11.25M. Summit Ridge has reviewed the Whitfield
+      QoE report and uses the QoE-adjusted figure of $11.0M for sizing
+      purposes. The $0.25M difference reflects rounding in facility sizing.
+
+      AMORTIZATION
+
+      Term Loan A: 1.0% per annum (quarterly), with excess cash flow sweep
+      of 50% if Total Net Leverage > 3.5x.
+
+      MANDATORY PREPAYMENT
+
+      - 100% of net cash proceeds from asset sales (subject to $1.0M basket)
+      - 50% of excess cash flow if leverage > 3.5x
+      - 100% of net insurance/condemnation proceeds (subject to reinvestment
+        rights within 180 days)
+
+      REPORTING
+
+      Monthly financial statements within 30 days of month-end.
+      Annual audited financials within 90 days of fiscal year-end.
+      Quarterly compliance certificates within 45 days of quarter-end.
+
+      REPRESENTATIONS & CONDITIONS
+
+      Conditions precedent to closing include:
+        - Completion of final QoE report (currently in draft)
+        - Confirmation that net working capital at close is within $1.0M of
+          the reference NWC target (to be agreed based on trailing 12-month
+          average, currently estimated at $6.2M per the CIM)
+        - No material adverse change between signing and closing
+
+question: |
+  You are advising a PE sponsor considering the acquisition of NovaBridge
+  Technologies. Based on the three due diligence documents, prepare a
+  brief assessment covering:
+
+  1. What is the defensible Adjusted EBITDA figure, and where do the
+     sources disagree on adjustments?
+  2. How reliable is management's FY2025 revenue projection of $62.0M?
+  3. Are there any working capital issues the buyer should flag before
+     closing?
+  4. Given the bank's covenant structure, identify any near-term risks
+     to covenant compliance.
+
+  Focus on specific numbers and cross-reference discrepancies between
+  documents. Flag where one source's assumptions contradict another's.
+
+referenceFacts:
+  - id: fact-1
+    description: QoE-adjusted EBITDA is $11.0M, not management's $11.8M
+    canonical: "11.0"
+    pattern: "\\$?11\\.0[Mm]?.*(?:adjusted|QoE|Whitfield)|(?:QoE|Whitfield|adjusted).*\\$?11\\.0"
+    weight: 3
+  - id: fact-2
+    description: >-
+      $0.8M of restructuring is recurring (vendor platform exits in 3
+      consecutive years)
+    canonical: "recurring"
+    pattern: "(?:vendor|platform|analytics).*(?:recur|annual|each year|three.*year|pattern)|(?:recur|pattern).*(?:vendor|platform exit)"
+    weight: 3
+  - id: fact-3
+    description: >-
+      SBC is treated as a standard add-back but QoE flags it as
+      ongoing operating expense ($2.8-3.5M/yr)
+    canonical: "stock-based compensation"
+    pattern: "(?:SBC|stock.based).*(?:recurring|ongoing|operat|continu)|(?:recurring|ongoing).*(?:SBC|stock.based)"
+    weight: 2
+  - id: fact-4
+    description: >-
+      Pipeline conversion: CIM uses 92% but historical win rate is 74%
+      (Appendix C)
+    canonical: "74%"
+    pattern: "(?:74|seventy.four).*(?:percent|%|win rate|conversion|historical)|(?:win rate|conversion|historical).*(?:74|seventy.four)"
+    weight: 3
+  - id: fact-5
+    description: >-
+      FY2025 revenue is closer to $58.6M after pipeline and
+      normalization adjustments
+    canonical: "58.6"
+    pattern: "\\$?58\\.?6|\\$?59|\\$?60\\.?4"
+    weight: 2
+  - id: fact-6
+    description: >-
+      $4.1M related-party receivable (PropVenture) is not disclosed in
+      CIM working capital schedule
+    canonical: "PropVenture"
+    pattern: "PropVenture|related.party.*(?:receiv|4\\.1)|(?:receiv|4\\.1).*related.party"
+    weight: 3
+  - id: fact-7
+    description: >-
+      NWC may be $2.1M (not $6.2M) if related-party receivable excluded,
+      which risks the bank's NWC closing condition
+    canonical: "2.1"
+    pattern: "(?:NWC|working capital).*(?:2\\.1|reduce|adjust)|\\$?2\\.1[Mm]?.*(?:NWC|working capital|exclud)"
+    weight: 2
+  - id: fact-8
+    description: >-
+      Bank's leverage covenant (4.0x by Q4 2025) is tight if EBITDA is
+      $11.0M and debt is $45M (4.1x at close)
+    canonical: "leverage"
+    pattern: "(?:leverage|4\\.0x|4\\.1x|covenant).*(?:tight|risk|exceed|close|breach)|(?:tight|risk|breach).*(?:leverage|covenant)"
+    weight: 2
+
+rubricWeights:
+  faithfulness: 0.35
+  completeness: 0.35
+  coherence: 0.10
+  actionability: 0.20
+
+passFail:
+  minFactualScore: 0.55
+  requiredFactIds: [fact-1, fact-4, fact-6]
+  minJudgeComposite: 0.5
+  description: >-
+    Must identify the QoE-adjusted EBITDA ($11.0M vs $11.8M), the pipeline
+    conversion discrepancy (92% vs 74%), and the undisclosed related-party
+    receivable. These are the three cross-document contradictions that a
+    competent due diligence review must surface. Full credit requires
+    connecting the dots: the NWC issue threatens the bank's closing
+    condition, and the EBITDA adjustment makes leverage covenants tighter.
+
+expectedSkills: []

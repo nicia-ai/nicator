@@ -1,0 +1,117 @@
+# KWB-001 · synthesis
+#
+# Three analyst reports on the same company reach different conclusions about
+# its cash position. The task requires synthesizing across all three, identifying
+# the discrepancy, and explaining it.
+#
+# Floor: The baseline can usually extract the numbers from individual reports.
+# Ceiling: Full credit requires noticing that reports use different accounting
+# dates and reconciling accordingly.
+
+id: kwb-001
+category: synthesis
+name: Conflicting cash position reports
+description: >-
+  Synthesize three analyst reports that report different cash figures for the
+  same company. Identify the discrepancy and explain its source.
+
+sources:
+  - id: src-a
+    title: "Meridian Capital — Quarterly Flash Note (Q3 close)"
+    tokenCount: 312
+    content: |
+      Acorn Systems (ACRS) — Q3 Flash
+
+      Revenue came in at $42.1M, slightly ahead of our $41.8M estimate. The company exited
+      the quarter with $87.4M in cash and equivalents, providing approximately 14 months of
+      runway at the current burn rate of $6.2M/month. Management reaffirmed full-year
+      guidance of $165M–$170M.
+
+      Notable: Acorn drew $15M on its revolving credit facility in mid-September to cover a
+      vendor prepayment. The draw was repaid in full by October 3rd and should not be
+      interpreted as a liquidity signal. Excluding the transient draw, net cash was $87.4M
+      at quarter close.
+
+      We maintain our Buy rating with a $28 price target.
+
+  - id: src-b
+    title: "Stonebridge Research — ACRS Initiation of Coverage"
+    tokenCount: 289
+    content: |
+      Initiating Coverage: Acorn Systems (ACRS) — Buy, $31 PT
+
+      Acorn ended the most recently reported period with $72.4M in cash, cash equivalents,
+      and short-term investments. At the company's stated burn rate, this represents roughly
+      11–12 months of runway. We model an additional raise in H1 next year.
+
+      The balance sheet is adequate but not comfortable. Our $31 price target assumes the
+      company executes on its enterprise pipeline without requiring dilutive equity.
+
+      Risk: any deterioration in the enterprise sales cycle could compress runway below
+      our 12-month threshold, triggering covenant concerns on the existing credit facility.
+
+  - id: src-c
+    title: "Acorn Systems — Q3 Earnings Press Release"
+    tokenCount: 204
+    content: |
+      ACORN SYSTEMS REPORTS THIRD QUARTER 2024 RESULTS
+
+      San Francisco, CA — Acorn Systems (NASDAQ: ACRS) today reported financial results
+      for the third quarter ended September 30, 2024.
+
+      Third Quarter Highlights:
+      - Revenue: $42.1 million (+31% YoY)
+      - Gross margin: 68.4%
+      - Cash, cash equivalents, and short-term investments: $87.4 million
+      - Revolving credit facility: $0 drawn at quarter close
+
+      "We are pleased with our Q3 execution," said CEO Diana Marsh. "Our cash position
+      of $87.4 million provides a strong foundation as we accelerate our go-to-market
+      investments in Q4."
+
+question: |
+  Three sources report different cash figures for Acorn Systems:
+  - Meridian Capital reports $87.4M
+  - Stonebridge Research reports $72.4M
+  - The company's own press release reports $87.4M
+
+  Explain the discrepancy. Which figure is correct for Q3-end, and what explains
+  the difference in Stonebridge's number? What should an investor take away from
+  this?
+
+referenceFacts:
+  - id: fact-1
+    description: Q3-end cash figure agreed by Meridian and press release
+    canonical: "87.4"
+    weight: 2
+  - id: fact-2
+    description: Stonebridge figure includes short-term investments
+    canonical: short-term investments
+    weight: 2
+  - id: fact-3
+    description: Revolving credit draw was transient / repaid
+    canonical: repaid
+    pattern: "repaid|paid back|cleared|transient"
+    weight: 1
+  - id: fact-4
+    description: Stonebridge figure likely reflects a different date or definition
+    canonical: "72.4"
+    weight: 1
+
+rubricWeights:
+  faithfulness: 0.35
+  completeness: 0.35
+  coherence: 0.15
+  actionability: 0.15
+
+passFail:
+  minFactualScore: 0.6
+  requiredFactIds: [fact-1, fact-2]
+  minJudgeComposite: 0.5
+  description: >-
+    Must correctly identify $87.4M as the Q3-end figure and explain that
+    Stonebridge's lower number reflects a different asset definition
+    (short-term investments).
+
+expectedSkills:
+  - researcher

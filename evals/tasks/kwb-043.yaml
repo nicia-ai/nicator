@@ -1,0 +1,482 @@
+# KWB-043 · decision-support
+#
+# Four documents: a requirements spec and three vendor proposals for a
+# data platform migration. The difficulty:
+#
+#   1. The requirements doc has a hard constraint buried in Section 5.3
+#      (data must not leave the EU) — one vendor's fine print reveals
+#      their metadata/control plane is US-hosted
+#   2. A second vendor meets all functional requirements but their
+#      pricing appendix reveals a per-query cost that, at the stated
+#      query volume from the requirements, makes them 3x more expensive
+#      than their headline price suggests
+#   3. The third vendor has a "maximum dataset size" footnote that falls
+#      short of the requirements doc's data volume projection for Year 3
+#   4. Each vendor proposal is written to look maximally favorable; the
+#      disqualifiers are in appendices, footnotes, or require arithmetic
+#      to discover
+#   5. The correct recommendation must acknowledge that no vendor is
+#      perfect — the "best" option has a mitigable risk, not a clean win
+#
+# Floor: Baseline picks the vendor that looks best on headline features.
+# Ceiling: Full marks require cross-referencing requirements against
+# vendor fine print and showing the math on the pricing model.
+
+id: kwb-043
+category: decision-support
+name: Vendor evaluation with buried disqualifiers
+description: >-
+  Evaluate three data platform vendors against a requirements document.
+  Each vendor's proposal is written to appear favorable; disqualifying
+  limitations are buried in appendices, footnotes, and pricing tables
+  that require arithmetic to evaluate. No vendor is perfect — the correct
+  answer identifies the least-bad option with explicit risk acknowledgment.
+
+sources:
+  - id: src-req
+    title: "Data Platform Migration — Requirements Specification v2.0"
+    tokenCount: 2200
+    content: |
+      DATA PLATFORM MIGRATION — REQUIREMENTS SPECIFICATION
+      Project Codename: Atlas
+      Author: Data Engineering — Platform Team
+      Version: 2.0 — November 2024
+      Status: APPROVED by CTO and CISO
+
+      1. BACKGROUND
+
+      Meridian Analytics is migrating from a legacy on-premises data warehouse
+      (Teradata) to a cloud-native data platform. The migration must be
+      completed within 18 months of vendor selection. The platform will serve
+      three primary use cases: (a) operational reporting (finance, ops, HR),
+      (b) customer analytics and ML feature serving, and (c) regulatory
+      reporting for EU financial services compliance.
+
+      2. DATA VOLUME AND GROWTH
+
+      2.1 Current State
+      - Structured data: 45 TB (PostgreSQL exports, Teradata tables)
+      - Semi-structured data: 12 TB (JSON event logs, API responses)
+      - Total: 57 TB
+
+      2.2 Growth Projections
+      - Year 1: 80 TB (migration + organic growth)
+      - Year 2: 130 TB
+      - Year 3: 210 TB (driven by ML feature store expansion)
+
+      2.3 Query Volume
+      - Operational queries: 15,000/day (mostly dashboards, avg < 5 sec)
+      - Analytical queries: 800/day (complex joins, avg 30-120 sec)
+      - ML batch jobs: 50/day (full table scans, can tolerate minutes)
+      - Total: ~15,850 queries/day
+
+      3. FUNCTIONAL REQUIREMENTS
+
+      3.1 Core Platform
+      - R-001: Support for SQL-based querying (ANSI SQL compliant)
+      - R-002: Native support for semi-structured data (JSON, Parquet, Avro)
+      - R-003: Separation of storage and compute
+      - R-004: Automatic scaling of compute resources
+      - R-005: Support for concurrent workloads without contention
+      - R-006: Time-travel / versioned data (minimum 30 days)
+
+      3.2 Data Integration
+      - R-010: Native connectors for PostgreSQL, S3, Kafka
+      - R-011: CDC (Change Data Capture) support
+      - R-012: Streaming ingestion (sub-minute latency)
+      - R-013: Schema evolution without downtime
+
+      3.3 Security and Governance
+      - R-020: Column-level access control
+      - R-021: Data masking for PII
+      - R-022: Full audit trail of data access
+      - R-023: Integration with enterprise IAM (Okta)
+
+      4. NON-FUNCTIONAL REQUIREMENTS
+
+      4.1 Performance
+      - N-001: 95th percentile query latency ≤ 5 seconds for operational
+        queries
+      - N-002: Minimum throughput of 1,000 concurrent queries
+      - N-003: Data ingestion rate ≥ 50 GB/hour sustained
+
+      4.2 Reliability
+      - N-010: 99.95% platform availability (measured monthly)
+      - N-011: RPO ≤ 1 hour, RTO ≤ 4 hours
+
+      5. COMPLIANCE AND DATA RESIDENCY
+
+      5.1 Regulatory Framework
+      The platform must support compliance with MiFID II, GDPR, and the
+      EU Digital Operational Resilience Act (DORA).
+
+      5.2 Audit Requirements
+      All data access must be auditable. Query logs must be retained for
+      7 years for regulatory reporting datasets.
+
+      5.3 Data Residency — MANDATORY
+      ALL data — including raw data, processed data, metadata, query logs,
+      and system telemetry — must be stored and processed exclusively
+      within the European Union. No data may transit through or be stored
+      in non-EU jurisdictions, including for backup, disaster recovery,
+      or platform management purposes. This requirement is non-negotiable
+      and is a condition of our operating license from the BaFin.
+
+      6. BUDGET
+
+      6.1 Annual Budget
+      The approved annual budget for the data platform (excluding migration
+      costs) is €2.4M. This covers compute, storage, licensing, and
+      managed services. It does not include internal headcount.
+
+      6.2 Migration Budget
+      One-time migration budget: €800K (includes consulting, tooling,
+      parallel-run costs).
+
+      7. EVALUATION CRITERIA
+
+      Vendors will be evaluated on:
+        - Functional completeness (30%)
+        - Data residency compliance (25%) — PASS/FAIL
+        - Total cost of ownership over 3 years (20%)
+        - Migration complexity and timeline risk (15%)
+        - Vendor stability and support (10%)
+
+      Data residency is a hard gate: any vendor that cannot meet Section 5.3
+      is disqualified regardless of other criteria.
+
+  - id: src-vendor-a
+    title: "Proposal — DataForge Cloud Platform"
+    tokenCount: 2000
+    content: |
+      DATAFORGE CLOUD PLATFORM
+      Proposal for Meridian Analytics — Project Atlas
+      Submitted: December 2024
+
+      EXECUTIVE SUMMARY
+
+      DataForge is a cloud-native analytical data platform built for
+      enterprise workloads. Our platform serves 400+ enterprise customers
+      including 12 EU-regulated financial institutions. We offer a fully
+      managed service with EU-region deployment.
+
+      FUNCTIONAL COMPLIANCE
+
+      | Requirement | DataForge Capability              | Status      |
+      |-------------|-----------------------------------|-------------|
+      | R-001       | Full ANSI SQL + extensions        | ✓ Compliant |
+      | R-002       | Native JSON, Parquet, Avro, ORC   | ✓ Compliant |
+      | R-003       | Decoupled storage (object store)  | ✓ Compliant |
+      | R-004       | Auto-scaling compute clusters     | ✓ Compliant |
+      | R-005       | Workload isolation (virtual WH)   | ✓ Compliant |
+      | R-006       | Time-travel: 90 days (configurable)| ✓ Exceeds  |
+      | R-010       | PostgreSQL, S3, Kafka connectors  | ✓ Compliant |
+      | R-011       | CDC via Debezium integration      | ✓ Compliant |
+      | R-012       | Streaming: Kafka direct ingest    | ✓ Compliant |
+      | R-013       | Schema evolution (additive)       | ✓ Compliant |
+      | R-020       | Column-level RBAC                 | ✓ Compliant |
+      | R-021       | Dynamic data masking              | ✓ Compliant |
+      | R-022       | Full audit trail (Access History) | ✓ Compliant |
+      | R-023       | Okta SAML/SCIM integration        | ✓ Compliant |
+
+      PERFORMANCE
+
+      - Operational query P95: 2.1 seconds (benchmarked on similar workload)
+      - Concurrent queries: 2,000+ (tested)
+      - Ingestion rate: 120 GB/hour sustained
+
+      DATA RESIDENCY
+
+      DataForge offers full EU deployment in our Frankfurt (eu-central-1)
+      and Dublin (eu-west-1) regions. All customer data, including backups,
+      is stored within the EU.
+
+      Our platform management layer — including the control plane that
+      handles cluster orchestration, billing metering, and account
+      management — is operated from our global infrastructure. The control
+      plane does not store customer data, but it does process metadata
+      including: query performance metrics, cluster utilization telemetry,
+      table-level statistics (row counts, column types, byte sizes), and
+      user account information (email addresses, roles, login events).
+
+      See Appendix D for our data residency architecture diagram.
+
+      PRICING
+
+      Annual platform cost based on stated requirements:
+
+      | Component              | Annual Cost    |
+      |------------------------|----------------|
+      | Compute (auto-scaling) | €1,200,000     |
+      | Storage (Year 1: 80TB) | €192,000       |
+      | Ingestion              | Included       |
+      | Support (Premier)      | €180,000       |
+      | **Total Year 1**       | **€1,572,000** |
+
+      Year 2 estimate: €1,850,000 (storage growth to 130 TB)
+      Year 3 estimate: €2,180,000 (storage growth to 210 TB)
+      3-year total: €5,602,000
+
+      Note: Pricing assumes DataForge Standard compute tier. Enterprise
+      tier (required for column-level RBAC and audit trail features) is
+      priced at 1.4x the Standard tier rate. The functional compliance
+      table above reflects Enterprise tier capabilities.
+
+      MIGRATION SUPPORT
+
+      DataForge Migration Accelerator: white-glove migration service with
+      dedicated engineering team. Typical Teradata migration: 12-16 weeks.
+      Included in standard onboarding for contracts over €1M/year.
+
+  - id: src-vendor-b
+    title: "Proposal — Lakestream Analytics Platform"
+    tokenCount: 1800
+    content: |
+      LAKESTREAM ANALYTICS PLATFORM
+      Response to Meridian Analytics RFP — Project Atlas
+      December 2024
+
+      ABOUT LAKESTREAM
+
+      Lakestream is a next-generation lakehouse platform that unifies
+      structured and semi-structured analytics on open data formats.
+      Founded in 2019, we serve 200+ customers across Europe and North
+      America, including 6 EU banks under ECB supervision.
+
+      FUNCTIONAL COMPLIANCE
+
+      All 14 functional requirements (R-001 through R-023) are fully met.
+      Lakestream's lakehouse architecture natively supports all listed
+      capabilities. See Appendix A for detailed compliance mapping.
+
+      Highlights:
+      - SQL engine: Photon-accelerated, ANSI SQL compliant
+      - Semi-structured: Delta Lake with native JSON/Parquet
+      - Compute/storage separation: yes, with auto-scaling
+      - Time-travel: unlimited (configurable retention)
+      - Column-level security: Unity Catalog
+      - Okta integration: SAML 2.0 + SCIM provisioning
+
+      PERFORMANCE
+
+      Benchmark results on comparable workload (45 TB, financial services):
+      - Operational P95: 1.8 seconds
+      - Concurrent queries: 3,000+
+      - Ingestion: 200 GB/hour (Spark Structured Streaming)
+
+      DATA RESIDENCY
+
+      Lakestream operates a fully sovereign EU cloud region (Frankfurt).
+      All data, metadata, control plane services, and telemetry are
+      processed and stored within the EU. We achieve this through our
+      EU Sovereign Cloud architecture, deployed on EU-only infrastructure
+      with no dependencies on non-EU systems.
+
+      Lakestream holds EU Cloud Code of Conduct certification (2024) and
+      has been approved by BaFin for use by regulated financial institutions.
+
+      PRICING
+
+      | Component                 | Annual Cost    |
+      |---------------------------|----------------|
+      | Platform license          | €480,000       |
+      | Compute (committed)       | €720,000       |
+      | Storage (Year 1: 80TB)    | €160,000       |
+      | Support (Enterprise)      | €120,000       |
+      | **Subtotal Year 1**       | **€1,480,000** |
+
+      Query processing fee: €0.008 per query (all query types).
+
+      Year 1 query cost: 15,850 queries/day × 365 × €0.008 = €46,282
+      Year 1 total: €1,526,282
+
+      Note: Query fees are billed on actual usage. The estimate above uses
+      the stated query volume of 15,850/day. Query volume projections for
+      Years 2 and 3 were not provided in the RFP.
+
+      APPENDIX B — CAPACITY LIMITS
+
+      Lakestream platform limits (per workspace):
+
+      | Parameter            | Standard    | Enterprise  |
+      |----------------------|-------------|-------------|
+      | Max dataset size     | 100 TB      | 500 TB      |
+      | Max concurrent users | 500         | 2,000       |
+      | Max clusters         | 20          | 100         |
+      | Query timeout        | 30 min      | 120 min     |
+
+      Meridian's proposal is priced at the Standard tier. Upgrade to
+      Enterprise tier available at 1.8x the platform license fee.
+
+      Footnote: The "Max dataset size" limit applies to the total volume of
+      data managed by a single Lakestream workspace, including raw, staging,
+      and curated layers. Delta log files and time-travel snapshots count
+      toward this limit.
+
+      MIGRATION
+
+      Lakestream Professional Services: dedicated migration team. Teradata
+      migration experience with 4 completed EU bank projects. Estimated
+      timeline: 14-18 weeks. Cost: €350,000 (fixed price).
+
+  - id: src-vendor-c
+    title: "Proposal — Altius Data Cloud"
+    tokenCount: 1600
+    content: |
+      ALTIUS DATA CLOUD
+      Proposal for Project Atlas — Meridian Analytics
+      December 2024
+
+      COMPANY OVERVIEW
+
+      Altius is a European-founded data cloud provider, headquartered in
+      Berlin, serving 150+ enterprise customers across the EU. Purpose-built
+      for EU data sovereignty, with all infrastructure owned and operated
+      within the EU.
+
+      TECHNICAL CAPABILITIES
+
+      Altius meets all 14 functional requirements in the RFP. Key
+      differentiators:
+
+      - SQL engine with full ANSI compliance and proprietary optimizations
+        for financial workloads (MiFID II reporting queries optimized)
+      - Native support for JSON, Parquet, Avro, Delta, and Iceberg
+      - Fully decoupled storage and compute with per-query auto-scaling
+      - Time-travel: 60 days standard, extendable to 365 days
+      - Column-level security with attribute-based access control (ABAC)
+      - Comprehensive audit logging with 10-year retention capability
+      - Okta, Azure AD, and Ping Identity integration
+
+      PERFORMANCE
+
+      Production benchmarks from a comparable EU bank deployment (50 TB):
+      - Operational query P95: 3.2 seconds
+      - Concurrent queries: 1,200
+      - Ingestion: 80 GB/hour
+
+      DATA RESIDENCY
+
+      Altius is 100% EU-sovereign. All infrastructure — compute, storage,
+      networking, control plane, support systems, and backup facilities —
+      is located within the EU (Frankfurt and Amsterdam). Altius has no
+      US entity and no US infrastructure. Our team is 100% EU-based.
+
+      Certifications: EU Cloud Code of Conduct, C5 (BSI), ISO 27001,
+      SOC 2 Type II. Approved by BaFin, AMF, and DNB for regulated
+      financial services use.
+
+      PRICING
+
+      | Component              | Annual Cost    |
+      |------------------------|----------------|
+      | Platform license       | €600,000       |
+      | Compute (auto-scaling) | €960,000       |
+      | Storage (Year 1: 80TB) | €200,000       |
+      | Support (Premium)      | €240,000       |
+      | **Total Year 1**       | **€2,000,000** |
+
+      Year 2 estimate: €2,250,000
+      Year 3 estimate: €2,550,000
+      3-year total: €6,800,000
+
+      No per-query fees. All-inclusive pricing with no hidden costs.
+
+      MIGRATION
+
+      Altius has completed 8 Teradata-to-Altius migrations for EU financial
+      institutions. Our dedicated migration team includes former Teradata
+      engineers. Estimated timeline: 10-14 weeks. Migration support is
+      included at no additional cost for 3-year contracts.
+
+      CUSTOMER REFERENCES
+
+      Available upon request. We can arrange reference calls with 3 EU
+      banks currently running production workloads on Altius, including
+      one with a comparable data volume (60 TB).
+
+question: |
+  Based on the requirements specification and the three vendor proposals,
+  prepare a recommendation for the CTO. For each vendor, identify:
+
+  1. Whether they meet the mandatory data residency requirement (Section 5.3)
+  2. The true 3-year total cost of ownership (watch for pricing gotchas)
+  3. Any capacity or feature limitations that would become problems at scale
+
+  Make a specific recommendation. If no vendor is perfect, identify the
+  best option and the risks the team would need to mitigate.
+
+referenceFacts:
+  - id: fact-1
+    description: >-
+      DataForge fails data residency: control plane processes metadata
+      (query metrics, table stats, user info) outside the EU, violating
+      Section 5.3's requirement that ALL data including metadata and
+      telemetry stay in EU
+    canonical: "control plane"
+    pattern: "(?:DataForge|Vendor A).*(?:control plane|metadata|residency|disqualif|fail|non.EU|outside)|(?:control plane|metadata).*(?:non.EU|outside|US|global|disqualif)"
+    weight: 3
+  - id: fact-2
+    description: >-
+      DataForge's actual Year 1 cost is ~€2.2M (Enterprise tier at 1.4x
+      is required for column-level RBAC and audit trail), not €1.57M
+    canonical: "Enterprise tier"
+    pattern: "(?:DataForge|1\\.4x|Enterprise tier).*(?:cost|price|requir|actual|RBAC|audit)|(?:actual|true|real).*(?:cost|price).*(?:DataForge|Enterprise)"
+    weight: 2
+  - id: fact-3
+    description: >-
+      Lakestream Standard tier caps dataset at 100 TB; Year 3 projection
+      is 210 TB. Must upgrade to Enterprise (1.8x license) to avoid
+      hitting the limit in Year 2-3.
+    canonical: "100 TB"
+    pattern: "(?:Lakestream|100 ?TB|dataset.*limit|capacity).*(?:210|Year 3|exceed|insufficient|upgrade|Enterprise)|(?:210|Year 3).*(?:100 ?TB|limit|capacity)"
+    weight: 3
+  - id: fact-4
+    description: >-
+      Lakestream's query fees scale with volume: at 15,850 queries/day
+      the per-query cost adds ~€46K/yr, but query volume growth is not
+      included in their pricing estimate
+    canonical: "per-query"
+    pattern: "(?:per.query|query fee|\\€0\\.008|query.*cost).*(?:Lakestream|scale|grow|volume)|(?:Lakestream).*(?:per.query|query fee|query cost)"
+    weight: 2
+  - id: fact-5
+    description: >-
+      Altius is the only vendor with full EU sovereignty (no US control
+      plane, no capacity limit problem at 210 TB scale)
+    canonical: "Altius"
+    pattern: "(?:Altius|Vendor C).*(?:sovereign|residency|compliant|recommend|best|only)|(?:recommend|best option|only.*compliant).*(?:Altius|Vendor C)"
+    weight: 2
+  - id: fact-6
+    description: >-
+      Altius costs €2.0M/yr Year 1 (within €2.4M budget) but Year 3 at
+      €2.55M exceeds the budget — this is a risk to flag
+    canonical: "budget"
+    pattern: "(?:Altius|Vendor C).*(?:budget|€2\\.4|€2\\.55|exceed|over|Year 3)|(?:budget|€2\\.4).*(?:Altius|exceed|Year 3)"
+    weight: 2
+  - id: fact-7
+    description: >-
+      Altius has lower performance benchmarks (P95 3.2s vs <5s requirement)
+      which technically passes but leaves less headroom than competitors
+    canonical: "3.2"
+    pattern: "(?:Altius|Vendor C).*(?:3\\.2|performance|headroom|P95|latency)|(?:performance|P95|latency|headroom).*(?:Altius|3\\.2)"
+    weight: 1
+
+rubricWeights:
+  faithfulness: 0.30
+  completeness: 0.25
+  coherence: 0.15
+  actionability: 0.30
+
+passFail:
+  minFactualScore: 0.50
+  requiredFactIds: [fact-1, fact-3, fact-5]
+  minJudgeComposite: 0.5
+  description: >-
+    Must disqualify DataForge on data residency (control plane metadata
+    processed outside EU), identify Lakestream's 100 TB Standard tier
+    cap vs 210 TB Year 3 requirement, and recommend Altius as the
+    strongest option despite its higher cost and performance headroom
+    concerns. A recommendation without identifying DataForge's residency
+    failure or Lakestream's capacity problem is unsupported.
+
+expectedSkills: []
