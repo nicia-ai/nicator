@@ -135,6 +135,13 @@ const SkillInvokedSchema = BaseAssertion.extend({
   skillVersion: z.string().optional(),
 });
 
+/** The final run output must match or include an artifact produced by a task. */
+const RunOutputMatchesArtifactSchema = BaseAssertion.extend({
+  type: z.literal("run_output_matches_artifact"),
+  task: TaskMatcherSchema,
+  mode: z.enum(["exact", "contains"]).default("contains"),
+});
+
 export const GraphAssertionSchema = z.discriminatedUnion("type", [
   TaskExistsSchema,
   TaskAbsentSchema,
@@ -148,6 +155,7 @@ export const GraphAssertionSchema = z.discriminatedUnion("type", [
   CompactionCountSchema,
   RunErrorSchema,
   SkillInvokedSchema,
+  RunOutputMatchesArtifactSchema,
 ]);
 export type GraphAssertion = z.infer<typeof GraphAssertionSchema>;
 
@@ -524,6 +532,64 @@ function evalSkillInvoked(
   };
 }
 
+function normalizeForComparison(text: string): string {
+  return text.replaceAll(/\s+/g, " ").trim();
+}
+
+function evalRunOutputMatchesArtifact(
+  assertion: z.infer<typeof RunOutputMatchesArtifactSchema>,
+  lineage: RunLineage,
+): AssertionResult {
+  if (lineage.run.status !== "completed") {
+    return {
+      assertion,
+      passed: false,
+      detail: `Run status is "${lineage.run.status}", not "completed"`,
+    };
+  }
+
+  const tasks = findTasks(lineage, assertion.task);
+  if (tasks.length === 0) {
+    return {
+      assertion,
+      passed: false,
+      detail: `No task found matching ${describeMatch(assertion.task)}`,
+    };
+  }
+
+  const runOutput = normalizeForComparison(lineage.run.output);
+  for (const task of tasks) {
+    for (const op of task.operations) {
+      for (const artifact of op.artifacts) {
+        const artifactContent = normalizeForComparison(artifact.content);
+        const passed =
+          assertion.mode === "exact" ?
+            runOutput === artifactContent
+          : runOutput.includes(artifactContent);
+        if (passed) {
+          return {
+            assertion,
+            passed: true,
+            detail:
+              assertion.mode === "exact" ?
+                `Run output matches artifact "${artifact.name}" from ${describeMatch(assertion.task)}`
+              : `Run output includes artifact "${artifact.name}" from ${describeMatch(assertion.task)}`,
+          };
+        }
+      }
+    }
+  }
+
+  return {
+    assertion,
+    passed: false,
+    detail:
+      assertion.mode === "exact" ?
+        `Run output does not exactly match any artifact from ${describeMatch(assertion.task)}`
+      : `Run output does not include any artifact content from ${describeMatch(assertion.task)}`,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Main entry point
 // ---------------------------------------------------------------------------
@@ -558,6 +624,8 @@ export function evaluateAssertions(
         return evalRunError(assertion, lineage);
       case "skill_invoked":
         return evalSkillInvoked(assertion, lineage);
+      case "run_output_matches_artifact":
+        return evalRunOutputMatchesArtifact(assertion, lineage);
       default:
         assertNever(assertion);
     }

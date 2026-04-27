@@ -1,5 +1,5 @@
 import type { EvalTask } from "../schema";
-import { FailureModeSchema } from "../schema";
+import { allTaskDocuments, FailureModeSchema } from "../schema";
 import { DIMENSIONS } from "./rubric";
 
 // ---------------------------------------------------------------------------
@@ -121,7 +121,7 @@ export function buildUserPrompt(
   responseA: string,
   responseB: string,
 ): string {
-  const sourcesText = task.sources
+  const sourcesText = allTaskDocuments(task)
     .map((s) => `### ${s.title}\n\n${s.content}`)
     .join("\n\n---\n\n");
 

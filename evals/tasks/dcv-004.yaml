@@ -1,0 +1,975 @@
+# DCV-004 · decomposition-value
+#
+# Fourth decomposition-value task. Different shape from dcv-001..003
+# (all of which used a single long cross-referenced corpus with a
+# prose final answer, and on which the flat baseline kept matching
+# decomposed). dcv-004 picks a shape where decomposition *should*
+# help if the hypothesis is live at all:
+#
+#   - 12 independent vendors, no cross-vendor reasoning required
+#   - Each vendor dossier contains plausible distractors for the real
+#     fact (older cert, hypothetical algorithm, aspirational region)
+#   - 4 attributes per vendor = 48 reference facts; wrong assignment
+#     on any one vendor loses points for that vendor, not just overall
+#   - Final deliverable is a strict fixed-schema feature matrix, not
+#     a gap-register or a prose report
+#
+# Why this shape:
+#
+#   - Flat long-context reasoning has to attend to 12 vendors' buried
+#     facts in a single pass while ignoring distractors; attention
+#     dilution across vendors has a structural cost
+#   - Decomposed: one extract-claims per vendor isolates each dossier's
+#     distractors from the others, then matrix-compiler consolidates
+#   - Factual scoring is per-fact regex proximity; surface-form
+#     sensitivity is handled by rescoring with the per-fact LLM judge
+#     (pnpm eval:rescore --task dcv-004).
+#
+# Planted facts, one row per vendor × four attributes:
+#
+#   VENDOR             SOC 2                      ENCRYPTION          RESIDENCY   BREACH SLA
+#   Quantix            Type II cert 2025-06-15    AES-256             US-only     24h
+#   Forest Ledger      Type I only (no Type II)   AES-256             US+EU       72h
+#   Harborline         Type II cert 2024-11-03    AES-128             global      48h
+#   Prismway           no SOC 2                   AES-256             US-only     24h
+#   Stonebridge        Type II in progress        AES-256             US+EU       48h
+#   Orinoco            Type II cert 2025-09-22    ChaCha20-Poly1305   US-only     72h
+#   Kestrel            Type II cert 2025-02-14    AES-256             US+EU+APAC  24h
+#   Vantage Trail      Type II expired 2024-08    AES-256             EU-only     72h
+#   Meridian           Type II cert 2025-11-29    AES-256             US-only     4h
+#   Polaris            no SOC 2 (ISO 27001 only)  AES-128             US+EU       96h
+#   Copperline         Type II cert 2025-07-18    AES-256             US-only     24h
+#   Twelvefold         Type II in progress        AES-256             US+EU       48h
+#
+# Seven vendors use AES-256, two use AES-128, one uses ChaCha20-Poly1305.
+# Four are US-only, four are US+EU, others mix. Breach SLA values span
+# 4h / 24h / 48h / 72h / 96h. This spread is deliberate: wrong-vendor
+# assignment of a fact is detectable by the scorer, not masked by
+# shared values.
+
+id: dcv-004
+category: decomposition-value
+metadata:
+  purpose: mechanism
+  realism: synthetic
+  releaseGate: research
+  comparisonMode: flat-harness
+  workloadFamily: vendor-matrix
+  hypothesis: >-
+    Decomposing a wide vendor-comparison task into per-vendor extraction
+    plus a structured matrix compiler preserves more per-vendor facts than
+    a single flat pass, because attention to each dossier's distractors is
+    not shared across vendors.
+  stressAxes:
+    - breadth
+    - distractor_density
+    - per_item_isolation
+    - decomposition_fidelity
+name: Vendor compliance matrix — breadth-at-scale
+description: >-
+  Twelve seeded vendor dossiers (each roughly 400 tokens of
+  marketing-framed prose with the authoritative fact buried among
+  older, aspirational, or hypothetical distractors). Produce a fixed
+  four-column feature matrix — SOC 2 status, at-rest encryption
+  algorithm, primary data residency, and breach notification SLA —
+  with one row per vendor. Wrong-vendor assignment is the primary
+  failure mode under test.
+
+sources: []
+
+inputArtifacts:
+  - id: vendor-quantix
+    title: "Quantix Data Systems — Trust & Security Overview"
+    tokenCount: 420
+    content: |
+      # Quantix Data Systems — Trust & Security Overview
+
+      **Product:** Quantix Trust Platform
+      **Category:** Managed data processing
+
+      ## About
+      Quantix Data Systems was founded in 2019 and provides managed data
+      processing services to financial-services and healthcare customers.
+      The platform runs across multiple U.S. regions and serves more than
+      400 customers.
+
+      ## Compliance history
+      Quantix was briefly evaluated for SOC 2 Type I during a 2023
+      pre-sales exercise but elected not to publish the Type I report and
+      instead pursue a full SOC 2 Type II examination. That Type II
+      examination has since completed: Quantix is currently SOC 2 Type II
+      certified, report issue date 2025-06-15, covering the observation
+      period ending 2025-05-31. The report is available under NDA.
+
+      ## Cryptography
+      Customer data at rest uses AES-256 block encryption with
+      per-tenant data keys managed through AWS KMS. Early pilot customers
+      in 2021 were briefly served through an AES-128 sandbox tenancy, but
+      that sandbox was retired in 2022 and no production storage remains
+      on AES-128 today.
+
+      ## Data residency
+      Customer PHI and regulated financial data is stored exclusively in
+      U.S. AWS regions. Quantix has evaluated adding an EU presence and a
+      Canadian presence in the past, but no non-U.S. region is currently
+      in production. Quantix is a US-only platform from a data-storage
+      standpoint.
+
+      ## Breach notification
+      Quantix customer DPAs commit Quantix to notify an affected customer
+      within 24 hours of confirming a material security incident. This
+      24-hour commitment is contractual and applies to every production
+      customer on the current DPA template.
+
+  - id: vendor-forest-ledger
+    title: "Forest Ledger — Security & Compliance Datasheet"
+    tokenCount: 410
+    content: |
+      # Forest Ledger — Security & Compliance Datasheet
+
+      **Product:** Forest Ledger Audit Cloud
+      **Category:** Regulatory audit trail as a service
+
+      ## Certifications
+      Forest Ledger has completed a SOC 2 Type I examination (report
+      dated 2024-09-12) and the Type I report is available to customers
+      on request. A Type II examination is part of our longer-term
+      compliance roadmap but is not yet in progress; no Type II
+      observation window has been opened and no Type II report has been
+      issued. Customers evaluating Forest Ledger should plan around
+      Type I assurance only.
+
+      ## Cryptography
+      All persisted customer audit records are encrypted at rest with
+      AES-256 using customer-specific data keys. We do not support
+      customer-managed keys on the current tier. An earlier proof of
+      concept built on AES-128 was deprecated before general
+      availability and retains no production traffic.
+
+      ## Data residency
+      Forest Ledger is operated across two regions: a U.S. cluster
+      (us-east-2) and an EU cluster (eu-west-1). Customers choose a
+      primary region at onboarding. Cross-region replication between
+      U.S. and EU is available as part of the standard tier. An APAC
+      region has been discussed internally but is not yet committed.
+
+      ## Breach notification
+      Forest Ledger's master services agreement commits Forest Ledger to
+      notify affected customers within 72 hours of determining that a
+      security incident is material. Prior versions of the MSA used a
+      24-hour commitment for a small pilot cohort; the current MSA used
+      for all production customers is the 72-hour template.
+
+  - id: vendor-harborline
+    title: "Harborline Cloud — Platform Security Brief"
+    tokenCount: 420
+    content: |
+      # Harborline Cloud — Platform Security Brief
+
+      **Product:** Harborline Global Data Plane
+      **Category:** Managed multi-region data platform
+
+      ## Audit history
+      Harborline Cloud has been SOC 2 Type II certified since 2022. The
+      most recently issued SOC 2 Type II report is dated 2024-11-03 and
+      covers the observation period ending 2024-09-30. The prior report,
+      dated 2023-10-18, is superseded by the 2024-11-03 report and
+      should not be cited as the current attestation.
+
+      ## Cryptography
+      At-rest encryption for customer data uses AES-128 in CBC mode.
+      Harborline published a position paper in 2024 evaluating a future
+      migration to AES-256, and that migration is on a long-term roadmap,
+      but no production tenant has been moved and AES-128 remains the
+      production algorithm.
+
+      ## Data residency
+      Harborline runs a global data plane with active-active regions on
+      three continents (North America, Europe, and Asia-Pacific).
+      Customer data may be replicated across any combination of those
+      regions by default, and customers who require single-region
+      residency must negotiate a specific addendum. The standard
+      deployment is global.
+
+      ## Breach notification
+      Under the standard Harborline DPA the company commits to notifying
+      an affected customer within 48 hours of confirming a material
+      security incident. Enterprise customers on the Fortune tier have
+      separately negotiated a 24-hour notification addendum; that
+      addendum is not the default and is not in effect for standard-tier
+      customers.
+
+  - id: vendor-prismway
+    title: "Prismway Systems — Security Summary"
+    tokenCount: 395
+    content: |
+      # Prismway Systems — Security Summary
+
+      **Product:** Prismway Edge Analytics
+      **Category:** On-device analytics platform
+
+      ## Third-party attestations
+      Prismway Systems does not currently hold a SOC 2 Type II
+      certification, nor a SOC 2 Type I. A readiness assessment was
+      performed by a Big-Four firm in Q3 2024; that assessment
+      identified gaps, several of which remain open, and no formal SOC 2
+      examination has been booked. Customers looking for SOC 2 assurance
+      today should plan accordingly.
+
+      ## Cryptography
+      Prismway uses AES-256 for all customer telemetry at rest, with
+      envelope encryption through HashiCorp Vault. A separate on-device
+      store uses AES-GCM for ephemeral session state, but the persisted
+      customer data at rest is consistently AES-256.
+
+      ## Data residency
+      Prismway's control plane and customer telemetry storage are
+      deployed exclusively in U.S. regions (us-east-1 and us-west-2).
+      Prismway is marketed as a U.S.-only service; an EU deployment has
+      been requested by a handful of prospects but no EU region has been
+      stood up and no EU data is stored today.
+
+      ## Breach notification
+      Prismway's standard customer agreement commits Prismway to notify
+      the affected customer within 24 hours of confirming a material
+      security incident. This notification commitment is expressed in
+      hours, not in business days, and is not waived on weekends.
+
+  - id: vendor-stonebridge
+    title: "Stonebridge APIs — Security & Compliance"
+    tokenCount: 410
+    content: |
+      # Stonebridge APIs — Security & Compliance
+
+      **Product:** Stonebridge Clearing APIs
+      **Category:** Financial messaging gateway
+
+      ## Attestations
+      Stonebridge APIs is currently undergoing its first SOC 2 Type II
+      examination. The observation window opened 2025-10-01; the formal
+      report is expected in late 2026. Stonebridge has issued a SOC 2
+      Type I letter to prospects in 2025, but there is not yet a Type II
+      report on file. Status: Type II in progress.
+
+      ## Cryptography
+      All customer payloads at rest use AES-256 encryption with
+      FIPS 140-2 validated modules. A vendor-supplied ChaCha20 hybrid
+      mode was benchmarked during early development but is not enabled
+      in production; production at-rest storage is consistently AES-256.
+
+      ## Data residency
+      Stonebridge operates a dual-region footprint: a U.S. primary
+      region in us-east-2 and an EU primary region in eu-central-1.
+      Customers may designate their home region at onboarding. A UK
+      region was announced in 2024 but deferred. There is no APAC
+      region today.
+
+      ## Breach notification
+      Stonebridge's standard DPA commits Stonebridge to notify the
+      affected customer within 48 hours of confirming a material
+      security incident. This replaces an earlier 24-hour commitment
+      that applied only to one pilot customer and is no longer the
+      standard term.
+
+  - id: vendor-orinoco
+    title: "Orinoco Labs — Trust Report"
+    tokenCount: 410
+    content: |
+      # Orinoco Labs — Trust Report
+
+      **Product:** Orinoco Event Grid
+      **Category:** Low-latency event streaming
+
+      ## Audit cadence
+      Orinoco Labs has maintained SOC 2 Type II certification since
+      early 2023. The most recent SOC 2 Type II report is dated
+      2025-09-22 and covers the observation period ending 2025-08-31.
+      Older reports (2024-07-12 and 2023-07-08) are superseded.
+
+      ## Cryptography
+      Orinoco's at-rest storage uses ChaCha20-Poly1305 as the default
+      AEAD cipher suite, selected in 2023 after a performance evaluation
+      concluded ChaCha20-Poly1305 outperformed AES-256-GCM on the
+      Orinoco worker fleet. Customers who prefer AES-256 can request a
+      migration and Orinoco will provision a secondary tenancy, but the
+      default and recommended algorithm remains ChaCha20-Poly1305.
+
+      ## Data residency
+      Orinoco Labs operates exclusively in U.S. regions. Orinoco has
+      received customer requests for EU and Canadian regions but none
+      are in production. The platform is US-only as of today.
+
+      ## Breach notification
+      The Orinoco master agreement commits Orinoco to notify the
+      affected customer within 72 hours of confirming a material
+      security incident. A faster 24-hour track is available as a
+      negotiated addendum for regulated-industry customers, but no
+      customer is on that addendum today; the effective commitment is
+      the standard 72-hour window.
+
+  - id: vendor-kestrel
+    title: "Kestrel Stream — Security Whitepaper Summary"
+    tokenCount: 415
+    content: |
+      # Kestrel Stream — Security Whitepaper Summary
+
+      **Product:** Kestrel Stream Fabric
+      **Category:** Real-time data fabric
+
+      ## Certifications
+      Kestrel Stream holds a current SOC 2 Type II attestation. The
+      most recent report is dated 2025-02-14 and covers the observation
+      period ending 2025-01-31. Kestrel also holds ISO 27001 (2024) and
+      is in the final stage of an ISO 27017 examination; the ISO
+      attestations are supplementary and do not replace the SOC 2
+      Type II report.
+
+      ## Cryptography
+      Kestrel uses AES-256 for all data at rest, with a cryptographic
+      boundary that wraps both the customer content and derived
+      indexes. A ChaCha20 option was briefly discussed during the 2023
+      platform review but not adopted; AES-256 remains the production
+      algorithm today.
+
+      ## Data residency
+      Kestrel Stream operates a genuine tri-continent footprint:
+      US-East, EU-Central, and APAC-Singapore regions are all live and
+      customers may choose any combination, including multi-region
+      replication across all three. This is a deliberate differentiator
+      relative to U.S.-only competitors.
+
+      ## Breach notification
+      Kestrel's standard DPA commits Kestrel Stream to notify the
+      affected customer within 24 hours of confirming a material
+      security incident.
+
+  - id: vendor-vantage-trail
+    title: "Vantage Trail — Vendor Security Packet"
+    tokenCount: 420
+    content: |
+      # Vantage Trail — Vendor Security Packet
+
+      **Product:** Vantage Trail Compliance Archive
+      **Category:** Long-term regulatory archive
+
+      ## Certification status
+      Vantage Trail previously held a SOC 2 Type II certification with a
+      report issue date of 2024-08-01. That certification has not been
+      renewed; the 2024-08-01 report's observation period ended
+      2024-06-30 and no subsequent Type II examination has been booked.
+      Customers should treat Vantage Trail's SOC 2 Type II as expired
+      rather than current. Vantage Trail has indicated it plans to
+      resume the Type II program in late 2026.
+
+      ## Cryptography
+      Vantage Trail's archival storage uses AES-256 with a key hierarchy
+      rooted in a customer-owned KMS. An AES-128 fallback path existed
+      for pre-2023 legacy tenants but has since been deprecated and
+      migrated; all current production storage is AES-256.
+
+      ## Data residency
+      Vantage Trail is operated entirely from EU regions (eu-west-1 and
+      eu-central-1). Vantage Trail does not currently serve customers
+      from U.S. or APAC regions; EU-only is the intentional market
+      position given Vantage Trail's target customers are EU financial
+      institutions.
+
+      ## Breach notification
+      The Vantage Trail services agreement commits Vantage Trail to
+      notify the affected customer within 72 hours of confirming a
+      material security incident. This 72-hour term was introduced in
+      the 2024 refresh and replaces an older 24-hour commitment that
+      is not in force on the current agreement.
+
+  - id: vendor-meridian
+    title: "Meridian Clearinghouse — Security Posture"
+    tokenCount: 400
+    content: |
+      # Meridian Clearinghouse — Security Posture
+
+      **Product:** Meridian Clearinghouse
+      **Category:** Healthcare claims clearinghouse
+
+      ## SOC 2 history
+      Meridian Clearinghouse holds a current SOC 2 Type II attestation
+      with a report issue date of 2025-11-29, covering the observation
+      period ending 2025-10-31. Previous SOC 2 Type II reports
+      (2024-11-12, 2023-11-05) are superseded.
+
+      ## Cryptography
+      Meridian encrypts customer data at rest with AES-256 across every
+      region and every tenant. There is no AES-128 tier, no
+      ChaCha20-Poly1305 tier, and no customer-configurable algorithm
+      override. AES-256 is the only at-rest algorithm in production.
+
+      ## Data residency
+      Meridian's production footprint is U.S.-only. All claims data is
+      stored in U.S. regions, and Meridian does not expose a non-U.S.
+      deployment option to customers. The product-marketing site lists
+      an EU region as "planned" but no EU infrastructure exists today.
+
+      ## Breach notification
+      Meridian's customer agreements commit Meridian Clearinghouse to
+      notify the affected customer within 4 hours of confirming a
+      material security incident. This 4-hour commitment is expressed
+      in hours, is not waived on weekends, and is the fastest
+      commitment Meridian offers across its tiers.
+
+  - id: vendor-polaris
+    title: "Polaris Data Services — Customer Trust Brief"
+    tokenCount: 420
+    content: |
+      # Polaris Data Services — Customer Trust Brief
+
+      **Product:** Polaris Data Mesh
+      **Category:** Cross-domain data mesh
+
+      ## Third-party audits
+      Polaris Data Services does not hold a SOC 2 Type II certification.
+      Polaris holds ISO 27001 (most recent certification 2025-03-14) and
+      is evaluating a future SOC 2 engagement, but no SOC 2 examination
+      is in progress and no SOC 2 report (Type I or Type II) has been
+      issued. Customers who require SOC 2 assurance should note this
+      gap.
+
+      ## Cryptography
+      Polaris uses AES-128 encryption at rest for all customer data.
+      Polaris has published a 2026 roadmap item to migrate to AES-256
+      but has not yet begun any production migration; AES-128 remains
+      the operational cipher for customer data stores today.
+
+      ## Data residency
+      Polaris operates two regions: a U.S. region in us-west-2 and an
+      EU region in eu-west-3. Customers may choose their primary region
+      and optionally enable cross-region replication. No APAC region is
+      currently offered; one was scoped in 2024 and shelved.
+
+      ## Breach notification
+      Polaris commits under its standard DPA to notify the affected
+      customer within 96 hours of confirming a material security
+      incident. A faster 48-hour option is listed in a premium support
+      tier, but the standard commitment — and the one in force for
+      the general customer base — is 96 hours.
+
+  - id: vendor-copperline
+    title: "Copperline Metrics — Security Fact Sheet"
+    tokenCount: 395
+    content: |
+      # Copperline Metrics — Security Fact Sheet
+
+      **Product:** Copperline Observability Grid
+      **Category:** Metrics and tracing platform
+
+      ## Attestations
+      Copperline Metrics is SOC 2 Type II certified. The most recent
+      Type II report is dated 2025-07-18 and covers the observation
+      period ending 2025-06-30. Copperline has held SOC 2 Type II
+      continuously since 2022; older reports (2024-07-20, 2023-07-10)
+      are superseded by the 2025-07-18 report.
+
+      ## Cryptography
+      Customer metrics and trace payloads at rest are encrypted with
+      AES-256 using per-customer data keys. Copperline's public key
+      management documentation confirms there is no AES-128 pathway
+      in production; an AES-128 sandbox was removed in 2023.
+
+      ## Data residency
+      Copperline's customer-data storage is entirely U.S.-based. The
+      product is a US-only service from a data-storage perspective. An
+      EU pilot was discussed in 2024 but shelved; no EU region exists
+      today.
+
+      ## Breach notification
+      Copperline's customer agreement commits Copperline Metrics to
+      notify the affected customer within 24 hours of confirming a
+      material security incident. This 24-hour commitment is
+      contractual across the current customer base.
+
+  - id: vendor-twelvefold
+    title: "Twelvefold Archive — Trust & Compliance Overview"
+    tokenCount: 420
+    content: |
+      # Twelvefold Archive — Trust & Compliance Overview
+
+      **Product:** Twelvefold Object Archive
+      **Category:** Long-term object archive for regulated data
+
+      ## SOC 2 status
+      Twelvefold Archive is undergoing its first SOC 2 Type II
+      examination. The observation window opened 2025-12-01 and the
+      target report issue date is 2026-06-01. Until then Twelvefold
+      Archive's SOC 2 Type II status is: in progress. A SOC 2 Type I
+      bridge letter exists but does not constitute a Type II
+      certification.
+
+      ## Cryptography
+      Twelvefold's object storage uses AES-256 encryption for all
+      customer archives. Encryption keys may be customer-managed via
+      KMS or fully managed by Twelvefold; either option uses the same
+      AES-256 storage primitive underneath. No AES-128 path exists in
+      the product.
+
+      ## Data residency
+      Twelvefold operates two primary regions: a U.S. region in
+      us-east-2 and an EU region in eu-west-2. Customers choose a
+      primary region at archive creation and may optionally enable a
+      replicated mirror in the other region. No APAC or UK region is
+      offered today.
+
+      ## Breach notification
+      The Twelvefold services agreement commits Twelvefold Archive to
+      notify the affected customer within 48 hours of confirming a
+      material security incident. A premium 24-hour commitment is
+      available as a negotiated addendum but is not the default; the
+      in-force commitment for the general customer base is 48 hours.
+
+question: >-
+  You are evaluating twelve vendors for a compliance-sensitive
+  integration. For every vendor, identify its current SOC 2 Type II
+  status (certified with date, in progress, expired, or absent), its
+  at-rest encryption algorithm, its primary data residency posture, and
+  its breach notification SLA. Several dossiers contain distractor
+  material: superseded reports, deprecated algorithm tiers, regions
+  that were only discussed and never launched. Use only the
+  authoritative current fact for each attribute.
+
+  Produce a feature matrix with one block per vendor in this exact
+  format and nothing else. Do not add commentary, ranking, or
+  narrative text outside the blocks:
+
+  VENDOR: <vendor name as it appears in the dossier>
+  SOC2: <current SOC 2 Type II status, with issue date when certified>
+  ENCRYPTION: <exact at-rest algorithm as written in the dossier>
+  RESIDENCY: <primary data residency posture>
+  BREACH_SLA: <numeric value with exact unit (hours)>
+
+  Return exactly twelve vendor blocks, in the same order the vendors
+  appear in the input artifacts.
+
+referenceFacts:
+  # --- Quantix: Type II 2025-06-15 / AES-256 / US-only / 24h -------------
+  - id: fact-quantix-soc2
+    description: "Quantix — SOC 2 Type II certified 2025-06-15"
+    canonical: "Quantix SOC 2 Type II 2025-06-15"
+    pattern: 'Quantix[\s\S]{0,130}(SOC.?2.?Type.?II|Type.?II)[\s\S]{0,60}2025-06-15'
+    weight: 1
+  - id: fact-quantix-encryption
+    description: "Quantix — AES-256 at rest"
+    canonical: "Quantix AES-256"
+    pattern: 'Quantix[\s\S]{0,130}AES-?256'
+    weight: 1
+  - id: fact-quantix-residency
+    description: "Quantix — US-only"
+    canonical: "Quantix US-only"
+    pattern: 'Quantix[\s\S]{0,130}(US.?only|U\.S\.?.?only|United States only|exclusively.{0,20}U\.?S\.?)'
+    weight: 1
+  - id: fact-quantix-breach
+    description: "Quantix — 24 hour breach SLA"
+    canonical: "Quantix 24 hours"
+    pattern: 'Quantix[\s\S]{0,130}(24.?hours?|24h\b)'
+    weight: 1
+
+  # --- Forest Ledger: Type I only / AES-256 / US+EU / 72h ----------------
+  - id: fact-forest-soc2
+    description: "Forest Ledger — SOC 2 Type I only, not Type II"
+    canonical: "Forest Ledger Type I only"
+    pattern: '(Forest.?Ledger)[\s\S]{0,130}(Type.?I\b|not Type.?II|Type.?II.{0,40}(no|not yet|none|absent))'
+    weight: 1
+  - id: fact-forest-encryption
+    description: "Forest Ledger — AES-256"
+    canonical: "Forest Ledger AES-256"
+    pattern: '(Forest.?Ledger)[\s\S]{0,130}AES-?256'
+    weight: 1
+  - id: fact-forest-residency
+    description: "Forest Ledger — US + EU"
+    canonical: "Forest Ledger US and EU"
+    pattern: '(Forest.?Ledger)[\s\S]{0,130}((US|U\.S\.?)[\s\S]{0,30}(EU|Europe)|(EU|Europe)[\s\S]{0,30}(US|U\.S\.?))'
+    weight: 1
+  - id: fact-forest-breach
+    description: "Forest Ledger — 72 hour breach SLA"
+    canonical: "Forest Ledger 72 hours"
+    pattern: '(Forest.?Ledger)[\s\S]{0,130}(72.?hours?|72h\b)'
+    weight: 1
+
+  # --- Harborline: Type II 2024-11-03 / AES-128 / global / 48h -----------
+  - id: fact-harborline-soc2
+    description: "Harborline — SOC 2 Type II certified 2024-11-03"
+    canonical: "Harborline SOC 2 Type II 2024-11-03"
+    pattern: 'Harborline[\s\S]{0,130}(SOC.?2.?Type.?II|Type.?II)[\s\S]{0,60}2024-11-03'
+    weight: 1
+  - id: fact-harborline-encryption
+    description: "Harborline — AES-128"
+    canonical: "Harborline AES-128"
+    pattern: 'Harborline[\s\S]{0,130}AES-?128'
+    weight: 1
+  - id: fact-harborline-residency
+    description: "Harborline — global / multi-region"
+    canonical: "Harborline global"
+    pattern: 'Harborline[\s\S]{0,130}(global|multi.?region|three continents|North America.{0,60}Europe.{0,60}(Asia|APAC))'
+    weight: 1
+  - id: fact-harborline-breach
+    description: "Harborline — 48 hour breach SLA"
+    canonical: "Harborline 48 hours"
+    pattern: 'Harborline[\s\S]{0,130}(48.?hours?|48h\b)'
+    weight: 1
+
+  # --- Prismway: no SOC 2 / AES-256 / US-only / 24h ----------------------
+  - id: fact-prismway-soc2
+    description: "Prismway — no SOC 2 (neither Type I nor Type II)"
+    canonical: "Prismway no SOC 2"
+    pattern: 'Prismway[\s\S]{0,130}(no SOC.?2|does not (currently )?hold.{0,30}SOC.?2|SOC.?2.{0,30}(absent|none|not certified))'
+    weight: 1
+  - id: fact-prismway-encryption
+    description: "Prismway — AES-256"
+    canonical: "Prismway AES-256"
+    pattern: 'Prismway[\s\S]{0,130}AES-?256'
+    weight: 1
+  - id: fact-prismway-residency
+    description: "Prismway — US-only"
+    canonical: "Prismway US-only"
+    pattern: 'Prismway[\s\S]{0,130}(US.?only|U\.S\.?.?only|United States only|exclusively.{0,20}U\.?S\.?)'
+    weight: 1
+  - id: fact-prismway-breach
+    description: "Prismway — 24 hour breach SLA"
+    canonical: "Prismway 24 hours"
+    pattern: 'Prismway[\s\S]{0,130}(24.?hours?|24h\b)'
+    weight: 1
+
+  # --- Stonebridge: Type II in progress / AES-256 / US+EU / 48h ---------
+  - id: fact-stonebridge-soc2
+    description: "Stonebridge — SOC 2 Type II in progress"
+    canonical: "Stonebridge Type II in progress"
+    pattern: 'Stonebridge[\s\S]{0,130}(Type.?II.{0,30}(in progress|underway|examination.{0,20}(current|open))|undergoing.{0,40}Type.?II|observation window.{0,60}Type.?II)'
+    weight: 1
+  - id: fact-stonebridge-encryption
+    description: "Stonebridge — AES-256"
+    canonical: "Stonebridge AES-256"
+    pattern: 'Stonebridge[\s\S]{0,130}AES-?256'
+    weight: 1
+  - id: fact-stonebridge-residency
+    description: "Stonebridge — US + EU"
+    canonical: "Stonebridge US and EU"
+    pattern: 'Stonebridge[\s\S]{0,130}((US|U\.S\.?)[\s\S]{0,40}(EU|Europe)|(EU|Europe)[\s\S]{0,40}(US|U\.S\.?))'
+    weight: 1
+  - id: fact-stonebridge-breach
+    description: "Stonebridge — 48 hour breach SLA"
+    canonical: "Stonebridge 48 hours"
+    pattern: 'Stonebridge[\s\S]{0,130}(48.?hours?|48h\b)'
+    weight: 1
+
+  # --- Orinoco: Type II 2025-09-22 / ChaCha20-Poly1305 / US-only / 72h ---
+  - id: fact-orinoco-soc2
+    description: "Orinoco — SOC 2 Type II certified 2025-09-22"
+    canonical: "Orinoco SOC 2 Type II 2025-09-22"
+    pattern: 'Orinoco[\s\S]{0,130}(SOC.?2.?Type.?II|Type.?II)[\s\S]{0,60}2025-09-22'
+    weight: 1
+  - id: fact-orinoco-encryption
+    description: "Orinoco — ChaCha20-Poly1305"
+    canonical: "Orinoco ChaCha20-Poly1305"
+    pattern: 'Orinoco[\s\S]{0,130}ChaCha20[\s\S-]{0,10}Poly1305'
+    weight: 1
+  - id: fact-orinoco-residency
+    description: "Orinoco — US-only"
+    canonical: "Orinoco US-only"
+    pattern: 'Orinoco[\s\S]{0,130}(US.?only|U\.S\.?.?only|United States only|exclusively.{0,20}U\.?S\.?)'
+    weight: 1
+  - id: fact-orinoco-breach
+    description: "Orinoco — 72 hour breach SLA"
+    canonical: "Orinoco 72 hours"
+    pattern: 'Orinoco[\s\S]{0,130}(72.?hours?|72h\b)'
+    weight: 1
+
+  # --- Kestrel: Type II 2025-02-14 / AES-256 / US+EU+APAC / 24h ----------
+  - id: fact-kestrel-soc2
+    description: "Kestrel — SOC 2 Type II certified 2025-02-14"
+    canonical: "Kestrel SOC 2 Type II 2025-02-14"
+    pattern: 'Kestrel[\s\S]{0,130}(SOC.?2.?Type.?II|Type.?II)[\s\S]{0,60}2025-02-14'
+    weight: 1
+  - id: fact-kestrel-encryption
+    description: "Kestrel — AES-256"
+    canonical: "Kestrel AES-256"
+    pattern: 'Kestrel[\s\S]{0,130}AES-?256'
+    weight: 1
+  - id: fact-kestrel-residency
+    description: "Kestrel — US + EU + APAC (three regions)"
+    canonical: "Kestrel US EU APAC"
+    pattern: 'Kestrel[\s\S]{0,130}((US|U\.S\.?)[\s\S]{0,60}(EU|Europe)[\s\S]{0,60}(APAC|Asia.?Pacific|Singapore)|tri.?continent|three (regions|continents))'
+    weight: 1
+  - id: fact-kestrel-breach
+    description: "Kestrel — 24 hour breach SLA"
+    canonical: "Kestrel 24 hours"
+    pattern: 'Kestrel[\s\S]{0,130}(24.?hours?|24h\b)'
+    weight: 1
+
+  # --- Vantage Trail: Type II expired 2024-08-01 / AES-256 / EU-only / 72h
+  - id: fact-vantage-soc2
+    description: "Vantage Trail — SOC 2 Type II expired (2024-08-01, not renewed)"
+    canonical: "Vantage Trail Type II expired"
+    pattern: '(Vantage.?Trail)[\s\S]{0,130}(expired|not renewed|lapsed|no longer.{0,20}certified)'
+    weight: 1
+  - id: fact-vantage-encryption
+    description: "Vantage Trail — AES-256"
+    canonical: "Vantage Trail AES-256"
+    pattern: '(Vantage.?Trail)[\s\S]{0,130}AES-?256'
+    weight: 1
+  - id: fact-vantage-residency
+    description: "Vantage Trail — EU-only"
+    canonical: "Vantage Trail EU-only"
+    pattern: '(Vantage.?Trail)[\s\S]{0,130}(EU.?only|Europe.?only|exclusively.{0,20}EU|entirely.{0,20}EU)'
+    weight: 1
+  - id: fact-vantage-breach
+    description: "Vantage Trail — 72 hour breach SLA"
+    canonical: "Vantage Trail 72 hours"
+    pattern: '(Vantage.?Trail)[\s\S]{0,130}(72.?hours?|72h\b)'
+    weight: 1
+
+  # --- Meridian: Type II 2025-11-29 / AES-256 / US-only / 4h -------------
+  - id: fact-meridian-soc2
+    description: "Meridian — SOC 2 Type II certified 2025-11-29"
+    canonical: "Meridian SOC 2 Type II 2025-11-29"
+    pattern: 'Meridian[\s\S]{0,130}(SOC.?2.?Type.?II|Type.?II)[\s\S]{0,60}2025-11-29'
+    weight: 1
+  - id: fact-meridian-encryption
+    description: "Meridian — AES-256"
+    canonical: "Meridian AES-256"
+    pattern: 'Meridian[\s\S]{0,130}AES-?256'
+    weight: 1
+  - id: fact-meridian-residency
+    description: "Meridian — US-only"
+    canonical: "Meridian US-only"
+    pattern: 'Meridian[\s\S]{0,130}(US.?only|U\.S\.?.?only|United States only|exclusively.{0,20}U\.?S\.?)'
+    weight: 1
+  - id: fact-meridian-breach
+    description: "Meridian — 4 hour breach SLA"
+    canonical: "Meridian 4 hours"
+    pattern: 'Meridian[\s\S]{0,130}(\b4.?hours?|\b4h\b)'
+    weight: 1
+
+  # --- Polaris: no SOC 2 / AES-128 / US+EU / 96h -------------------------
+  - id: fact-polaris-soc2
+    description: "Polaris — no SOC 2 (ISO 27001 only)"
+    canonical: "Polaris no SOC 2"
+    pattern: 'Polaris[\s\S]{0,130}(no SOC.?2|does not (currently )?hold.{0,30}SOC.?2|SOC.?2.{0,30}(absent|none|not (certified|in progress))|ISO 27001 only)'
+    weight: 1
+  - id: fact-polaris-encryption
+    description: "Polaris — AES-128"
+    canonical: "Polaris AES-128"
+    pattern: 'Polaris[\s\S]{0,130}AES-?128'
+    weight: 1
+  - id: fact-polaris-residency
+    description: "Polaris — US + EU"
+    canonical: "Polaris US and EU"
+    pattern: 'Polaris[\s\S]{0,130}((US|U\.S\.?)[\s\S]{0,40}(EU|Europe)|(EU|Europe)[\s\S]{0,40}(US|U\.S\.?))'
+    weight: 1
+  - id: fact-polaris-breach
+    description: "Polaris — 96 hour breach SLA"
+    canonical: "Polaris 96 hours"
+    pattern: 'Polaris[\s\S]{0,130}(96.?hours?|96h\b)'
+    weight: 1
+
+  # --- Copperline: Type II 2025-07-18 / AES-256 / US-only / 24h ----------
+  - id: fact-copperline-soc2
+    description: "Copperline — SOC 2 Type II certified 2025-07-18"
+    canonical: "Copperline SOC 2 Type II 2025-07-18"
+    pattern: 'Copperline[\s\S]{0,130}(SOC.?2.?Type.?II|Type.?II)[\s\S]{0,60}2025-07-18'
+    weight: 1
+  - id: fact-copperline-encryption
+    description: "Copperline — AES-256"
+    canonical: "Copperline AES-256"
+    pattern: 'Copperline[\s\S]{0,130}AES-?256'
+    weight: 1
+  - id: fact-copperline-residency
+    description: "Copperline — US-only"
+    canonical: "Copperline US-only"
+    pattern: 'Copperline[\s\S]{0,130}(US.?only|U\.S\.?.?only|United States only|US.?based|entirely U\.?S\.?)'
+    weight: 1
+  - id: fact-copperline-breach
+    description: "Copperline — 24 hour breach SLA"
+    canonical: "Copperline 24 hours"
+    pattern: 'Copperline[\s\S]{0,130}(24.?hours?|24h\b)'
+    weight: 1
+
+  # --- Twelvefold: Type II in progress / AES-256 / US+EU / 48h -----------
+  - id: fact-twelvefold-soc2
+    description: "Twelvefold — SOC 2 Type II in progress"
+    canonical: "Twelvefold Type II in progress"
+    pattern: 'Twelvefold[\s\S]{0,130}(Type.?II.{0,30}(in progress|underway|examination.{0,20}(current|open))|undergoing.{0,40}Type.?II|observation window.{0,60}Type.?II)'
+    weight: 1
+  - id: fact-twelvefold-encryption
+    description: "Twelvefold — AES-256"
+    canonical: "Twelvefold AES-256"
+    pattern: 'Twelvefold[\s\S]{0,130}AES-?256'
+    weight: 1
+  - id: fact-twelvefold-residency
+    description: "Twelvefold — US + EU"
+    canonical: "Twelvefold US and EU"
+    pattern: 'Twelvefold[\s\S]{0,130}((US|U\.S\.?)[\s\S]{0,40}(EU|Europe)|(EU|Europe)[\s\S]{0,40}(US|U\.S\.?))'
+    weight: 1
+  - id: fact-twelvefold-breach
+    description: "Twelvefold — 48 hour breach SLA"
+    canonical: "Twelvefold 48 hours"
+    pattern: 'Twelvefold[\s\S]{0,130}(48.?hours?|48h\b)'
+    weight: 1
+
+rubricWeights:
+  faithfulness: 0.40
+  completeness: 0.40
+  coherence: 0.10
+  actionability: 0.10
+
+passFail:
+  minFactualScore: 0.80
+  requireZeroFailingStepGrades: true
+  description: >-
+    A passing run must correctly assign every attribute to the correct
+    vendor. Wrong-vendor assignment is the primary failure mode; the
+    distractor material in each dossier (deprecated algorithms,
+    superseded reports, aspirational regions, pilot-only SLA terms)
+    is specifically designed to be confused with the authoritative
+    current fact if attention is spread across all twelve vendors at
+    once.
+
+requiredSkills:
+  - extract-claims
+  - matrix-compiler
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a vendor-matrix coordinator. Twelve vendor dossiers are
+    seeded as input artifacts in your context. Each dossier contains
+    the authoritative current fact for four attributes plus realistic
+    distractors (superseded SOC 2 reports, deprecated encryption
+    tiers, aspirational regions, pilot-only breach-notification
+    commitments). Your job is to produce a strict feature matrix with
+    one row per vendor and exactly four attributes per row: SOC 2
+    Type II status, at-rest encryption algorithm, primary data
+    residency, and breach notification SLA.
+
+    **Decomposition pipeline — follow this exactly.**
+
+    **Phase 1 — Read every seeded dossier.**
+    Call `read_artifact` in parallel once per seeded input artifact
+    (12 read_artifact calls, which you may split across at most two
+    turns). After this phase you must have the full text of every
+    seeded dossier in tool results. Read each dossier exactly once
+    unless a specific read fails and must be retried.
+
+    **Phase 2 — Extract per-vendor claims (parallel skill calls).**
+    Invoke the `extract-claims` skill exactly 12 times in parallel,
+    once per vendor dossier. You may split these calls across at
+    most three turns, but do not emit more than four `skill` calls
+    in a single assistant turn. For each call, paste the full dossier
+    text from Phase 1 directly into `task_input`. Do not batch
+    multiple dossiers into one extract-claims task; each of the 12
+    seeded dossiers must produce its own distinct claim artifact.
+    Your short directive to each extractor must explicitly ask it to
+    record, for exactly this one vendor:
+    - vendor name
+    - current SOC 2 Type II status (certified with date, in progress,
+      expired with date, or absent)
+    - exact at-rest encryption algorithm as written
+    - primary data residency posture
+    - breach notification SLA in hours
+    and to distinguish the authoritative current fact from any older,
+    deprecated, or aspirational variant mentioned in the dossier.
+    Do not begin Phase 3 until all 12 extract-claims tasks have
+    completed and you have 12 distinct claim artifact_ids. If you
+    have fewer than 12, continue extracting before moving on.
+
+    **Phase 3 — Compile the matrix (single skill call).**
+    Dispatch exactly one `skill` call to `matrix-compiler`, passing
+    all 12 extract-claims artifact_ids via `artifact_ids` and a short
+    directive to produce the 12 vendor blocks in the order the
+    vendors appear in the seeded input artifacts. The matrix-compiler
+    must rely on the extract-claims artifacts rather than on
+    coordinator memory of the dossiers. Do not dispatch the compiler
+    until all 12 extract-claims subagents have completed.
+
+    The harness finalizes the run from the matrix-compiler's artifact.
+    Do not produce a separate final answer after Phase 3; the compiler's
+    output is the final deliverable.
+  subagentResultMode: artifact_only
+  autoFinalizeFromSubagent: matrix-compiler
+  skills:
+    - name: extract-claims
+      version: "1.0.0"
+      policy:
+        type: always
+    - name: matrix-compiler
+      version: "1.0.0"
+      policy:
+        type: always
+  limits:
+    maxTasksPerRun: 40
+    maxOperationsPerTask: 20
+    maxTokensPerRun: 800000
+
+graphAssertions:
+  - type: run_status
+    status: completed
+    description: "Decomposition run must complete"
+
+  - type: task_count
+    match:
+      role: tool
+      subagentName: read_artifact
+    min: 12
+    description: "coordinator must read every seeded vendor dossier"
+
+  - type: task_count
+    match:
+      subagentName: extract-claims
+    min: 12
+    description: "extract-claims must be invoked once per vendor"
+
+  - type: task_count
+    match:
+      role: subagent
+      subagentName: matrix-compiler
+    min: 1
+    max: 1
+    description: "exactly one matrix-compiler skill run must exist"
+
+  - type: task_order
+    first:
+      subagentName: extract-claims
+    then:
+      role: subagent
+      subagentName: matrix-compiler
+    description: "extract-claims must precede matrix-compiler"
+
+  - type: consumes
+    consumer:
+      role: subagent
+      subagentName: matrix-compiler
+    producer:
+      subagentName: extract-claims
+    description: "matrix-compiler must consume extract-claims artifacts"
+
+  - type: consumes_absent
+    consumer:
+      role: subagent
+      subagentName: matrix-compiler
+    producer:
+      role: tool
+      subagentName: input_ingestion
+    description: "matrix-compiler must not consume raw seeded dossiers"
+
+  - type: task_absent
+    match:
+      role: tool
+      subagentName: answer_from_artifact
+    description: "harness-managed finalization should eliminate answer_from_artifact calls"
+
+  - type: run_output_matches_artifact
+    task:
+      role: subagent
+      subagentName: matrix-compiler
+    mode: exact
+    description: "final answer must be exactly the matrix-compiler artifact content"
+
+  - type: task_absent
+    match:
+      role: tool
+      subagentName: agent
+    description: "no ad-hoc `agent` dispatches — fixed-skill pipeline only"

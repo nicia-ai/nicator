@@ -3,7 +3,7 @@
  *
  * Usage:
  *   pnpm eval:calibrate                    # run on all labels
- *   pnpm eval:calibrate --task kwb-001     # single task
+ *   pnpm eval:calibrate --task syn-001     # single task
  *
  * The workflow:
  * 1. Load human labels from labels.json
@@ -21,7 +21,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 
 import { JUDGE_MODEL } from "../constants";
-import type { EvalTask } from "../schema";
+import { allTaskDocuments, type EvalTask } from "../schema";
 import { loadTasks } from "../task-loader";
 import { DIMENSIONS, computeComposite, round3 } from "../llm-judge/rubric";
 import type { DimensionName } from "../llm-judge/rubric";
@@ -75,7 +75,7 @@ async function judgeOutput(
     return `### ${dim.name}\n${dim.description}\n\nScoring anchors:\n${anchors}`;
   }).join("\n\n");
 
-  const sourcesText = task.sources
+  const sourcesText = allTaskDocuments(task)
     .map((s) => `### ${s.title}\n\n${s.content}`)
     .join("\n\n---\n\n");
 

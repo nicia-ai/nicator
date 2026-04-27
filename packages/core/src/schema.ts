@@ -66,6 +66,9 @@ export const SkillReferenceSchema = z.object({
 });
 export type SkillReference = Readonly<z.infer<typeof SkillReferenceSchema>>;
 
+export const SubagentResultModeSchema = z.enum(["inline", "artifact_only"]);
+export type SubagentResultMode = z.infer<typeof SubagentResultModeSchema>;
+
 // ---------------------------------------------------------------------------
 // AgentDefinition
 // ---------------------------------------------------------------------------
@@ -77,6 +80,8 @@ export const AgentDefinitionStorageSchema = z.object({
   name: z.string().min(1),
   description: z.string(),
   systemPrompt: z.string(),
+  subagentResultMode: SubagentResultModeSchema.default("inline"),
+  autoFinalizeFromSubagent: z.string().min(1).optional(),
   limits: z.object({
     maxTasksPerRun: z.number().int().positive().default(50),
     maxOperationsPerTask: z.number().int().positive().default(3),
@@ -286,6 +291,8 @@ export const SkillSchema = z.object({
   name: z.string().min(1),
   version: z.string(),
   description: z.string(),
+  allowDirectTools: z.boolean().default(true),
+  allowReadArtifact: z.boolean().default(false),
   maxIterations: z.number().int().positive().optional(),
 });
 export type Skill = Readonly<z.infer<typeof SkillSchema>>;
@@ -351,18 +358,27 @@ export type Compaction = Readonly<z.infer<typeof CompactionSchema>>;
 // API request schemas (trust boundary validation)
 // ---------------------------------------------------------------------------
 
-export const InputDocumentSchema = z.object({
-  id: z.string().min(1),
-  title: z.string(),
+/**
+ * Artifact seeded into a run at startup, before any agent work begins.
+ *
+ * These are the inputs the agent should be able to fetch on demand via
+ * `read_artifact` — typically source documents, but any artifact type
+ * is supported (code files, structured JSON, file references, etc.).
+ * Defaults to `input_document` when type is omitted.
+ */
+export const InputArtifactSchema = z.object({
+  name: z.string().min(1),
+  type: ArtifactTypeSchema.default("input_document"),
   content: z.string(),
+  mimeType: z.string().optional(),
 });
-export type InputDocument = Readonly<z.infer<typeof InputDocumentSchema>>;
+export type InputArtifact = Readonly<z.infer<typeof InputArtifactSchema>>;
 
 export const CreateRunBodySchema = z.object({
   agentDefinitionId: z.guid(),
   agentDefinitionVersion: z.number().int().positive().optional(),
   input: z.string().min(1),
-  inputDocuments: z.array(InputDocumentSchema).optional(),
+  inputArtifacts: z.array(InputArtifactSchema).optional(),
 });
 export type CreateRunBody = Readonly<z.infer<typeof CreateRunBodySchema>>;
 

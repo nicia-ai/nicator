@@ -1,0 +1,1020 @@
+{
+  "runId": "3251f5b8-ff73-41d5-a2fe-dae70ebbb9c7",
+  "timestamp": "2026-04-06T07:08:40.969Z",
+  "harnessVersion": "0.1.0",
+  "modelVersion": "claude-sonnet-4-6",
+  "tasks": [
+    {
+      "taskId": "kwb-001",
+      "category": "synthesis",
+      "harnessOutput": {
+        "text": "## Cash Figure Discrepancy — Acorn Systems (ACRS) Q3 2024\n\n### Conclusion Up Front\n\n**The correct Q3-end cash figure is $87.4M**, as reported by both Acorn's own press release and Meridian Capital. Stonebridge's $72.4M figure is not wrong per se — but it is measuring something different, most likely a prior period or a subset of the balance sheet.\n\n---\n\n### What Each Source Reports\n\n| Source | Figure | Basis |\n|---|---|---|\n| Acorn Q3 Press Release | **$87.4M** | Cash, cash equivalents, and short-term investments at Sept 30, 2024 |\n| Meridian Capital | **$87.4M** | Cash and equivalents at quarter close; explicitly excludes transient revolver draw |\n| Stonebridge Research | **$72.4M** | \"Cash, cash equivalents, and short-term investments\" — period unspecified |\n\n---\n\n### Source of the Discrepancy\n\nThe most likely explanation for Stonebridge's $72.4M figure is **a timing or period mismatch**:\n\n1. **Stonebridge is an initiation report, not a Q3 earnings update.** Initiation reports are often drafted weeks or months before publication, potentially using the most recently *filed* financial statement rather than the just-reported quarter. If Stonebridge pulled data from Q2 2024 (June 30) financials — the last period with audited/filed numbers at the time of drafting — a lower cash figure is fully consistent with a company burning ~$6.2M/month. The gap between $72.4M and $87.4M ($15M) is exactly the size of the revolving credit facility draw, which is likely coincidental but worth noting.\n\n2. **Possible definitional difference (less likely).** Stonebridge uses the same label — \"cash, cash equivalents, and short-term investments\" — as the press release, so a definitional scope difference (e.g., excluding short-term investments) is less probable as an explanation, though cannot be fully ruled out without seeing Stonebridge's underlying model.\n\n3. **The $15M revolver draw is a red herring.** Meridian explicitly flags that the revolver draw was repaid before quarter close, and the press release confirms $0 drawn at September 30. The $87.4M figure already reflects the repayment. The revolver does not explain the gap with Stonebridge.\n\n---\n\n### Investor Takeaways\n\n- **Use primary sources first.** The company's own press release, tied to audited/reported financials, is the authoritative figure for a specific quarter-end date. $87.4M is the Q3-end cash position.\n\n- **Context-check analyst reports.** Initiation-of-coverage reports lag real-time data by design. Stonebridge's $72.4M likely reflects a pre-Q3 snapshot and its runway/covenant analysis should be re-run against the actual $87.4M figure — which improves the picture modestly (closer to 14 months of runway, consistent with Meridian's estimate, vs. Stonebridge's 11–12 months).\n\n- **The revolver draw is not a concern.** Both Meridian and the press release confirm it was fully repaid by quarter close. It was an operational timing mechanism, not a liquidity signal.\n\n- **Flag the discrepancy to Stonebridge.** An investor relying on the initiation report for runway and covenant analysis is working from a stale number. The difference (~$15M) is material relative to a monthly burn of $6.2M — it represents roughly 2.4 additional months of runway — and could affect covenant headroom assessments.",
+        "totalTokens": 3455,
+        "latencyMs": 20239
+      },
+      "baselineOutput": {
+        "text": "## Reconciling the Cash Figure Discrepancy\n\n### Which Figure Is Correct for Q3-End?\n\n**$87.4 million** is the correct figure for cash, cash equivalents, and short-term investments as of September 30, 2024. This is confirmed by two independent sources that both reference the same balance sheet date:\n\n- Acorn's own press release (primary source)\n- Meridian Capital's flash note, which cross-checks cleanly\n\n---\n\n### What Explains Stonebridge's $72.4M Figure?\n\nThe most probable explanation is that **Stonebridge initiated coverage using an earlier period's balance sheet** — almost certainly Q2-end (June 30, 2024) — rather than the Q3 figures. A $15M difference between $87.4M and $72.4M is too precise to be a rounding error or modeling assumption, and it is consistent with what a cash balance might look like one quarter prior, before Q3 cash inflows arrived.\n\nSeveral factors support this interpretation:\n\n- Stonebridge's note uses hedged language: *\"the most recently reported period\"* — a phrase that would be accurate if they initiated coverage while Q3 results were not yet public\n- Initiation-of-coverage reports are frequently written during the quiet period before a quarter closes or before new results are published, then released shortly after the earnings date with stale underlying data\n- The runway estimate Stonebridge derives (11–12 months) is internally consistent with $72.4M at a ~$6M/month burn, whereas $87.4M at that same burn rate yields approximately 14 months — exactly what Meridian reports\n\n---\n\n### Why Meridian's Treatment of the Revolver Is Worth Noting\n\nMeridian explicitly flags the mid-September $15M revolver draw and its October 3rd repayment. This is good analytical hygiene. At the moment of the draw, reported gross cash would have been higher than $87.4M, but net liquidity was the same. Meridian correctly concludes it is not a liquidity signal. Stonebridge, working from older data, never encounters this issue — but an investor reading only Stonebridge would miss that the revolver exists and was recently touched.\n\n---\n\n### What an Investor Should Take Away\n\n**1. Always identify the balance sheet date, not just the figure.**\nA cash number without a date is nearly meaningless. Stonebridge's $72.4M may have been accurate as of June 30 and was simply not updated before publication.\n\n**2. Initiation reports carry a staleness risk.**\nBanks and independent research firms often write initiations over weeks or months. By publication, the underlying data may already be one quarter old. Treat cash and runway figures in initiations with extra skepticism until cross-checked against the most recent press release or 10-Q.\n\n**3. The $15M in Stonebridge's gap is not alarming — but the analytical gap is.**\nThe $15M difference does not reflect hidden losses or an undisclosed liability. However, Stonebridge's runway and covenant-risk analysis is built on a foundation that is $15M lighter than reality. Their concern about compressing below a 12-month threshold is somewhat less acute than they model, at least as of Q3-end.\n\n**4. Go to primary sources first.**\nThe company's press release is the authoritative document for quarter-end figures. Sell-side notes are useful for interpretation and context, but they should be calibrated against the primary source — not the other way around.\n\n**5. The covenant risk flag from Stonebridge still deserves attention.**\nEven if the cash figure is stale, the underlying analytical point — that deterioration in the enterprise sales cycle could create covenant pressure — is a legitimate risk worth monitoring, independent of the precise starting cash balance.\n\n---\n\n**Bottom line:** There is no real discrepancy between Meridian and the company. Stonebridge is almost certainly working from Q2 data. The correct Q3-end figure is **$87.4 million**.",
+        "totalTokens": 1576,
+        "latencyMs": 23972
+      },
+      "harnessMetrics": {
+        "skillsInvoked": [],
+        "totalOperations": 0,
+        "hitlTriggered": false,
+        "contextPressureTokens": 0,
+        "compressionApplied": false
+      },
+      "factualScore": {
+        "taskId": "kwb-001",
+        "facts": [
+          {
+            "factId": "fact-1",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-2",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-3",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-4",
+            "matched": true,
+            "weight": 1
+          }
+        ],
+        "score": 1
+      },
+      "baselineFactualScore": {
+        "taskId": "kwb-001",
+        "facts": [
+          {
+            "factId": "fact-1",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-2",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-3",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-4",
+            "matched": true,
+            "weight": 1
+          }
+        ],
+        "score": 0.8333333333333334
+      },
+      "passFailResult": {
+        "harnessPass": true,
+        "baselinePass": true,
+        "harnessReason": "All criteria met",
+        "baselineReason": "All criteria met"
+      },
+      "stepGrades": {
+        "taskId": "kwb-001",
+        "grades": [
+          {
+            "aspect": "skill_decomposition",
+            "severity": "warn",
+            "finding": "Missing expected skills: researcher. Invoked: ."
+          },
+          {
+            "aspect": "context_compression",
+            "severity": "pass",
+            "finding": "No context compression applied."
+          },
+          {
+            "aspect": "retry_behavior",
+            "severity": "pass",
+            "finding": "No retries needed."
+          }
+        ],
+        "summary": {
+          "pass": 2,
+          "warn": 1,
+          "fail": 0
+        }
+      }
+    },
+    {
+      "taskId": "kwb-002",
+      "category": "synthesis",
+      "harnessOutput": {
+        "text": "## Synthesizing the Discrepancy: $48.2B vs. $71.3B\n\n### Why the Numbers Differ\n\nThe gap is **not a contradiction** — it reflects fundamentally different measurement scopes. Three structural factors explain nearly all of it:\n\n| Factor | Verdant (Survey) | Granite (Transaction) | Impact |\n|---|---|---|---|\n| **Shadow SaaS** | Invisible — captures only IT-approved spend | Captured via card/AP data | ~$22.8B gap (32% of Granite's total) |\n| **Implementation & services** | Explicitly excluded | Likely partially captured in transaction flows | Verdant estimates 15–20% understatement |\n| **Reporting bias** | Self-reported; respondents may under-report or be unaware of full spend | Observed payment data; less subject to recall bias | Unknown magnitude |\n\n**Back-of-envelope reconciliation:**\n- Start with Verdant's $48.2B (direct IT-approved license spend)\n- Add Verdant's own 15–20% exclusion adjustment → $55.4B–$57.8B\n- Granite attributes 32% of its $71.3B to shadow SaaS → ~$22.8B in shadow spend\n- If shadow SaaS is layered onto the adjusted Verdant figure: $55–58B + some portion of $22.8B\n- The numbers converge plausibly, suggesting **no fundamental error in either study** — they are measuring overlapping but distinct populations of spend.\n\n---\n\n### Which Number Should a Strategic Planner Use?\n\n**Use Granite's $71.3B as the primary market size estimate**, with important caveats. Here's why:\n\n- **It is more complete.** Shadow SaaS (32% of spend) is real economic activity — vendors receive that revenue regardless of whether IT procurement knows about it.\n- **Transaction data has lower recall bias** than self-reported surveys, particularly for diffuse departmental spend.\n- **For TAM/SAM sizing**, underestimating the market leads to underinvestment; it is a more costly error than overestimation in most strategic contexts.\n\n**However, use Verdant's $48.2B when the question is specifically about IT-controlled, centrally-procured spend** — e.g., when assessing consolidation opportunities, vendor negotiation leverage, or enterprise license agreement (ELA) potential.\n\n---\n\n### Required Caveats\n\n1. **Scope mismatch, not error.** Neither firm is wrong. Planners should specify *which* market they mean: IT-visible spend vs. total economic activity.\n\n2. **Granite's extrapolation risk.** Its 8,400-company sample is extrapolated to the full US enterprise base via BLS employment data. If its sample skews toward larger or more card-reliant enterprises, $71.3B may itself be an overcount.\n\n3. **Growth rates are more comparable than absolutes.** Verdant reports 23% YoY growth; Granite reports 26%. The convergence here is meaningful — both methodologies independently confirm strong growth, lending confidence to the directional signal even where absolute size differs.\n\n4. **Category rankings shift by methodology.** Verdant ranks HR > Finance > Sales/CRM; Granite ranks HR > Sales/CRM > Finance. The Sales/CRM reordering likely reflects heavy shadow/departmental purchasing (e.g., individual reps buying tools outside IT), which is a strategically useful insight on its own.\n\n5. **Neither figure is current.** Both are 2024 estimates. At 23–26% growth rates, the market may be in the $87–90B range by end of 2025.\n\n---\n\n### Bottom Line\n\n> The $23.1B gap is explained primarily by shadow SaaS and the inclusion/exclusion of services spend — not by one firm being wrong. **For strategic planning, anchor on Granite's $71.3B as total addressable market**, use Verdant's $48.2B to size the IT-procurement-controlled segment, and treat both growth rates (23–26%) as mutually corroborating. Flag the shadow SaaS finding (32% of spend) as a material strategic insight about buyer behavior, not just a measurement artifact.",
+        "totalTokens": 3404,
+        "latencyMs": 24328
+      },
+      "baselineOutput": {
+        "text": "# Reconciling the Verdant vs. Granite SaaS Market Estimates\n\n## Why the Numbers Differ: A Structural Diagnosis\n\nThe $23.1B gap (roughly 48% larger by Granite's measure) is not primarily a measurement error — it reflects **fundamentally different questions being asked** about the same underlying market. Understanding this is the first step to using either number responsibly.\n\n### The Major Sources of Divergence\n\n**1. Shadow SaaS (~$22.8B implied gap contribution)**\n\nGranite explicitly identifies shadow SaaS as ~32% of its $71.3B total, which implies roughly **$22.8B in departmental spend** that bypasses central IT procurement. This is almost certainly the single largest driver of the discrepancy. Verdant surveys IT budget owners — people who, by definition, control centralized procurement. They are structurally blind to the finance manager who puts Notion on a corporate card, the sales team running its own Gong subscription, or the HR department that quietly adopted a recruiting tool outside the approved stack. This is not a flaw in Verdant's survey design; it is an inherent ceiling on what self-reported IT spend can capture.\n\n**2. Verdant's Explicit Exclusions (~$7–10B implied)**\n\nVerdant's methodology note acknowledges it omits:\n- Implementation and professional services\n- Customization work\n- Embedded SaaS within larger platform contracts\n\nVerdant itself estimates this understates total economic activity by 15–20%, which on a $48.2B base implies **$7.2–$9.6B in excluded spend**. Even if Granite captures some but not all of these categories consistently, this is a meaningful reconciling item.\n\n**3. Definitional Scope of \"Vertical SaaS\"**\n\nBoth firms claim to measure \"US enterprise vertical SaaS,\" but their operational definitions likely diverge in ways neither fully discloses. Granite's transaction-based approach identifies vendors by merchant category codes and recurring payment patterns — a method that will capture some horizontal SaaS (Slack, Zoom, Microsoft 365 adjacents) if they recur alongside vertical tools. Verdant's 14 survey categories presumably follow a fixed taxonomy respondents map their spend into, which may exclude edge cases differently. **Neither firm publishes a vendor inclusion list**, which makes true apples-to-apples comparison impossible from the outside.\n\n**4. Extrapolation Risk in Granite's Model**\n\nGranite observes 8,400 enterprises and extrapolates to the full US enterprise base using BLS employment data. This introduces model risk: if the 8,400 companies skew toward tech-forward, higher-spend firms (as corporate card and AP/AR data networks often do), extrapolation will systematically overstate the market. The direction of this bias is almost certainly **upward**.\n\n**5. Self-Reporting Bias in Verdant's Survey**\n\nIT budget owners may underreport spend they don't directly control or spend they're embarrassed to account for (redundant tools, shelfware). They may also underestimate spend that's bundled with hardware or telecom contracts. The direction of this bias is almost certainly **downward**.\n\n---\n\n## A Rough Reconciliation\n\n| Item | Approximate Value |\n|---|---|\n| Verdant baseline (direct IT SaaS) | $48.2B |\n| Add: Verdant's own excluded categories (+17.5% midpoint) | +$8.4B |\n| Add: Shadow SaaS (Granite's 32% of $71.3B) | +$22.8B |\n| Subtotal | ~$79.4B |\n| Less: Granite extrapolation upward bias (estimated) | –$8B (speculative) |\n| **Plausible \"true\" market range** | **$60–75B** |\n\nThis suggests Granite's $71.3B is within a defensible range while Verdant's $48.2B is best understood as a **lower-bound proxy for centrally-managed IT spend** rather than a total market figure.\n\n---\n\n## Which Number Should a Strategic Planner Use?\n\n**The honest answer is: neither in isolation, and the choice depends on the decision being made.**\n\n### Use Verdant's $48.2B when:\n- **Sizing a market for enterprise IT sales motions** — deals that go through formal procurement, legal, and IT approval. This is the budget you can actually sell into through a standard B2B process",
+        "totalTokens": 1538,
+        "latencyMs": 23754
+      },
+      "harnessMetrics": {
+        "skillsInvoked": [],
+        "totalOperations": 0,
+        "hitlTriggered": false,
+        "contextPressureTokens": 0,
+        "compressionApplied": false
+      },
+      "factualScore": {
+        "taskId": "kwb-002",
+        "facts": [
+          {
+            "factId": "fact-1",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-2",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-3",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-4",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-5",
+            "matched": true,
+            "weight": 1
+          }
+        ],
+        "score": 1
+      },
+      "baselineFactualScore": {
+        "taskId": "kwb-002",
+        "facts": [
+          {
+            "factId": "fact-1",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-2",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-3",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-4",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-5",
+            "matched": true,
+            "weight": 1
+          }
+        ],
+        "score": 1
+      },
+      "passFailResult": {
+        "harnessPass": true,
+        "baselinePass": true,
+        "harnessReason": "All criteria met",
+        "baselineReason": "All criteria met"
+      },
+      "stepGrades": {
+        "taskId": "kwb-002",
+        "grades": [
+          {
+            "aspect": "skill_decomposition",
+            "severity": "warn",
+            "finding": "Missing expected skills: researcher. Invoked: ."
+          },
+          {
+            "aspect": "context_compression",
+            "severity": "pass",
+            "finding": "No context compression applied."
+          },
+          {
+            "aspect": "retry_behavior",
+            "severity": "pass",
+            "finding": "No retries needed."
+          }
+        ],
+        "summary": {
+          "pass": 2,
+          "warn": 1,
+          "fail": 0
+        }
+      }
+    },
+    {
+      "taskId": "kwb-003",
+      "category": "synthesis",
+      "harnessOutput": {
+        "text": "**Information Gap: Q3 2024 Data Not Available in Provided Sources**\n\nThe provided source documents do not contain NovaTech's Q3 2024 results. Specifically:\n\n- **Source 1** covers **Q2 2024** (revenue $31.7M, gross margin 71.2%)\n- **Source 2** is a **Q4 2024 preview** that references Q3 only obliquely — noting a \"Q3 working capital draw-down\" and that Q4 revenue would imply \"sequential acceleration from the company's reported Q3 figure\" — but does not disclose Q3 revenue or gross margin figures.\n\n**What can be inferred (with low confidence):**\n- Q3 revenue was *lower than* the modeled Q4 figure of $38.5M (since Q4 is described as a sequential acceleration).\n- Q3 revenue was likely *higher than* Q2's $31.7M, given the full-year tracking to ~$138M. (Q1 + Q2 + Q3 would need to total ~$99.5M to leave room for $38.5M in Q4, implying Q3 was roughly ~$35–36M — but this is arithmetic inference, not a sourced figure.)\n\n**No gross margin data for Q3 is present in either source.**\n\nTo answer this question accurately, the Q3 2024 earnings report or a corresponding analyst note would be required.",
+        "totalTokens": 2594,
+        "latencyMs": 7500
+      },
+      "baselineOutput": {
+        "text": "## NovaTech Q3 2024 Performance\n\nThe provided documents **do not contain Q3 2024 results**. Neither the Q2 2024 Review nor the Q4 2024 Preview includes specific Q3 revenue figures or gross margin data.\n\n### What the Documents Do Indicate About Q3\n\nThe Q4 Preview provides a couple of indirect references to Q3:\n\n- **Sequential acceleration** is expected in Q4, implying Q4 revenue of $38.5M would be higher than Q3's reported figure\n- A **Q3 working capital draw-down** is mentioned in the context of the year-end cash estimate of $48.2M\n\nHowever, the actual Q3 revenue number and gross margin are not disclosed in either document.\n\n---\n\nTo answer your question accurately, you would need the **Q3 2024 earnings report or a separate Lakeshore Capital Q3 review note**, which has not been provided here. I'd caution against inferring specific Q3 metrics from the available data, as that could lead to inaccurate conclusions.",
+        "totalTokens": 584,
+        "latencyMs": 6263
+      },
+      "harnessMetrics": {
+        "skillsInvoked": [],
+        "totalOperations": 0,
+        "hitlTriggered": false,
+        "contextPressureTokens": 0,
+        "compressionApplied": false
+      },
+      "factualScore": {
+        "taskId": "kwb-003",
+        "facts": [
+          {
+            "factId": "fact-1",
+            "matched": true,
+            "weight": 3
+          },
+          {
+            "factId": "fact-2",
+            "matched": true,
+            "weight": 1
+          }
+        ],
+        "score": 1
+      },
+      "baselineFactualScore": {
+        "taskId": "kwb-003",
+        "facts": [
+          {
+            "factId": "fact-1",
+            "matched": false,
+            "weight": 3
+          },
+          {
+            "factId": "fact-2",
+            "matched": false,
+            "weight": 1
+          }
+        ],
+        "score": 0
+      },
+      "passFailResult": {
+        "harnessPass": true,
+        "baselinePass": false,
+        "harnessReason": "All criteria met",
+        "baselineReason": "Missing required facts: fact-1"
+      },
+      "stepGrades": {
+        "taskId": "kwb-003",
+        "grades": [
+          {
+            "aspect": "skill_decomposition",
+            "severity": "warn",
+            "finding": "Missing expected skills: researcher. Invoked: ."
+          },
+          {
+            "aspect": "context_compression",
+            "severity": "pass",
+            "finding": "No context compression applied."
+          },
+          {
+            "aspect": "retry_behavior",
+            "severity": "pass",
+            "finding": "No retries needed."
+          }
+        ],
+        "summary": {
+          "pass": 2,
+          "warn": 1,
+          "fail": 0
+        }
+      }
+    },
+    {
+      "taskId": "kwb-007",
+      "category": "gap-analysis",
+      "harnessOutput": {
+        "text": "## SLA Gap Analysis: DataPipe MSA vs. Internal IT Requirements\n\nThe following five inconsistencies were identified where the DataPipe MSA **fails to meet** internal requirements. Items that are consistent between the two documents are omitted.\n\n---\n\n### Gap 1 — Uptime SLA: Insufficient and Self-Measured\n\n| | DataPipe MSA | Internal Requirement |\n|---|---|---|\n| **Uptime target** | 99.5% monthly | 99.9% monthly |\n| **Measurement source** | DataPipe's internal monitoring | Independent third-party monitoring |\n\n**MSA §4.1 vs. Req §1**\nThe vendor commits to 99.5% uptime — **0.4 percentage points below** the required 99.9%. Additionally, uptime is measured solely by DataPipe's own internal system, directly contradicting the requirement that measurement must use an independent third-party source (not vendor self-reporting).\n\n---\n\n### Gap 2 — Maintenance Windows: Twice the Permitted Duration\n\n| | DataPipe MSA | Internal Requirement |\n|---|---|---|\n| **Max scheduled maintenance** | 4 hours/month | 2 hours/month |\n\n**MSA §4.1 vs. Req §1**\nThe MSA permits up to 4 hours of scheduled maintenance per month, which is double the 2-hour maximum allowed by internal requirements. These windows are also excluded from uptime calculations, compounding the effective availability gap.\n\n---\n\n### Gap 3 — P1 Incident Response: Slower and Business-Hours Only\n\n| | DataPipe MSA | Internal Requirement |\n|---|---|---|\n| **Acknowledgment SLA** | 2 business hours | 1 hour, 24/7 |\n| **Resolution SLA** | \"Commercially reasonable efforts\" (not guaranteed) | 4 hours for service-affecting outages |\n\n**MSA §4.2 vs. Req §2**\nTwo distinct sub-gaps exist here:\n1. **Speed**: The vendor's 2-business-hour acknowledgment is twice as slow as the required 1-hour window.\n2. **Coverage**: The vendor's SLA applies only during *business hours*, whereas the requirement mandates 24/7 coverage.\n3. **Resolution**: The vendor provides no guaranteed resolution time, offering only \"commercially reasonable efforts.\" Internal requirements mandate a hard 4-hour resolution commitment for service-affecting outages.\n\n---\n\n### Gap 4 — Data Retention: Shorter Period with Potential Extra Charges\n\n| | DataPipe MSA | Internal Requirement |\n|---|---|---|\n| **Retention period** | Minimum 30 days | Minimum 90 days |\n| **Pricing** | Longer retention at additional cost | 90-day retention must be included in base pricing |\n\n**MSA §4.3 vs. Req §3**\nThe vendor retains data for only 30 days — one-third of the 90-day minimum required. Furthermore, the MSA explicitly states longer retention is available only *at additional cost*, whereas internal requirements mandate that up to 90-day retention be included in base pricing with no additional charges.\n\n---\n\n### Gap 5 — Security Certification and Pen Test Access\n\n| | DataPipe MSA | Internal Requirement |\n|---|---|---|\n| **SOC 2 certification level** | Type I | Type II |\n| **Pen test results access** | Available under NDA | Must be available without NDA requirement |\n\n**MSA §4.5 vs. Req §5**\nTwo distinct sub-gaps exist here:\n1. **Certification level**: SOC 2 Type I (point-in-time assessment) does not satisfy the requirement for SOC 2 Type II (audit over a period of time, providing stronger operational assurance).\n2. **Penetration test access**: The MSA conditions access to pen test results on signing an NDA, which directly conflicts with the requirement that results be available without an NDA.\n\n---\n\n## Summary Table\n\n| # | Topic | MSA Section | Req Section | Nature of Gap |\n|---|---|---|---|---|\n| 1 | Uptime target | §4.1 | §1 | MSA: 99.5% vs. required 99.9% |\n| 2 | Maintenance window | §4.1 | §1 | MSA: 4 hrs/mo vs. required 2 hrs/mo |\n| 3a | P1 acknowledgment speed | §4.2 | §2 | MSA: 2 biz hrs vs. required 1 hr 24/7 |\n| 3b | P1 resolution guarantee | §4.2 | §2 | MSA: no guarantee vs. required 4-hr SLA |\n| 4a | Retention duration | §4.3 | §3 | MSA: 30 days vs. required 90 days |\n| 4b | Retention pricing | §4.3 | §3 | MSA: extra cost vs. must be in base price |\n| 5a | SOC 2 level | §4.5 | §5 | MSA: Type I vs. required Type II |\n| 5b | Pen test NDA | §4.5 | §5 | MSA requires NDA; requirement prohibits it |\n\n---\n\n**Note on consistent items:** Geographic processing (US-East/US-West, no cross-border transfer without written consent) is substantively consistent between MSA §4.4 and Req §4 and is therefore not reported as a gap.",
+        "totalTokens": 3932,
+        "latencyMs": 20382
+      },
+      "baselineOutput": {
+        "text": "# DataPipe MSA vs. Internal IT Requirements — Gap Analysis\n\n---\n\n## GAP 1: Uptime SLA Level\n\n| | Detail |\n|---|---|\n| **Internal Requirement (§1)** | Minimum **99.9%** monthly uptime |\n| **DataPipe MSA (§4.1)** | Guarantees only **99.5%** monthly uptime |\n| **Gap** | The contracted uptime threshold is **0.4 percentage points below** the internal minimum. At scale, 99.5% permits approximately 3.6 hours of downtime per month versus the 43 minutes permitted under the internal standard. |\n\n---\n\n## GAP 2: Uptime Measurement Methodology\n\n| | Detail |\n|---|---|\n| **Internal Requirement (§1)** | Uptime must be measured by an **independent third-party monitoring source**; vendor self-reporting is explicitly prohibited |\n| **DataPipe MSA (§4.1)** | Uptime is measured exclusively by **DataPipe's internal monitoring system** |\n| **Gap** | The contract relies entirely on vendor self-reporting, which is directly and explicitly prohibited by the internal requirement. This also means SLA credit eligibility (MSA §5.1) is determined solely by DataPipe's own data, creating a conflict of interest. |\n\n---\n\n## GAP 3: Permitted Maintenance Window Duration\n\n| | Detail |\n|---|---|\n| **Internal Requirement (§1)** | Maintenance windows may **not exceed 2 hours per month** |\n| **DataPipe MSA (§4.1)** | Scheduled maintenance windows may be **up to 4 hours per month** |\n| **Gap** | The contract permits **twice the allowable maintenance downtime** under the internal standard. |\n\n---\n\n## GAP 4: Priority 1 Incident Acknowledgment — Time Window\n\n| | Detail |\n|---|---|\n| **Internal Requirement (§2)** | P1 acknowledgment required within **1 hour** |\n| **DataPipe MSA (§4.2)** | P1 acknowledgment required within **2 business hours** |\n| **Gap** | The contract allows twice as long for acknowledgment as the internal requirement permits. |\n\n---\n\n## GAP 5: Priority 1 Incident Acknowledgment — Coverage Hours\n\n| | Detail |\n|---|---|\n| **Internal Requirement (§2)** | P1 acknowledgment must be available **24/7** (not limited to business hours) |\n| **DataPipe MSA (§4.2)** | P1 acknowledgment is measured in **business hours only** |\n| **Gap** | Incidents occurring outside business hours (nights, weekends, holidays) have no contractually binding response commitment. This is a significant operational risk for a production data pipeline. |\n\n---\n\n## GAP 6: Priority 1 Resolution SLA\n\n| | Detail |\n|---|---|\n| **Internal Requirement (§2)** | P1 resolution required **within 4 hours** for service-affecting outages |\n| **DataPipe MSA (§4.2)** | Resolution SLAs are provided on a **\"commercially reasonable efforts\" basis and are not guaranteed** |\n| **Gap** | The contract provides **no binding resolution commitment whatsoever**. The internal requirement mandates a hard 4-hour resolution SLA, which is entirely absent from the MSA. |\n\n---\n\n## GAP 7: Data Retention Period\n\n| | Detail |\n|---|---|\n| **Internal Requirement (§3)** | Minimum **90 days** retention, included in base pricing with no additional charge for standard retention up to 90 days |\n| **DataPipe MSA (§4.3)** | Retention is **30 days** at base; longer periods are available **at additional cost** |\n| **Gap** | Two sub-gaps exist: **(a)** the base retention period is **60 days shorter** than the internal minimum; and **(b)** achieving the required 90-day retention would incur **additional fees** not anticipated in the internal requirement, creating both a compliance gap and a budget exposure. |\n\n---\n\n## GAP 8: SOC 2 Certification Type\n\n| | Detail |\n|---|---|\n| **Internal Requirement (§5)** | Vendor must hold **SOC 2 Type II** certification |\n| **DataPipe MSA",
+        "totalTokens": 1731,
+        "latencyMs": 18904
+      },
+      "harnessMetrics": {
+        "skillsInvoked": [],
+        "totalOperations": 0,
+        "hitlTriggered": false,
+        "contextPressureTokens": 0,
+        "compressionApplied": false
+      },
+      "factualScore": {
+        "taskId": "kwb-007",
+        "facts": [
+          {
+            "factId": "gap-1-uptime",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "gap-1-monitoring",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "gap-1-maintenance",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "gap-2-support",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "gap-3-retention",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "gap-4-soc2",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "gap-4-pentest",
+            "matched": true,
+            "weight": 1
+          }
+        ],
+        "score": 1
+      },
+      "baselineFactualScore": {
+        "taskId": "kwb-007",
+        "facts": [
+          {
+            "factId": "gap-1-uptime",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "gap-1-monitoring",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "gap-1-maintenance",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "gap-2-support",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "gap-3-retention",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "gap-4-soc2",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "gap-4-pentest",
+            "matched": true,
+            "weight": 1
+          }
+        ],
+        "score": 1
+      },
+      "passFailResult": {
+        "harnessPass": true,
+        "baselinePass": true,
+        "harnessReason": "All criteria met",
+        "baselineReason": "All criteria met"
+      },
+      "stepGrades": {
+        "taskId": "kwb-007",
+        "grades": [
+          {
+            "aspect": "skill_decomposition",
+            "severity": "warn",
+            "finding": "Missing expected skills: researcher. Invoked: ."
+          },
+          {
+            "aspect": "context_compression",
+            "severity": "pass",
+            "finding": "No context compression applied."
+          },
+          {
+            "aspect": "retry_behavior",
+            "severity": "pass",
+            "finding": "No retries needed."
+          }
+        ],
+        "summary": {
+          "pass": 2,
+          "warn": 1,
+          "fail": 0
+        }
+      }
+    },
+    {
+      "taskId": "kwb-008",
+      "category": "gap-analysis",
+      "harnessOutput": {
+        "text": "## Compliance Gaps: Brightline Corp Handbook vs. Cascadia Labor Law\n\nThe following are areas where the Brightline handbook **falls short of** Cascadia's legal requirements. Areas where Brightline meets or exceeds the law (minimum wage, rest breaks, incident reporting) are excluded per instructions.\n\n---\n\n### ❌ Gap 1 — Overtime Threshold (§5.1)\n\n| | Brightline Handbook | Cascadia Law |\n|---|---|---|\n| Weekly overtime trigger | **>45 hours** | **>40 hours** |\n\n**Issue:** Brightline's policy only requires overtime pay after 45 hours worked in a week. Cascadia law mandates overtime for all hours beyond 40. Employees working 41–45 hours per week are legally entitled to 1.5× pay but would not receive it under the current handbook.\n\n---\n\n### ❌ Gap 2 — Paid Sick Leave Annual Cap (§6.2)\n\n| | Brightline Handbook | Cascadia Law |\n|---|---|---|\n| Annual accrual cap | **80 hours** | **40 hours** *(cap on accrual)* |\n| Carryover of unused leave | **Not mentioned** | **Required** |\n\n**Issue (Carryover):** Cascadia law mandates that unused sick leave carry over to the following year. The handbook is silent on carryover — this is a compliance gap, as silence does not satisfy an affirmative legal obligation.\n\n> **Note on the cap:** Brightline's 80-hour cap is more generous than the state's 40-hour accrual cap. That aspect alone is not a gap. However, the absence of any carryover policy remains non-compliant regardless of the cap amount.\n\n---\n\n### ❌ Gap 3 — Meal Breaks (§6 — Omitted Entirely)\n\n| | Brightline Handbook | Cascadia Law |\n|---|---|---|\n| Meal break policy | **Not addressed** | **Required** (30-min unpaid break for shifts >5 consecutive hours) |\n\n**Issue:** Cascadia law requires employers to provide an uninterrupted 30-minute unpaid meal break to any employee working more than 5 consecutive hours. The handbook contains no meal break provision. Omission of a legally required policy is a compliance gap.\n\n---\n\n### Summary Table\n\n| Area | Handbook Provision | Cascadia Requirement | Gap |\n|---|---|---|---|\n| Overtime threshold | >45 hrs/week | >40 hrs/week | ✅ Yes — underpays 41–45 hr workers |\n| Sick leave carryover | Not mentioned | Carryover required | ✅ Yes — legally required, not addressed |\n| Meal breaks | Not mentioned | 30-min break >5 hrs | ✅ Yes — legally required, entirely absent |\n| Overtime rate | 1.5× | 1.5× | No gap |\n| Minimum wage | $16.50/hr | $15.75/hr | No gap (exceeds) |\n| Rest breaks | 15 min per 4 hrs | 15 min per 4 hrs | No gap |\n| Incident reporting | 24 hours | 24 hours | No gap |",
+        "totalTokens": 3241,
+        "latencyMs": 13288
+      },
+      "baselineOutput": {
+        "text": "## Compliance Gap Analysis: Brightline Corp Handbook vs. Cascadia Labor Law\n\n---\n\n### ❌ Non-Compliant Areas Only\n\n---\n\n#### 1. Overtime Threshold — *Section 5.1*\n\n| | Brightline Handbook | Cascadia Law |\n|---|---|---|\n| Weekly overtime trigger | **>45 hours** | **>40 hours** |\n\n**Gap:** Brightline's handbook sets the overtime threshold 5 hours above the legal requirement. Non-exempt employees must receive 1.5× pay for all hours beyond 40 per workweek. Employees working 41–45 hours in a week would be underpaid under the current policy.\n\n---\n\n#### 2. Paid Sick Leave Annual Cap — *Section 6.2*\n\n| | Brightline Handbook | Cascadia Law |\n|---|---|---|\n| Annual accrual cap | **80 hours** | **40 hours** |\n| Carryover requirement | Not addressed | **Required** |\n\n**Gap — two sub-issues:**\n- The accrual cap itself (80 vs. 40 hours) is *facially more generous*, but the handbook **does not address the mandatory carryover requirement**. Cascadia law requires unused sick leave to carry over year to year. The handbook's silence on this point creates a compliance risk if Brightline's actual practice does not honor carryover.\n- **Note:** If the 80-hour cap is implemented as a *use-it-or-lose-it* annual cap with no carryover, that would be a direct violation regardless of the higher cap amount.\n\n---\n\n#### 3. Meal Breaks — *Section 6 (absent)*\n\n| | Brightline Handbook | Cascadia Law |\n|---|---|---|\n| Meal break policy | **Not mentioned** | **Required** |\n\n**Gap:** Cascadia law requires an uninterrupted 30-minute unpaid meal break for any employee working more than 5 consecutive hours. The handbook contains no meal break provision whatsoever. The absence of this policy — including the conditions under which it may be waived — is a clear omission that puts Brightline out of compliance.\n\n---\n\n### ✅ Areas Confirmed Compliant (not flagged per instructions)\nMinimum wage, rest breaks, and workplace safety incident reporting were reviewed and meet or exceed Cascadia requirements.\n\n---\n\n### Summary Table\n\n| Area | Status | Risk Level |\n|---|---|---|\n| Overtime threshold | Below legal minimum | 🔴 High |\n| Sick leave carryover | Not addressed | 🟠 Medium–High |\n| Meal breaks | Policy entirely absent | 🔴 High |\n\n---\n\n> **Recommendation:** Brightline should update Section 5.1 to reflect the 40-hour overtime trigger, add an explicit carryover provision to Section 6.2, and introduce a new Section 6.3 addressing meal break entitlements and waiver conditions, all before the next handbook revision cycle.",
+        "totalTokens": 1253,
+        "latencyMs": 13288
+      },
+      "harnessMetrics": {
+        "skillsInvoked": [],
+        "totalOperations": 0,
+        "hitlTriggered": false,
+        "contextPressureTokens": 0,
+        "compressionApplied": false
+      },
+      "factualScore": {
+        "taskId": "kwb-008",
+        "facts": [
+          {
+            "factId": "gap-1-overtime",
+            "matched": true,
+            "weight": 3
+          },
+          {
+            "factId": "gap-2-meal",
+            "matched": true,
+            "weight": 3
+          },
+          {
+            "factId": "no-gap-minimum-wage",
+            "matched": true,
+            "weight": 0
+          }
+        ],
+        "score": 1
+      },
+      "baselineFactualScore": {
+        "taskId": "kwb-008",
+        "facts": [
+          {
+            "factId": "gap-1-overtime",
+            "matched": true,
+            "weight": 3
+          },
+          {
+            "factId": "gap-2-meal",
+            "matched": true,
+            "weight": 3
+          },
+          {
+            "factId": "no-gap-minimum-wage",
+            "matched": false,
+            "weight": 0
+          }
+        ],
+        "score": 1
+      },
+      "passFailResult": {
+        "harnessPass": true,
+        "baselinePass": true,
+        "harnessReason": "All criteria met",
+        "baselineReason": "All criteria met"
+      },
+      "stepGrades": {
+        "taskId": "kwb-008",
+        "grades": [
+          {
+            "aspect": "skill_decomposition",
+            "severity": "warn",
+            "finding": "Missing expected skills: researcher. Invoked: ."
+          },
+          {
+            "aspect": "context_compression",
+            "severity": "pass",
+            "finding": "No context compression applied."
+          },
+          {
+            "aspect": "retry_behavior",
+            "severity": "pass",
+            "finding": "No retries needed."
+          }
+        ],
+        "summary": {
+          "pass": 2,
+          "warn": 1,
+          "fail": 0
+        }
+      }
+    },
+    {
+      "taskId": "kwb-010",
+      "category": "extraction",
+      "harnessOutput": {
+        "text": "Here are the five extracted data points from **Global FinServ Third-Party Risk Management Policy v4.2**:\n\n---\n\n## Key Compliance Thresholds & Deadlines\n\n| # | Item | Policy Requirement | Source |\n|---|------|--------------------|--------|\n| 1 | **PII threshold: Tier 1 vs. Tier 2** | Tier 1 requires access to PII of **>10,000 customers**; Tier 2 covers **1,000–10,000 customers** | §3.1 |\n| 2 | **Tier 1 minimum cyber insurance** | **$5M cyber** liability (plus $10M E&O) | §3.1 |\n| 3 | **Onboarding assessment deadline** | **45 business days** from contract execution (extensions require CRO approval) | §4.1 |\n| 4 | **Confirmed breach notification deadline** | **24 hours** of discovery | §5.1 |\n| 5 | **Consequence of failing remediation period** | If not remediated within 30 days, the vendor relationship is **escalated to the Board Risk Committee** | §4.4 |\n\n---\n\n**Notes:**\n- The 10,000-customer PII figure is the precise cut-off: vendors at *exactly* 10,000 fall within Tier 2 (policy uses \">10,000\" for Tier 1).\n- A separate, less urgent timeline exists for *suspected* (unconfirmed) breaches: **72 hours** (§5.1).\n- Failing breach notification deadlines (either 24h or 72h) carries an additional consequence: **automatic reclassification to Tier 1**, regardless of current tier (§5.2).",
+        "totalTokens": 2896,
+        "latencyMs": 7397
+      },
+      "baselineOutput": {
+        "text": "Here are the five extracted items from the policy document:\n\n1. **PII Threshold (Tier 1 vs. Tier 2)**\nThe dividing line is **10,000 customers**. Tier 1 vendors access PII of *more than* 10,000 customers, while Tier 2 vendors access PII of *1,000 to 10,000* customers. *(Section 3.1)*\n\n2. **Minimum Cyber Insurance for Tier 1**\nTier 1 vendors must carry a minimum of **$5 million** in cyber insurance. *(Section 3.1)*\n\n3. **Onboarding Assessment Deadline**\nNew vendor assessments must be completed within **45 business days** of contract execution. Any extension requires CRO approval. *(Section 4.1)*\n\n4. **Breach Notification Deadline (Confirmed Breaches)**\nVendors must notify Global FinServ within **24 hours** of discovering a confirmed breach. Note that *suspected* breaches carry a longer window of 72 hours. *(Section 5.1)*\n\n5. **Consequence of Failing the Remediation Period**\nIf a vendor fails to remediate within the **30-day remediation window**, the vendor relationship is **escalated to the Board Risk Committee**. *(Section 4.4)*",
+        "totalTokens": 886,
+        "latencyMs": 4700
+      },
+      "harnessMetrics": {
+        "skillsInvoked": [],
+        "totalOperations": 0,
+        "hitlTriggered": false,
+        "contextPressureTokens": 0,
+        "compressionApplied": false
+      },
+      "factualScore": {
+        "taskId": "kwb-010",
+        "facts": [
+          {
+            "factId": "fact-1",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-2",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-3",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-4",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-5",
+            "matched": true,
+            "weight": 2
+          }
+        ],
+        "score": 1
+      },
+      "baselineFactualScore": {
+        "taskId": "kwb-010",
+        "facts": [
+          {
+            "factId": "fact-1",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-2",
+            "matched": false,
+            "weight": 2
+          },
+          {
+            "factId": "fact-3",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-4",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-5",
+            "matched": true,
+            "weight": 2
+          }
+        ],
+        "score": 0.8
+      },
+      "passFailResult": {
+        "harnessPass": true,
+        "baselinePass": true,
+        "harnessReason": "All criteria met",
+        "baselineReason": "All criteria met"
+      },
+      "stepGrades": {
+        "taskId": "kwb-010",
+        "grades": [
+          {
+            "aspect": "skill_decomposition",
+            "severity": "warn",
+            "finding": "Missing expected skills: researcher. Invoked: ."
+          },
+          {
+            "aspect": "context_compression",
+            "severity": "pass",
+            "finding": "No context compression applied."
+          },
+          {
+            "aspect": "retry_behavior",
+            "severity": "pass",
+            "finding": "No retries needed."
+          }
+        ],
+        "summary": {
+          "pass": 2,
+          "warn": 1,
+          "fail": 0
+        }
+      }
+    },
+    {
+      "taskId": "kwb-011",
+      "category": "extraction",
+      "harnessOutput": {
+        "text": "Here are the answers drawn directly from the PRD:\n\n---\n\n**1. Export formats available on the Pro plan**\n\n- **CSV** (available to all users)\n- **JSON** (available on Pro and Enterprise plans)\n\n*Parquet is excluded — it requires Enterprise plan plus the \"Advanced Analytics\" add-on.*\n\n---\n\n**2. Conditions for PGP signature inclusion**\n\nA PGP signature is included with an export when **both** conditions are met:\n- The user is on the **Enterprise tier**, and\n- The **tenant has uploaded a public key**.\n\n*(All tiers receive a SHA-256 checksum file regardless.)*\n\n---\n\n**3. What happens to exports over 1 million rows**\n\nExports exceeding 1M rows on **any tier** are:\n- Processed **asynchronously**, and\n- Delivered via a **download link sent to the user's email**.\n- The link **expires after 72 hours**.\n\n---\n\n**4. Enterprise retention with Compliance Archive enabled**\n\nExport files are retained **indefinitely** when the Enterprise tenant has enabled the \"Compliance Archive\" feature. (Without it, Enterprise retention is 30 days.)\n\n---\n\n**5. Webhook delivery retries**\n\nThe webhook delivery system attempts **3 retries**, with at-least-once delivery guaranteed.",
+        "totalTokens": 2705,
+        "latencyMs": 6088
+      },
+      "baselineOutput": {
+        "text": "## Answers from the Athena Platform Data Export PRD v2.1\n\n**1. Export formats available on the Pro plan**\nPro plan users have access to **CSV and JSON** exports. (Parquet is excluded from Pro — it requires an Enterprise plan plus the \"Advanced Analytics\" add-on.) *(§1.1)*\n\n---\n\n**2. Conditions for PGP signature inclusion**\nA PGP signature is included when **both** of the following conditions are met:\n- The user is on an **Enterprise plan**, and\n- The tenant has **uploaded a public key**\n\nAll tiers receive a SHA-256 checksum file regardless. *(§1.3)*\n\n---\n\n**3. What happens to exports over 1M rows**\nThey are **processed asynchronously** rather than delivered immediately. The completed export is sent to the user via a **download link delivered to their email**. That link **expires after 72 hours**. This applies on *any* tier. *(§2.4)*\n\n---\n\n**4. Retention duration on Enterprise with Compliance Archive**\nExport files are retained **indefinitely** when the \"Compliance Archive\" feature is enabled. Without it, Enterprise retention defaults to 30 days. *(§3.2)*\n\n---\n\n**5. Webhook delivery retry attempts**\nThe webhook delivery is guaranteed at-least-once with **3 retries**. *(§4.2)*",
+        "totalTokens": 829,
+        "latencyMs": 6112
+      },
+      "harnessMetrics": {
+        "skillsInvoked": [],
+        "totalOperations": 0,
+        "hitlTriggered": false,
+        "contextPressureTokens": 0,
+        "compressionApplied": false
+      },
+      "factualScore": {
+        "taskId": "kwb-011",
+        "facts": [
+          {
+            "factId": "fact-1",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-2",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-3",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-4",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-5",
+            "matched": true,
+            "weight": 1
+          }
+        ],
+        "score": 1
+      },
+      "baselineFactualScore": {
+        "taskId": "kwb-011",
+        "facts": [
+          {
+            "factId": "fact-1",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-2",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-3",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-4",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-5",
+            "matched": true,
+            "weight": 1
+          }
+        ],
+        "score": 1
+      },
+      "passFailResult": {
+        "harnessPass": true,
+        "baselinePass": true,
+        "harnessReason": "All criteria met",
+        "baselineReason": "All criteria met"
+      },
+      "stepGrades": {
+        "taskId": "kwb-011",
+        "grades": [
+          {
+            "aspect": "skill_decomposition",
+            "severity": "warn",
+            "finding": "Missing expected skills: researcher. Invoked: ."
+          },
+          {
+            "aspect": "context_compression",
+            "severity": "pass",
+            "finding": "No context compression applied."
+          },
+          {
+            "aspect": "retry_behavior",
+            "severity": "pass",
+            "finding": "No retries needed."
+          }
+        ],
+        "summary": {
+          "pass": 2,
+          "warn": 1,
+          "fail": 0
+        }
+      }
+    },
+    {
+      "taskId": "kwb-020",
+      "category": "decision-support",
+      "harnessOutput": {
+        "text": "## Recommendation: **CloudShift (Vendor A)**\n\n---\n\n### Elimination Analysis\n\n| Priority | CloudShift (A) | DataLift (B) | Nimbus Cloud (C) |\n|---|---|---|---|\n| **Data Sovereignty (Non-negotiable)** | ✅ Full EU, no caveats | ❌ **Fails** — US-based control plane today | ✅ Full EU, management plane included |\n| **Timeline (≤6 months)** | ✅ 4 months | ❌ **Fails** — 8 months | ✅ 5 months |\n| **Cost (≤$800K)** | ✅ $720K | ✅ $750K (but already eliminated) | ❌ **Fails** — $950K |\n| **Support (24/7, <1hr P1)** | ✅ 30-min P1, dedicated lead | ❌ 2-hr P1, business hours (already eliminated) | ✅ <30-min P1, named team |\n\n**DataLift** is eliminated on two non-negotiable grounds: its US-based control plane violates data sovereignty requirements (even with an EU control plane promised for Q2 2025, that is a future commitment, not a present guarantee), and its 8-month timeline exceeds the 6-month hard limit.\n\n**Nimbus Cloud** is eliminated because its $950K cost exceeds the $800K budget. While the memo states willingness to pay *more for a faster timeline*, Nimbus is only marginally faster than CloudShift (5 vs. 4 months) and costs $230K more — a poor tradeoff.\n\n**CloudShift** meets all four stated priorities and is the only vendor that does so.\n\n---\n\n### Why CloudShift Wins on Its Own Merits\n\n- **Fastest timeline** (4 months) with fixed-price contract — no overrun risk\n- **Lowest cost** among compliant proposals at $720K ($80K under budget)\n- **Strong support** — 30-minute P1, dedicated migration lead\n- **Full EU data sovereignty** with no caveats on control plane routing\n\n---\n\n### Main Risk: Limited Oracle Migration Experience\n\nCloudShift's proposal explicitly acknowledges limited experience with legacy Oracle database migrations, citing only 3 Oracle-to-PostgreSQL migrations in the last 2 years — compared to DataLift's 14 in 2024 alone. This is the most significant technical risk. An underestimated migration complexity could cause delays, data integrity issues, or cost overruns.\n\n### Mitigation Strategies\n\n1. **Structured discovery phase**: Require CloudShift to conduct a paid, time-boxed Oracle schema and stored procedure audit *before* contract execution, with findings shared openly. Price the contract only after this assessment.\n2. **Milestone-based payments with break clauses**: Tie payment tranches to delivered milestones. Include a contractual right to terminate with partial payment if critical blockers emerge early.\n3. **Allocate contingency from savings**: The $80K under-budget margin should be held in reserve as a contingency buffer for Oracle-specific complications.\n4. **Augment with specialist expertise**: Consider contracting an independent Oracle-to-PostgreSQL specialist (e.g., a DBA consultant) to review CloudShift's migration plan and provide oversight during the database phase — a modest spend from the contingency.\n5. **Parallel validation testing**: Even without DataLift's formal parallel-run, negotiate a defined validation/smoke-testing period against production data snapshots before final cutover.\n\n---\n\n### Conclusion\n\nCloudShift is the clear and only compliant recommendation. The Oracle experience gap is real but manageable with proper contractual structure and independent oversight. The $80K budget headroom and 2-month schedule buffer relative to the deadline provide meaningful room to absorb complications.",
+        "totalTokens": 3502,
+        "latencyMs": 19123
+      },
+      "baselineOutput": {
+        "text": "## Vendor Recommendation: CloudShift (Vendor A)\n\n### Summary Recommendation\n\nCloudShift is the best fit given your stated priorities. Here is the reasoning, working through each priority in order.\n\n---\n\n### Priority-by-Priority Analysis\n\n**1. Data Sovereignty (Non-Negotiable)**\n\n| Vendor | Status |\n|---|---|\n| CloudShift | ✅ Full EU processing and storage. Frankfurt + Dublin. SOC 2 Type II certified. |\n| DataLift | ❌ **Disqualifying.** Management tooling routes through a US-based control plane today. EU control plane is not available until Q2 2025, which is after your migration would complete. This is not a minor technicality — a US control plane means data or metadata is being processed outside the EU, which likely constitutes a data sovereignty violation regardless of where the data is stored. |\n| Nimbus Cloud | ✅ Fully EU-resident management plane. Frankfurt, London, Paris. GDPR-certified. |\n\nDataLift should be **eliminated from consideration** on this criterion alone. The memo states this is non-negotiable, and DataLift's own proposal acknowledges the gap. Their future roadmap does not solve a present requirement.\n\n**2. Migration Timeline (6-month maximum, faster preferred)**\n\n| Vendor | Timeline | vs. Requirement |\n|---|---|---|\n| CloudShift | 4 months | ✅ 2 months ahead of deadline |\n| Nimbus Cloud | 5 months | ✅ Within deadline |\n| DataLift | 8 months | ❌ Disqualified (also exceeds timeline) |\n\nCloudShift offers the faster timeline, which the memo explicitly values and is willing to pay more to achieve.\n\n**3. Cost ($800K budget)**\n\n| Vendor | Cost | vs. Budget |\n|---|---|---|\n| CloudShift | $720K | ✅ $80K under budget |\n| DataLift | $750K total | ❌ Disqualified |\n| Nimbus Cloud | $950K | ❌ $150K over budget |\n\nNimbus Cloud exceeds the budget by 19%. While the memo says the company will pay more for speed, Nimbus is only marginally faster than CloudShift (5 months vs. 4 months) while costing $230K more. That premium is not justified by a one-month improvement when CloudShift already beats the deadline comfortably.\n\n**4. Support**\n\n| Vendor | Coverage | P1 Response | Model |\n|---|---|---|---|\n| CloudShift | 24/7 | 30 minutes | Dedicated migration lead |\n| Nimbus Cloud | 24/7 | <30 minutes | Named team of 3 engineers |\n| DataLift | Business hours + on-call | 2 hours | Pooled support |\n\nBoth CloudShift and Nimbus meet the support requirement well. CloudShift's dedicated migration lead is a meaningful advantage — a single accountable owner typically produces better outcomes than a pooled model during complex migrations.\n\n---\n\n### The Main Risk: CloudShift's Limited Oracle Experience\n\nCloudShift discloses only **3 Oracle-to-PostgreSQL migrations** in two years, versus DataLift's 14 in 2024 alone (and DataLift is disqualified). Oracle-to-PostgreSQL migrations carry well-known complexity: stored procedures, proprietary data types, Oracle-specific SQL syntax, and licensing considerations. If CloudShift underestimates this complexity, the aggressive 4-month timeline is the first thing at risk, potentially followed by cost overruns on a nominally fixed-price contract (disputes over scope are common when technical surprises arise).\n\n---\n\n### Mitigation Strategies\n\n1. **Oracle-specific due diligence before signing.** Request detailed case studies of their 3 Oracle migrations. Ask for references you can call directly. Understand the size and complexity of those migrations relative to yours. Assess whether your Oracle environment is comparably scoped.\n\n2. **Negotiate a technical assessment phase.** Insert a 2–3 week paid discovery phase before the full contract is executed. CloudShift assesses your Oracle environment and confirms the timeline and fixed price. This surfaces surprises before they become disputes.\n\n3. **Define scope precisely in the contract.** Fixed-price contracts protect you from overruns only if scope is unambiguous. Work with legal to ensure Oracle-specific complexity (stored procedures",
+        "totalTokens": 1707,
+        "latencyMs": 20844
+      },
+      "harnessMetrics": {
+        "skillsInvoked": [],
+        "totalOperations": 0,
+        "hitlTriggered": false,
+        "contextPressureTokens": 0,
+        "compressionApplied": false
+      },
+      "factualScore": {
+        "taskId": "kwb-020",
+        "facts": [
+          {
+            "factId": "fact-1",
+            "matched": true,
+            "weight": 3
+          },
+          {
+            "factId": "fact-2",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-3",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-4",
+            "matched": true,
+            "weight": 2
+          }
+        ],
+        "score": 1
+      },
+      "baselineFactualScore": {
+        "taskId": "kwb-020",
+        "facts": [
+          {
+            "factId": "fact-1",
+            "matched": true,
+            "weight": 3
+          },
+          {
+            "factId": "fact-2",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-3",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-4",
+            "matched": true,
+            "weight": 2
+          }
+        ],
+        "score": 1
+      },
+      "passFailResult": {
+        "harnessPass": true,
+        "baselinePass": true,
+        "harnessReason": "All criteria met",
+        "baselineReason": "All criteria met"
+      },
+      "stepGrades": {
+        "taskId": "kwb-020",
+        "grades": [
+          {
+            "aspect": "skill_decomposition",
+            "severity": "warn",
+            "finding": "Missing expected skills: researcher. Invoked: ."
+          },
+          {
+            "aspect": "context_compression",
+            "severity": "pass",
+            "finding": "No context compression applied."
+          },
+          {
+            "aspect": "retry_behavior",
+            "severity": "pass",
+            "finding": "No retries needed."
+          }
+        ],
+        "summary": {
+          "pass": 2,
+          "warn": 1,
+          "fail": 0
+        }
+      }
+    },
+    {
+      "taskId": "kwb-021",
+      "category": "decision-support",
+      "harnessOutput": {
+        "text": "## Recommendation: Renew StreamCore on a 3-Year Term at $280K/year\n\n**Lead conclusion:** Renew StreamCore, but use the 3-year term offer to bring pricing to $280K/year. This satisfies the compliance deadline, avoids prohibitive switching costs, and materially reduces total spend — though it does not fully meet the CFO's 10% reduction mandate. That gap requires explicit CFO sign-off before proceeding.\n\n---\n\n## Decision Rationale\n\n### Why Not Switch?\n\n| Factor | Detail |\n|---|---|\n| Migration timeline | 4–6 months (Engineering estimate) |\n| Compliance deadline | January 31, 2025 — a gap **will** be flagged in the SOC 2 Type II audit |\n| Best alternative cost | Grafana Cloud: $180K + $120K infra/headcount = **$300K/year effective cost** |\n| True switching savings | $300K vs. $280K (3-year deal) — switching saves only ~$20K/year *after* one-time migration cost (2 senior engineers × 4–6 months) |\n| Switching verdict | **Not cost-effective for at least 2 years, and infeasible by the compliance deadline** |\n\n### Why the 3-Year Deal?\n\n- Current quote: $340K/year → 3-year total: **$1.02M**\n- 3-year flat-rate deal: $280K/year → 3-year total: **$840K**\n- **Savings: $180K over 3 years ($60K/year)**\n- Pricing returns to last year's level, which is defensible to the board\n\n### The CFO Mandate Gap\n\nThe CFO requires a **10% reduction** from $340K, i.e., ≤$306K. The 3-year deal at $280K **exceeds that threshold** (it is an **18% reduction** from the current renewal quote). ✅\n\n> **However:** The mandate may be interpreted as a reduction from the *baseline contract value* ($280K last year), not the inflated renewal quote. At $280K vs. $280K baseline, that is **flat — not a 10% reduction**. This ambiguity must be resolved with the CFO before signing.\n\n---\n\n## Risks of the 3-Year Commitment\n\n- **Lock-in:** 50% cancellation penalty on remaining term (~$420K at mid-term) limits flexibility\n- **Market risk:** If a superior/cheaper alternative emerges in Year 2–3, exit is expensive\n- **Leverage loss:** No annual renegotiation leverage for 3 years\n\n**Mitigation to negotiate:** Request contract provisions for annual price caps (e.g., no increase > CPI), technology substitution rights, or a performance/exit clause tied to product degradation.\n\n---\n\n## Specific Next Steps\n\n1. **Immediately (this week):** Seek CFO clarification — does \"10% reduction\" apply to the $340K renewal quote or the $280K prior-year contract value? The answer determines whether the 3-year deal satisfies the mandate outright or requires an exception.\n\n2. **If CFO confirms $340K as the baseline:** 3-year deal at $280K = 18% reduction. Proceed to negotiate contract protections (exit clause, price cap) and sign before January 31, 2025.\n\n3. **If CFO insists on reduction from $280K baseline:** Escalate as a business exception. Present the switching cost analysis ($180K+ in migration costs, SOC 2 audit risk, no viable 2-year payback) to support a waiver. The board's analytics spend scrutiny makes the audit gap a higher reputational risk than the cost gap.\n\n4. **Negotiate contract terms:** Push for an exit/substitution clause and a CPI-linked price cap for Years 2–3 to reduce lock-in risk before signing.\n\n5. **Do not let the deadline slip:** January 31, 2025 is a hard compliance gate. Internal approvals must be obtained by mid-January at the latest to allow for contract execution time.\n\n---\n\n## Summary\n\n| Option | Cost (Year 1) | Compliance Risk | Feasibility | Verdict |\n|---|---|---|---|---|\n| Renew at $340K (annual) | $340K | ✅ None | ✅ Immediate | ❌ Fails CFO mandate |\n| Switch to Grafana Cloud | ~$300K effective | ❌ SOC 2 gap | ❌ 4–6 months | ❌ Not viable by deadline |\n| Switch to DataDog | Higher (rebuild cost) | ❌ SOC 2 gap | ❌ Not feasible | ❌ Reject |\n| **3-year deal at $280K** | **$280K** | **✅ None** | **✅ Immediate** | **✅ Recommended** |\n\n> **Bottom line:** The 3-year StreamCore deal at $280K is the only option that meets the compliance deadline, avoids switching costs, and demonstrably reduces spend. The residual issue — whether it satisfies the CFO's mandate as stated — requires human judgment and should be escalated before contract execution.",
+        "totalTokens": 3708,
+        "latencyMs": 27246
+      },
+      "baselineOutput": {
+        "text": "# StreamCore Renewal Recommendation\n\n## Summary Recommendation\n\n**Negotiate a 3-year renewal at $280K/year, but with critical contract modifications before signing.** Do not switch vendors, and do not accept the standard annual renewal at $340K. The raw numbers favor renewal, but the 3-year lock-in carries real risk that needs to be mitigated contractually.\n\n---\n\n## Why the Alternatives Fall Short\n\n### Switching to DataDog or Grafana Cloud\n\nEngineering's analysis holds up under scrutiny, but it's worth being explicit about the full cost picture:\n\n**Grafana Cloud scenario:**\n- Year 1 cost: $180K (licensing) + $120K (infra/headcount) = $300K\n- Plus ~$400–600K in one-time migration cost (2 senior engineers × 4–6 months at fully-loaded cost, likely $100–150K/engineer/year → ~$100–150K total labor)\n- Break-even vs. $280K/year renewal: **never reaches it in Year 1–2, and Year 3 is marginal**\n\n**DataDog scenario:**\n- ML model rebuild adds 3 months of senior engineering time on top of migration\n- The 3-year transaction history embedded in StreamCore's models is a significant non-recoverable asset — rebuilding means degraded model performance for 12–18 months\n- SOC 2 compliance gap risk is real: a 4–6 month migration timeline almost certainly blows past the January 31 deadline\n\nSwitching is the wrong move **right now**, not necessarily forever.\n\n---\n\n## Addressing the CFO Mandate Directly\n\nThe CFO directive requires a 10% cost reduction or re-competition. The $340K renewal quote fails this test. Here is how the 3-year deal satisfies it:\n\n| Scenario | Annual Cost | vs. $280K Baseline | vs. $340K Quote |\n|---|---|---|---|\n| Annual renewal (current quote) | $340K | +21% | — |\n| 3-year lock at $280K | $280K | Flat | **-17.6%** |\n| Grafana (all-in, steady state) | $300K | +7% | -12% |\n\nThe 3-year deal at $280K delivers **$60K annual savings vs. the renewal quote**, which is an 18% reduction — clearing the 10% mandate. Frame it to the CFO and board as: *\"We re-competed analytically, identified switching costs that make migration NPV-negative through 2026, and negotiated a flat-rate 3-year deal that reduces cost 18% below the renewal quote.\"* This is a defensible answer for earnings prep.\n\n---\n\n## The Critical Problem: 3-Year Lock-In Risk\n\nThe 50% cancellation penalty on a $840K contract is up to **$420K in exit costs** if you need to leave in Year 2. That risk needs to be addressed contractually, not just accepted. This is the main negotiating work to do.\n\n### Required Contract Modifications Before Signing\n\nPush StreamCore on all of the following. Their willingness to negotiate on these points also tells you something about how much they want the 3-year commitment:\n\n1. **Capped annual price escalation clause** — Maximum 3–5% CPI-linked increase per year. Without this, they can argue for amendments that erode the $280K rate.\n\n2. **Reduced or tiered cancellation penalty** — Propose: 25% in Year 1, 15% in Year 2, 0% in Year 3. The current 50% flat penalty is aggressive.\n\n3. **Service level commitments with teeth** — Given the <50ms p99 latency requirement and SOC 2 dependency, you need SLA credits or termination rights if StreamCore fails to meet uptime/performance thresholds. Vendor failure should be a no-penalty exit trigger.\n\n4. **Data portability guarantee** — Explicit contractual right to export all trained ML model weights, training data, and pipeline configurations if you exit. This is the most important long-term leverage point. Without it, you are increasingly locked in with each passing year.\n\n5. **Most-favored-customer pricing** — Given the 3-year commitment, request a clause ensuring you receive pricing no higher than any comparable customer. Reasonable ask given your volume.\n\n---\n\n## Parallel Actions (Risk Hedging)\n\nSigning the 3-year",
+        "totalTokens": 1587,
+        "latencyMs": 23868
+      },
+      "harnessMetrics": {
+        "skillsInvoked": [],
+        "totalOperations": 0,
+        "hitlTriggered": false,
+        "contextPressureTokens": 0,
+        "compressionApplied": false
+      },
+      "factualScore": {
+        "taskId": "kwb-021",
+        "facts": [
+          {
+            "factId": "fact-1",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-2",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-3",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-4",
+            "matched": true,
+            "weight": 2
+          }
+        ],
+        "score": 1
+      },
+      "baselineFactualScore": {
+        "taskId": "kwb-021",
+        "facts": [
+          {
+            "factId": "fact-1",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-2",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-3",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-4",
+            "matched": true,
+            "weight": 2
+          }
+        ],
+        "score": 1
+      },
+      "passFailResult": {
+        "harnessPass": true,
+        "baselinePass": true,
+        "harnessReason": "All criteria met",
+        "baselineReason": "All criteria met"
+      },
+      "stepGrades": {
+        "taskId": "kwb-021",
+        "grades": [
+          {
+            "aspect": "skill_decomposition",
+            "severity": "warn",
+            "finding": "Missing expected skills: researcher. Invoked: ."
+          },
+          {
+            "aspect": "context_compression",
+            "severity": "pass",
+            "finding": "No context compression applied."
+          },
+          {
+            "aspect": "retry_behavior",
+            "severity": "pass",
+            "finding": "No retries needed."
+          }
+        ],
+        "summary": {
+          "pass": 2,
+          "warn": 1,
+          "fail": 0
+        }
+      }
+    }
+  ],
+  "aggregate": {
+    "factualAccuracy": {
+      "harness": 1,
+      "baseline": 0.8481481481481482,
+      "delta": 0.1518518518518518
+    },
+    "judgeQuality": {
+      "harness": 0,
+      "baseline": 0,
+      "delta": 0,
+      "inconclusiveCount": 0
+    },
+    "passRate": {
+      "harness": 1,
+      "baseline": 0.8888888888888888,
+      "total": 9
+    },
+    "byCategory": {
+      "synthesis": {
+        "harness": 0,
+        "baseline": 0,
+        "n": 3
+      },
+      "gap-analysis": {
+        "harness": 0,
+        "baseline": 0,
+        "n": 2
+      },
+      "extraction": {
+        "harness": 0,
+        "baseline": 0,
+        "n": 2
+      },
+      "decision-support": {
+        "harness": 0,
+        "baseline": 0,
+        "n": 2
+      }
+    },
+    "processMetrics": {
+      "avgSkillsPerRun": 0,
+      "avgOperationsPerRun": 0,
+      "hitlRate": 0,
+      "avgContextPressureRatio": 0
+    }
+  }
+}

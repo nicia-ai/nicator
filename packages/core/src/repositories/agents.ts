@@ -96,6 +96,7 @@ export function createAgentRepo(store: NicatorStore) {
             systemPrompt: definition.systemPrompt,
             limits: definition.limits,
             ...pickDefined({
+              autoFinalizeFromSubagent: definition.autoFinalizeFromSubagent,
               workspace: definition.workspace,
             }),
             createdAt: definition.createdAt,
@@ -156,19 +157,27 @@ export function createAgentRepo(store: NicatorStore) {
             id: ctx.s.id,
             version: ctx.s.version,
             description: ctx.s.description,
+            allowDirectTools: ctx.s.allowDirectTools,
+            allowReadArtifact: ctx.s.allowReadArtifact,
+            maxIterations: ctx.s.maxIterations,
           }))
           .execute();
 
         const match = existing.find((s) => s.version === skill.version);
         if (match) {
           const nodeId = String(match.id);
-          // Backfill empty metadata from placeholder nodes
+          // Backfill metadata from placeholder or stale nodes.
           const needsUpdate =
-            match.description === "" && skill.description !== "";
+            (match.description === "" && skill.description !== "") ||
+            match.allowDirectTools !== skill.allowDirectTools ||
+            match.allowReadArtifact !== skill.allowReadArtifact ||
+            match.maxIterations !== skill.maxIterations;
 
           if (needsUpdate) {
             await store.nodes.Skill.update(asSkillNodeId(nodeId), {
               description: skill.description,
+              allowDirectTools: skill.allowDirectTools,
+              allowReadArtifact: skill.allowReadArtifact,
               ...pickDefined({ maxIterations: skill.maxIterations }),
             });
           }
@@ -179,6 +188,8 @@ export function createAgentRepo(store: NicatorStore) {
           name: skill.name,
           version: skill.version,
           description: skill.description,
+          allowDirectTools: skill.allowDirectTools,
+          allowReadArtifact: skill.allowReadArtifact,
           ...pickDefined({ maxIterations: skill.maxIterations }),
         });
         return String(node.id);

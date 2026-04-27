@@ -1,0 +1,69 @@
+# STR-003 · steering
+#
+# Pair B (heavy/body) — positive side.
+# Heavy/absolute intensity steering in system-prompt body, research-shaped task.
+# Tests whether a mandatory directive ("you MUST invoke researcher") propagates
+# reliably. If str-001 (moderate) passes but str-003 (heavy) fails, the failure
+# is unusual — heavy steering should strictly dominate moderate.
+#
+# Pair with: str-004 (heavy negative — over-steering resilience test).
+
+id: str-003
+category: steering
+name: Heavy steering — mandatory directive propagates
+description: >-
+  Heavy system-prompt steering on a research-shaped task. Expected: researcher
+  is invoked. This is the upper end of the steering intensity gradient for
+  well-fitting tasks.
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 20
+    content: |
+      No source documents are provided. Use the researcher skill to investigate.
+
+question: |
+  Research the 2024 Nobel Prize in Physics. Who won it, for what work, and
+  what are the practical implications of the discovery?
+
+referenceFacts:
+  - id: fact-1
+    description: Mentions Nobel Prize or the laureates
+    canonical: "Nobel"
+    weight: 1
+
+passFail:
+  description: >-
+    Researcher skill must be invoked. Mandatory directive compliance test.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a research assistant. You have a `researcher` skill available.
+    You MUST invoke the researcher skill before answering any research
+    question. Do not attempt to answer research questions from your own
+    knowledge — always dispatch to the researcher skill first. This is a
+    hard requirement, not a preference.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+
+graphAssertions:
+  - type: run_status
+    status: completed
+    description: "Run should complete successfully"
+
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: researcher
+    description: "Researcher must be invoked under heavy mandatory steering"
+
+  - type: task_count
+    match:
+      role: subagent
+      subagentName: researcher
+    min: 1
+    description: "At least one researcher invocation expected"

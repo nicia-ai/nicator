@@ -1,4 +1,4 @@
-# KWB-001 · synthesis
+# SYN-001 · synthesis
 #
 # Three analyst reports on the same company reach different conclusions about
 # its cash position. The task requires synthesizing across all three, identifying
@@ -8,7 +8,7 @@
 # Ceiling: Full credit requires noticing that reports use different accounting
 # dates and reconciling accordingly.
 
-id: kwb-001
+id: syn-001
 category: synthesis
 name: Conflicting cash position reports
 description: >-
@@ -113,5 +113,5 @@ passFail:
     Stonebridge's lower number reflects a different asset definition
     (short-term investments).
 
-expectedSkills:
+forbiddenSkills:
   - researcher

@@ -7,35 +7,52 @@ import {
 } from "./step-graders";
 
 describe("gradeSkillDecomposition", () => {
-  it("passes when no expected skills defined", () => {
-    const result = gradeSkillDecomposition(["researcher"], []);
+  it("passes when no assertions defined", () => {
+    const result = gradeSkillDecomposition(["researcher"], [], []);
     expect(result.severity).toBe("pass");
   });
 
-  it("passes when all expected skills invoked", () => {
+  it("passes when all required skills invoked", () => {
     const result = gradeSkillDecomposition(
       ["researcher", "summarizer"],
       ["researcher", "summarizer"],
+      [],
     );
     expect(result.severity).toBe("pass");
   });
 
-  it("warns when expected skills are missing", () => {
+  it("fails when required skills are missing", () => {
     const result = gradeSkillDecomposition(
       ["researcher"],
       ["researcher", "fact-checker"],
+      [],
     );
-    expect(result.severity).toBe("warn");
+    expect(result.severity).toBe("fail");
     expect(result.finding).toContain("fact-checker");
   });
 
-  it("passes with note when extra skills invoked", () => {
+  it("passes when required satisfied and unrelated extras invoked", () => {
     const result = gradeSkillDecomposition(
       ["researcher", "summarizer", "extra-skill"],
       ["researcher", "summarizer"],
+      [],
     );
     expect(result.severity).toBe("pass");
-    expect(result.finding).toContain("extra-skill");
+  });
+
+  it("fails when a forbidden skill is invoked", () => {
+    const result = gradeSkillDecomposition(
+      ["researcher"],
+      [],
+      ["researcher"],
+    );
+    expect(result.severity).toBe("fail");
+    expect(result.finding).toContain("forbidden");
+  });
+
+  it("passes when forbidden skill is correctly skipped", () => {
+    const result = gradeSkillDecomposition([], [], ["researcher"]);
+    expect(result.severity).toBe("pass");
   });
 });
 

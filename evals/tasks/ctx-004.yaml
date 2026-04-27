@@ -24,7 +24,9 @@ description: >-
   dropping earlier ones, and vice versa. This isolates the recency
   dimension.
 
-sources:
+sources: []
+
+inputArtifacts:
   - id: src-1
     title: "Division Alpha: Quarterly Metrics"
     tokenCount: 3000
@@ -583,9 +585,9 @@ sources:
       Reviewed by: Dr. Alice Pemberton, VP Sustainability
 
 question: |
-  You have six divisional reports from NovaMaterials Inc. Use the
-  retrieve-document tool to fetch each report by source ID (src-1
-  through src-6), then produce a synthesis using the summarizer skill.
+  You have six divisional reports from NovaMaterials Inc. already seeded
+  as artifacts in your context. Use the read_artifact tool to fetch each
+  report's content, then produce a synthesis.
 
   Your synthesis MUST reference the specific proprietary metric from EACH
   division:
@@ -648,21 +650,13 @@ passFail:
 definitionOverrides:
   systemPrompt: >-
     You are an executive analyst at NovaMaterials Inc. reviewing divisional
-    quarterly reports. First, retrieve each division's report using the
-    retrieve-document tool (call it once per source ID, in order from
-    src-1 through src-6). After retrieving all six, use the summarizer
-    skill to produce an executive summary referencing the exact metric
-    values from each division. Do not skip any division. Use only the
-    exact numbers from the documents.
-  skills:
-    - name: researcher
-      version: "1.0.0"
-      policy:
-        type: always
-    - name: summarizer
-      version: "1.0.0"
-      policy:
-        type: always
+    quarterly reports. Six division reports are seeded as artifacts in your
+    context. First, read each report using the read_artifact tool (one
+    call per artifact_id shown in your Completed Tasks). After reading all
+    six, produce an executive summary referencing the exact metric values
+    from each division. Do not skip any division. Use only the exact
+    numbers from the documents.
+  skills: []
   limits:
     maxTasksPerRun: 25
     maxTokensPerRun: 50000
@@ -674,11 +668,7 @@ graphAssertions:
 
   - type: task_count
     match:
-      subagentName: researcher
+      role: tool
+      subagentName: read_artifact
     min: 6
-    description: "At least 6 researcher activations for the 6 divisions"
-
-  - type: task_exists
-    match:
-      subagentName: summarizer
-    description: "Summarizer should be activated for the executive summary"
+    description: "read_artifact must be called once per seeded input (6 total)"

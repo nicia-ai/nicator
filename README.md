@@ -166,9 +166,10 @@ policy, the CLI pauses for stdin approval.
 The model can spawn subagents on the fly — no declarative topology
 required. The `systemPrompt` tells it how to coordinate:
 
-- `spawn_subagent(name, prompt, task_input)` — model constructs the prompt
-- `spawn_subagent_with_skill(skill_name, task_input)` — uses a skill's
-  pre-built prompt
+- `agent(name, prompt, task_input)` — ad-hoc dispatch: model constructs
+  the prompt
+- `skill(skill_name, task_input)` — activates a pre-registered skill
+  with its fixture prompt
 
 See `fixtures/definitions/debate-assistant.json` for a working example
 that spawns advocate and judge subagents.

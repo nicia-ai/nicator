@@ -36,7 +36,7 @@ export function buildSystemPrompt(options: {
     agentInstructions(definition),
     toolCatalog(tools),
     hasBash ? workspaceGuidance() : "",
-    subagentGuidance(),
+    agentGuidance(definition),
     skillCatalog(skills),
     artifactAccess(),
     hitlProtocol(),
@@ -118,22 +118,36 @@ function workspaceGuidance(): string {
   ].join("\n");
 }
 
-function subagentGuidance(): string {
+function agentGuidance(definition: AgentDefinition): string {
+  const resultModeGuidance =
+    definition.subagentResultMode === "artifact_only" ?
+      [
+        `In this run, agent outputs are not returned inline.`,
+        `A successful agent call returns dispatch metadata including an`,
+        `\`output_artifact_id\`. Use that artifact_id for downstream`,
+        `\`artifact_ids\`, \`read_artifact\`, or \`answer_from_artifact\`; do`,
+        `not assume you received the child agent's full text as the tool result.`,
+      ]
+    : [`Each agent's final text response is returned as your tool result.`];
+
   return [
-    `<subagents>`,
-    `You can spawn subagents via spawn_subagent (custom prompt) or`,
-    `spawn_subagent_with_skill (pre-built skill prompt). Each subagent runs in`,
-    `its own context window with the same tools you have. Subagents can spawn`,
-    `their own subagents.`,
+    `<agents>`,
+    `Use the \`agent\` tool to create an agent with a custom role you define —`,
+    `name, system prompt, and task input. Use this when you need a named role`,
+    `that doesn't match any pre-registered skill.`,
     ``,
-    `Use subagents to:`,
-    `- Parallelize independent work (dispatch multiple subagents at once)`,
-    `- Isolate context for disparate operations`,
-    `- Delegate reasoning tasks with focused prompts`,
+    `Use agents to:`,
+    `- Run multi-agent coordination patterns with named roles`,
+    `  (e.g. \`bull\` and \`bear\` in a debate, or \`extractor\` → \`analyst\` → \`advisor\` in a pipeline)`,
+    `- Parallelize independent work streams that each need a distinct persona`,
+    `- Isolate a sub-task from your working context`,
     ``,
-    `Each subagent's final text response is returned as your tool result.`,
-    `Pass artifact_ids to give a subagent access to specific artifacts.`,
-    `</subagents>`,
+    ...resultModeGuidance,
+    `Pass \`artifact_ids\` to give an agent access to specific artifacts.`,
+    `Pass \`artifact_query\` when the harness should resolve artifacts from the`,
+    `run graph for you (for example, "all extract-claims outputs" or "the latest`,
+    `synthesizer output") instead of copying UUIDs from memory.`,
+    `</agents>`,
   ].join("\n");
 }
 
@@ -144,10 +158,12 @@ function skillCatalog(skills: ReadonlyArray<Skill>): string {
 
   return [
     `<skills>`,
-    `You can spawn a subagent with a pre-built skill via the`,
-    `spawn_subagent_with_skill tool. Use a skill when the task benefits from`,
-    `specialized instructions and multi-step tool use. Prefer a direct tool`,
-    `call over a skill when a single tool invocation suffices.`,
+    `Use the \`skill\` tool to activate a pre-registered skill. A skill is a`,
+    `named, versioned capability with a fixed system prompt that encodes a`,
+    `specific methodology. Activate a skill when one of the listed skills`,
+    `directly matches your task. For ad-hoc roles that don't match any skill,`,
+    `use the \`agent\` tool instead. Prefer a direct tool call when a single`,
+    `tool invocation suffices.`,
     ``,
     ...entries,
     `</skills>`,
@@ -159,14 +175,26 @@ function artifactAccess(): string {
     `<artifacts>`,
     `Your context includes a summary of completed task artifacts. Each artifact`,
     `is listed with an ID, name, type, and (for high-relevance artifacts) a`,
-    `short preview. To read the full content, call the read_artifact tool with`,
-    `the artifact_id.`,
+    `short preview.`,
+    ``,
+    `Use read_artifact to fetch full content by artifact_id.`,
+    `Use lookup_artifacts to recover exact artifact_ids by metadata (for`,
+    `example produced_by_subagent or name_contains) instead of copying opaque`,
+    `UUIDs from memory.`,
+    `Use write_artifact to checkpoint a registry, plan, or intermediate JSON`,
+    `state as a first-class artifact when later steps must reference it`,
+    `exactly.`,
+    `Use answer_from_artifact when a downstream stage already produced the`,
+    `final answer and you should return that exact artifact content rather`,
+    `than reconstructing it from memory. It accepts either an exact`,
+    `artifact_id or a narrow graph-backed artifact_query.`,
     ``,
     `Do NOT assume you know the full content from a preview alone. If you need`,
     `complete data to answer accurately, call read_artifact first. Artifacts`,
     `are scoped to the current run. Artifact types include text, json, and`,
     `file_reference (workspace files promoted via save_artifact — use`,
-    `read_artifact to retrieve their content).`,
+    `read_artifact to retrieve their content). Prefer graph-backed artifact`,
+    `lookup over conversational memory whenever an exact artifact_id matters.`,
     `</artifacts>`,
   ].join("\n");
 }
@@ -219,11 +247,26 @@ function operationalConstraints(
 function outputGuidance(): string {
   return [
     `<output>`,
-    `Be concise. Lead with conclusions, not process. Structure your output for`,
-    `the reader — use headings, lists, or tables when they aid comprehension.`,
-    `Distinguish clearly between facts, inferences, and uncertainties. Do not`,
-    `fabricate sources or citations. If information is missing or conflicting,`,
-    `say so directly.`,
+    `Produce a finished, polished answer — not a transcript of your reasoning.`,
+    `Reason privately; write a clean final response. Do not show mid-answer`,
+    `self-correction, exploratory tangents, or "Wait — actually…" pivots.`,
+    `If you realize your draft is wrong, revise it before you finalize, not in`,
+    `front of the reader.`,
+    ``,
+    `Lead with conclusions. Structure with headings, lists, or tables when they`,
+    `aid comprehension — not decoration.`,
+    ``,
+    `Distinguish facts (directly supported by the sources or tool results) from`,
+    `inferences (your analytical extension of them). Label inferences as such`,
+    `— e.g. "The most likely explanation, though not directly stated, is…".`,
+    `Do not state speculation with confidence. Do not assert a causal story`,
+    `the sources merely permit.`,
+    ``,
+    `When you draw on knowledge that is not in the provided sources or tool`,
+    `results (background facts, legal cases, general domain knowledge), note`,
+    `that the reader should verify before relying on it. Do not fabricate`,
+    `sources or citations. If information is missing or conflicting, say so`,
+    `directly.`,
     `</output>`,
   ].join("\n");
 }

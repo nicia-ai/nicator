@@ -1,4 +1,4 @@
-# KWB-042 · gap-analysis
+# GAP-003 · gap-analysis
 #
 # Two long documents: an enterprise security policy and an implementation
 # audit report. The task is to identify gaps between what the policy
@@ -29,8 +29,17 @@
 # Ceiling: Full marks require distinguishing real gaps from apparent ones
 # and citing specific evidence from both documents.
 
-id: kwb-042
+id: gap-003
 category: gap-analysis
+metadata:
+  purpose: stress
+  realism: prod-shaped
+  releaseGate: advisory
+  workloadFamily: compliance-gap-analysis
+  stressAxes:
+    - distractor_density
+    - footnote_lookup
+    - policy_vs_audit_reconciliation
 name: Security policy gap analysis with buried findings
 description: >-
   Compare a 60-page enterprise security policy (excerpted) against an
@@ -468,4 +477,4 @@ passFail:
     Flagging false positives (pen testing, SOC 2) is a faithfulness
     failure.
 
-expectedSkills: []
+forbiddenSkills: [researcher]

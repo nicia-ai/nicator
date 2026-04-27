@@ -1,4 +1,4 @@
-# KWB-043 · decision-support
+# DEC-003 · decision-support
 #
 # Four documents: a requirements spec and three vendor proposals for a
 # data platform migration. The difficulty:
@@ -22,8 +22,17 @@
 # Ceiling: Full marks require cross-referencing requirements against
 # vendor fine print and showing the math on the pricing model.
 
-id: kwb-043
+id: dec-003
 category: decision-support
+metadata:
+  purpose: stress
+  realism: prod-shaped
+  releaseGate: advisory
+  workloadFamily: vendor-selection
+  stressAxes:
+    - arithmetic
+    - buried_constraints
+    - appendix_lookup
 name: Vendor evaluation with buried disqualifiers
 description: >-
   Evaluate three data platform vendors against a requirements document.
@@ -479,4 +488,4 @@ passFail:
     concerns. A recommendation without identifying DataForge's residency
     failure or Lakestream's capacity problem is unsupported.
 
-expectedSkills: []
+forbiddenSkills: [researcher]

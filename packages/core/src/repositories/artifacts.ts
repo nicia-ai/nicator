@@ -14,8 +14,12 @@ import {
   toTask,
 } from "../repository-helpers.js";
 import type { Artifact, Operation, Run, Task } from "../schema.js";
-import type { ArtifactProvenance } from "./types.js";
-import type { NicatorStore } from "./types.js";
+import type {
+  ArtifactLookupEntry,
+  ArtifactLookupFilters,
+  ArtifactProvenance,
+  NicatorStore,
+} from "./types.js";
 
 export function createArtifactRepo(store: NicatorStore) {
   const repo = {
@@ -261,6 +265,122 @@ export function createArtifactRepo(store: NicatorStore) {
         return [...producedResults, ...inputResults].map((row) =>
           toArtifact(row.artifact),
         );
+      });
+    },
+
+    async lookupForRun(
+      runId: string,
+      filters: ArtifactLookupFilters = {},
+    ): Promise<ArtifactLookupEntry[]> {
+      return storageOp("artifacts.lookupForRun", async () => {
+        const normalizedNameContains = filters.nameContains
+          ?.trim()
+          .toLowerCase();
+        const limit = Math.max(1, Math.min(filters.limit ?? 20, 100));
+        const includeInputs = filters.includeInputArtifacts ?? true;
+
+        const producedResults = await store
+          .query()
+          .from("Run", "r")
+          .traverse("contains", "ce")
+          .to("Task", "t")
+          .traverse("has_operation", "he")
+          .to("Operation", "op")
+          .traverse("produces", "pe")
+          .to("Artifact", "art")
+          .whereNode("r", (r) => r.id.eq(runId))
+          .select((ctx) => ({
+            artifact: ctx.art,
+            task: ctx.t,
+            sequenceNumber: ctx.ce.sequenceNumber,
+          }))
+          .execute();
+
+        // Seeded input artifacts are attached via two edges: a produces
+        // edge from a synthetic "input_ingestion" tool task (so they flow
+        // through context scoring) and a has_input edge from the run (so
+        // they show up as `source: "input"` below). When the caller opts
+        // out of inputs, we must drop the produces-edge twin too —
+        // otherwise the dedup below lets a seeded input survive as
+        // `source: "produced"` and `includeInputArtifacts: false` is a
+        // no-op for seeded inputs.
+        const producedRows =
+          includeInputs ? producedResults : (
+            producedResults.filter(
+              (row) => row.task.subagentName !== "input_ingestion",
+            )
+          );
+        const entries: ArtifactLookupEntry[] = producedRows.map((row) => ({
+          artifact: toArtifact(row.artifact),
+          source: "produced",
+          producerTask: toTask(row.task, runId, Number(row.sequenceNumber)),
+        }));
+
+        if (includeInputs) {
+          const inputResults = await store
+            .query()
+            .from("Run", "r")
+            .traverse("has_input", "ie")
+            .to("Artifact", "art")
+            .whereNode("r", (r) => r.id.eq(runId))
+            .select((ctx) => ({ artifact: ctx.art }))
+            .execute();
+
+          entries.push(
+            ...inputResults.map((row) => ({
+              artifact: toArtifact(row.artifact),
+              source: "input" as const,
+            })),
+          );
+        }
+
+        const filtered = entries.filter((entry) => {
+          if (
+            normalizedNameContains &&
+            !entry.artifact.name.toLowerCase().includes(normalizedNameContains)
+          ) {
+            return false;
+          }
+          if (filters.type && entry.artifact.type !== filters.type) {
+            return false;
+          }
+          if (
+            filters.producedBySubagent &&
+            entry.producerTask?.subagentName !== filters.producedBySubagent
+          ) {
+            return false;
+          }
+          if (
+            filters.taskRole &&
+            entry.producerTask?.role !== filters.taskRole
+          ) {
+            return false;
+          }
+          if (
+            (filters.producedBySubagent || filters.taskRole) &&
+            entry.source !== "produced"
+          ) {
+            return false;
+          }
+          return true;
+        });
+
+        filtered.sort((a, b) => {
+          const aSeq = a.producerTask?.sequenceNumber ?? -1;
+          const bSeq = b.producerTask?.sequenceNumber ?? -1;
+          if (aSeq !== bSeq) return bSeq - aSeq;
+          return a.artifact.name.localeCompare(b.artifact.name);
+        });
+
+        const deduped = new Map<string, ArtifactLookupEntry>();
+        for (const entry of filtered) {
+          if (!deduped.has(entry.artifact.id)) {
+            deduped.set(entry.artifact.id, entry);
+          }
+          if (deduped.size >= limit) break;
+        }
+
+        return [...deduped.values()];
       });
     },
 

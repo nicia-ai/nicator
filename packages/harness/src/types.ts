@@ -1,7 +1,7 @@
 import type {
   AgentDefinition,
   HitlHandler,
-  InputDocument,
+  InputArtifact,
   Repository,
   Tool,
 } from "@nicator/core";
@@ -51,7 +51,7 @@ export type Logger = Readonly<{
 // Harness configuration
 // ---------------------------------------------------------------------------
 
-export type { InputDocument } from "@nicator/core";
+export type { InputArtifact } from "@nicator/core";
 
 export type HarnessConfig = Readonly<{
   repo: Repository;
@@ -60,10 +60,12 @@ export type HarnessConfig = Readonly<{
   hitlHandler: HitlHandler;
   /** Runtime context injected into system prompt (date, platform, etc.) */
   env: RuntimeContext;
-  /** Input documents provided at run creation. Created as input_document
-   *  artifacts linked to the Run via has_input edges. Subagents can access
-   *  them via artifact_ids. */
-  inputDocuments?: ReadonlyArray<InputDocument>;
+  /** Artifacts seeded into the run at startup. Created as graph artifacts
+   *  and anchored to a synthetic seq-0 "input_ingestion" task so they
+   *  flow through the context builder's scoring/tiering path like any
+   *  other produced artifact. The agent fetches their content via
+   *  `read_artifact`. */
+  inputArtifacts?: ReadonlyArray<InputArtifact>;
   /** Virtual workspace (filesystem + bash) for the run. When present, the
    *  harness captures output files as artifacts on run completion. */
   workspace?: Workspace;
@@ -124,4 +126,6 @@ export type DispatchResult = Readonly<{
   toolUseId: string;
   /** Child task ID created for this dispatch. */
   childTaskId: string;
+  /** When set, the coordinator should complete the run with this exact output. */
+  finalOutputText?: string;
 }>;

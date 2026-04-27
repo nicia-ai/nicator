@@ -1,4 +1,4 @@
-# KWB-041 · extraction
+# EXT-003 · extraction
 #
 # A master services agreement with heavily cross-referenced definitions.
 # The document is structured like a real enterprise contract: defined terms
@@ -27,8 +27,17 @@
 # Ceiling: Full marks require tracing definitions across sections and
 # identifying where cross-references create unexpected results.
 
-id: kwb-041
+id: ext-003
 category: extraction
+metadata:
+  purpose: stress
+  realism: prod-shaped
+  releaseGate: advisory
+  workloadFamily: contract-extraction
+  stressAxes:
+    - definition_chasing
+    - exception_nesting
+    - context_volume
 name: Cross-referenced contract extraction
 description: >-
   Extract specific provisions from a master services agreement where defined
@@ -373,4 +382,4 @@ passFail:
     reasoning through cross-references — surface-level reading gives the
     wrong answer for each.
 
-expectedSkills: []
+forbiddenSkills: [researcher]

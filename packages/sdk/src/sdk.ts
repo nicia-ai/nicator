@@ -8,6 +8,7 @@ import type {
 } from "@anthropic-ai/sdk/resources/messages";
 import type { Skill } from "@nicator/core";
 import {
+  AGENT_TOOL_NAME,
   ANTHROPIC_OVERLOADED_STATUS,
   DEFAULT_MAX_TOKENS,
   DEFAULT_SKILL_MAX_ITERATIONS,
@@ -17,8 +18,7 @@ import {
   OVERLOAD_MAX_RETRIES,
   OVERLOAD_RETRY_DELAY_MS,
   SKILL_LOOP_TIMEOUT_MS,
-  SPAWN_SUBAGENT_TOOL_NAME,
-  SPAWN_SUBAGENT_WITH_SKILL_TOOL_NAME,
+  SKILL_TOOL_NAME,
   stringifyOutput,
 } from "@nicator/core";
 
@@ -175,11 +175,11 @@ export async function runSubagentLoop(
       totalInputTokens += result.inputTokens;
       totalOutputTokens += result.outputTokens;
 
-      const toolBlock = result.response.content.find(
+      const toolBlocks = result.response.content.filter(
         (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
       );
 
-      if (!toolBlock) {
+      if (toolBlocks.length === 0) {
         return {
           text: result.text,
           inputTokens: totalInputTokens,
@@ -195,22 +195,24 @@ export async function runSubagentLoop(
         );
       }
 
-      const toolOutput = await raceSignal(
-        params.onToolCall(toolBlock.name, toolBlock.input),
-        signal,
-      );
+      const toolResults = [];
+      for (const toolBlock of toolBlocks) {
+        const toolOutput = await raceSignal(
+          params.onToolCall(toolBlock.name, toolBlock.input),
+          signal,
+        );
+        toolResults.push({
+          type: "tool_result" as const,
+          tool_use_id: toolBlock.id,
+          content: stringifyOutput(toolOutput),
+        });
+      }
 
       messages.push(
         { role: "assistant", content: result.response.content },
         {
           role: "user",
-          content: [
-            {
-              type: "tool_result",
-              tool_use_id: toolBlock.id,
-              content: stringifyOutput(toolOutput),
-            },
-          ],
+          content: toolResults,
         },
       );
     }
@@ -257,40 +259,100 @@ export function buildDirectToolDefinitions(
   }));
 }
 
+const ARTIFACT_QUERY_INPUT_SCHEMA = {
+  type: "object" as const,
+  properties: {
+    name_contains: {
+      type: "string",
+      description: "Case-insensitive substring match on artifact name.",
+    },
+    type: {
+      type: "string",
+      enum: [
+        "text",
+        "json",
+        "file_reference",
+        "hitl_decision",
+        "skill_prompt",
+        "skill_asset",
+        "input_document",
+      ],
+      description: "Optional artifact type filter.",
+    },
+    produced_by_subagent: {
+      type: "string",
+      description: "Filter to artifacts produced by a named subagent.",
+    },
+    task_role: {
+      type: "string",
+      enum: ["root", "tool", "hitl", "subagent"],
+      description: "Filter to artifacts produced by tasks of a given role.",
+    },
+    include_input_artifacts: {
+      type: "boolean",
+      description:
+        "Whether to include seeded input artifacts in the results. Defaults to true.",
+    },
+    limit: {
+      type: "integer",
+      minimum: 1,
+      maximum: 100,
+      description: "Maximum number of artifacts to return. Defaults to 20.",
+    },
+  },
+  additionalProperties: false,
+} as const;
+
 /**
- * Build the spawn_subagent tool — the general-purpose subagent primitive.
- * The agent provides a prompt, task input, and optional artifact IDs.
+ * Build the `agent` tool — creates an agent with a custom role that you define.
+ * Distinct from `skill`, which activates a pre-registered capability.
  */
-export function buildSpawnSubagentTool(): Tool {
+export function buildAgentTool(): Tool {
   return {
-    name: SPAWN_SUBAGENT_TOOL_NAME,
+    name: AGENT_TOOL_NAME,
     description:
-      "Spawn a subagent with a custom prompt. The subagent runs in its own " +
-      "context window with the same tools you have. Use this to parallelize " +
-      "work, isolate context for disparate operations, or delegate reasoning " +
-      "tasks. The subagent's final text response is returned as the result.",
+      "Create an agent with a custom role. You define the name, the system " +
+      "prompt, and the task input — the agent does not use any pre-registered " +
+      "capability. Use this when you need a named role that doesn't match any " +
+      "available skill. Common patterns:\n" +
+      "- Multi-agent coordination: named roles like `bull` and `bear` for debate, " +
+      "or `extractor` / `analyst` / `advisor` for a pipeline\n" +
+      "- Parallel work streams that each need a distinct persona\n" +
+      "- Isolating a sub-task from your working context\n\n" +
+      "The `name` you pass becomes the agent's label in the execution graph — " +
+      "choose names that describe the role, not the task. This is distinct " +
+      "from the `skill` tool, which runs a pre-registered capability.",
     input_schema: {
       type: "object" as const,
       properties: {
         name: {
           type: "string",
           description:
-            "Short name for this subagent (used for tracking and labels).",
+            "Short name describing the agent's role (e.g. `bull`, `analyst`). " +
+            "Becomes the label in the execution graph.",
         },
         prompt: {
           type: "string",
-          description: "System prompt for the subagent.",
+          description: "System prompt for the agent.",
         },
         task_input: {
           type: "string",
           description:
-            "The task description and any relevant context for the subagent.",
+            "The task description and any relevant context for the agent.",
         },
         artifact_ids: {
           type: "array",
           items: { type: "string" },
+          description: "Optional artifact IDs to make available to the agent.",
+        },
+        artifact_query: {
+          ...ARTIFACT_QUERY_INPUT_SCHEMA,
           description:
-            "Optional artifact IDs to make available to the subagent.",
+            "Resolve artifacts to pass to the agent by graph-backed metadata " +
+            "instead of copying UUIDs from memory. Use this when the agent " +
+            "should consume artifacts produced by a named subagent or matching " +
+            "a name pattern. Combined with artifact_ids if both are provided. " +
+            "If the query matches zero artifacts, the call is rejected.",
         },
       },
       required: ["name", "prompt", "task_input"],
@@ -300,25 +362,23 @@ export function buildSpawnSubagentTool(): Tool {
 }
 
 /**
- * Build the spawn_subagent_with_skill tool — convenience for invoking a
- * pre-built skill. The skill provides the system prompt; the agent provides
- * the task input and optional artifacts.
+ * Build the `skill` tool — activates a pre-registered, versioned capability.
+ * Distinct from `agent`, which creates a custom role on the fly.
  */
-export function buildSpawnSubagentWithSkillTool(
-  skills: ReadonlyArray<Skill>,
-): Tool {
+export function buildSkillTool(skills: ReadonlyArray<Skill>): Tool {
   const catalog = skills
     .map((s) => `- ${s.name}: ${s.description.trim()}`)
     .join("\n");
 
   return {
-    name: SPAWN_SUBAGENT_WITH_SKILL_TOOL_NAME,
+    name: SKILL_TOOL_NAME,
     description:
-      "Spawn a subagent using a pre-built skill. The skill provides the system " +
-      "prompt; you provide the task input and optional artifacts. The subagent " +
-      "runs in its own context window with the same tools you have. " +
-      "For simple, direct actions (a single web search, fetching a URL), prefer " +
-      "calling tools directly instead.\n\nAvailable skills:\n" +
+      "Activate a pre-registered skill. A skill is a named, versioned " +
+      "capability with a fixed system prompt that encodes a specific " +
+      "methodology (e.g. how to research a topic, how to summarize text). " +
+      "Use this ONLY when one of the listed skills directly matches your " +
+      "task. Do not use this for custom roles or ad-hoc delegations — use " +
+      "the `agent` tool for that.\n\nAvailable skills:\n" +
       catalog,
     input_schema: {
       type: "object" as const,
@@ -336,8 +396,16 @@ export function buildSpawnSubagentWithSkillTool(
         artifact_ids: {
           type: "array",
           items: { type: "string" },
+          description: "Optional artifact IDs to make available to the skill.",
+        },
+        artifact_query: {
+          ...ARTIFACT_QUERY_INPUT_SCHEMA,
           description:
-            "Optional artifact IDs to make available to the subagent.",
+            "Resolve artifacts to pass to the skill by graph-backed metadata " +
+            "instead of copying UUIDs from memory. Use this when the skill " +
+            "should consume artifacts produced by a named subagent or matching " +
+            "a name pattern. Combined with artifact_ids if both are provided. " +
+            "If the query matches zero artifacts, the call is rejected.",
         },
       },
       required: ["skill_name", "task_input"],

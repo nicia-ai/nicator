@@ -12,15 +12,14 @@ import type { StatSummary, PairedTestResult } from "./schema";
 // ---------------------------------------------------------------------------
 
 const T_CRITICAL_005: readonly number[] = [
-  /* df=0 (unused) */ 0,
-  /* df=1  */ 12.706, /* df=2  */ 4.303, /* df=3  */ 3.182, /* df=4  */ 2.776,
-  /* df=5  */ 2.571,  /* df=6  */ 2.447, /* df=7  */ 2.365, /* df=8  */ 2.306,
-  /* df=9  */ 2.262,  /* df=10 */ 2.228, /* df=11 */ 2.201, /* df=12 */ 2.179,
-  /* df=13 */ 2.160,  /* df=14 */ 2.145, /* df=15 */ 2.131, /* df=16 */ 2.120,
-  /* df=17 */ 2.110,  /* df=18 */ 2.101, /* df=19 */ 2.093, /* df=20 */ 2.086,
-  /* df=21 */ 2.080,  /* df=22 */ 2.074, /* df=23 */ 2.069, /* df=24 */ 2.064,
-  /* df=25 */ 2.060,  /* df=26 */ 2.056, /* df=27 */ 2.052, /* df=28 */ 2.048,
-  /* df=29 */ 2.045,
+  /* df=0 (unused) */ 0, /* df=1  */ 12.706, /* df=2  */ 4.303,
+  /* df=3  */ 3.182, /* df=4  */ 2.776, /* df=5  */ 2.571, /* df=6  */ 2.447,
+  /* df=7  */ 2.365, /* df=8  */ 2.306, /* df=9  */ 2.262, /* df=10 */ 2.228,
+  /* df=11 */ 2.201, /* df=12 */ 2.179, /* df=13 */ 2.16, /* df=14 */ 2.145,
+  /* df=15 */ 2.131, /* df=16 */ 2.12, /* df=17 */ 2.11, /* df=18 */ 2.101,
+  /* df=19 */ 2.093, /* df=20 */ 2.086, /* df=21 */ 2.08, /* df=22 */ 2.074,
+  /* df=23 */ 2.069, /* df=24 */ 2.064, /* df=25 */ 2.06, /* df=26 */ 2.056,
+  /* df=27 */ 2.052, /* df=28 */ 2.048, /* df=29 */ 2.045,
 ];
 
 const Z_CRITICAL_005 = 1.96;
@@ -45,7 +44,8 @@ function lnGamma(x: number): number {
   const c = [
     0.999_999_999_999_809_93, 676.520_368_121_885_1, -1259.139_216_722_402_8,
     771.323_428_777_653_1, -176.615_029_162_140_6, 12.507_343_278_686_905,
-    -0.138_571_095_265_720_12, 9.984_369_578_019_572e-6, 1.505_632_735_149_311_6e-7,
+    -0.138_571_095_265_720_12, 9.984_369_578_019_572e-6,
+    1.505_632_735_149_311_6e-7,
   ];
   let xx = x;
   let tmp = xx + g + 0.5;
@@ -55,7 +55,7 @@ function lnGamma(x: number): number {
     xx += 1;
     ser += c[j]! / xx;
   }
-  return tmp + Math.log(Math.sqrt(2 * Math.PI) * ser / x);
+  return tmp + Math.log((Math.sqrt(2 * Math.PI) * ser) / x);
 }
 
 /**
@@ -136,9 +136,10 @@ export function stddev(xs: readonly number[]): number {
 // Confidence interval
 // ---------------------------------------------------------------------------
 
-/** 95% confidence interval using t-distribution. Returns mean +/- margin. */
+/** 95% confidence interval using the t-distribution. */
 export function ci95(xs: readonly number[]): { lower: number; upper: number } {
   const n = xs.length;
+  if (n === 0) return { lower: 0, upper: 0 };
   if (n <= 1) return { lower: -Infinity, upper: Infinity };
 
   const m = mean(xs);
@@ -165,7 +166,9 @@ export function pairedTTest(
   alpha = DEFAULT_ALPHA,
 ): PairedTestResult {
   if (a.length !== b.length) {
-    throw new Error(`Paired t-test requires equal-length arrays: ${a.length} vs ${b.length}`);
+    throw new Error(
+      `Paired t-test requires equal-length arrays: ${a.length} vs ${b.length}`,
+    );
   }
   const n = a.length;
   if (n < 2) {
@@ -182,15 +185,23 @@ export function pairedTTest(
   const diffs = a.map((ai, i) => ai - b[i]!);
   const md = mean(diffs);
   const sd = stddev(diffs);
+  const ci = ci95(diffs);
   const se = sd / Math.sqrt(n);
   const t = se === 0 ? 0 : md / se;
   const df = n - 1;
-  const pValue = se === 0 ? (md === 0 ? 1 : 0) : tDistPValue(t, df);
+  let pValue: number;
+  if (se === 0) {
+    pValue = md === 0 ? 1 : 0;
+  } else {
+    pValue = tDistPValue(t, df);
+  }
 
   return {
     n,
     meanDelta: md,
     stddevDelta: sd,
+    ci95Lower: ci.lower,
+    ci95Upper: ci.upper,
     tStatistic: t,
     pValue,
     significant: pValue < alpha,

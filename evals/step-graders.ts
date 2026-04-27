@@ -59,48 +59,54 @@ export type StepGradingResult = z.infer<typeof StepGradingResultSchema>;
 /**
  * Check whether the harness invoked skills in the expected pattern.
  *
- * This does NOT penalize alternative decompositions — it flags unexpected
- * patterns for human review. An agent that finds a valid shortcut is fine.
+ * Two orthogonal assertions:
+ * - `requiredSkills` must all appear — missing any is a `fail`.
+ * - `forbiddenSkills` must not appear — any invocation is a `fail`.
+ *
+ * Skills outside both sets are neither required nor forbidden.
  */
 export function gradeSkillDecomposition(
   invokedSkills: ReadonlyArray<string>,
-  expectedSkills: ReadonlyArray<string>,
+  requiredSkills: ReadonlyArray<string>,
+  forbiddenSkills: ReadonlyArray<string>,
 ): StepGrade {
-  if (expectedSkills.length === 0) {
+  const missing = requiredSkills.filter((s) => !invokedSkills.includes(s));
+  const violated = forbiddenSkills.filter((s) => invokedSkills.includes(s));
+
+  if (missing.length === 0 && violated.length === 0) {
+    if (requiredSkills.length === 0 && forbiddenSkills.length === 0) {
+      return {
+        aspect: "skill_decomposition",
+        severity: "pass",
+        finding: "No skill assertions defined for this task.",
+      };
+    }
+    const parts: string[] = [];
+    if (requiredSkills.length > 0) {
+      parts.push(`all ${requiredSkills.length} required skill(s) invoked`);
+    }
+    if (forbiddenSkills.length > 0) {
+      parts.push(`no forbidden skill(s) invoked`);
+    }
     return {
       aspect: "skill_decomposition",
       severity: "pass",
-      finding: "No expected skill sequence defined for this task.",
+      finding: parts.join("; "),
     };
   }
 
-  const missing = expectedSkills.filter(
-    (s) => !invokedSkills.includes(s),
-  );
-  const unexpected = invokedSkills.filter(
-    (s) => !expectedSkills.includes(s),
-  );
-
-  if (missing.length === 0 && unexpected.length === 0) {
-    return {
-      aspect: "skill_decomposition",
-      severity: "pass",
-      finding: `All ${expectedSkills.length} expected skills invoked.`,
-    };
-  }
-
+  const findings: string[] = [];
   if (missing.length > 0) {
-    return {
-      aspect: "skill_decomposition",
-      severity: "warn",
-      finding: `Missing expected skills: ${missing.join(", ")}. Invoked: ${invokedSkills.join(", ")}.`,
-    };
+    findings.push(`missing required skills: ${missing.join(", ")}`);
   }
-
+  if (violated.length > 0) {
+    findings.push(`forbidden skills invoked: ${violated.join(", ")}`);
+  }
+  findings.push(`invoked: ${invokedSkills.length > 0 ? invokedSkills.join(", ") : "(none)"}`);
   return {
     aspect: "skill_decomposition",
-    severity: "pass",
-    finding: `Expected skills present. Additional skills invoked: ${unexpected.join(", ")}.`,
+    severity: "fail",
+    finding: findings.join("; "),
   };
 }
 

@@ -1,6 +1,5 @@
 import { DEFAULT_MIME_TYPE } from "@nicator/core";
 import { AgentFS } from "agentfs-sdk";
-import { agentfs as createAgentFs } from "agentfs-sdk/just-bash";
 import type { IFileSystem } from "just-bash";
 import { Bash, defineCommand, InMemoryFs } from "just-bash";
 
@@ -251,6 +250,11 @@ export async function createPersistentWorkspace(
   // createAgentFs wraps it as an IFileSystem for just-bash.
   // Using the same file path as TypeGraph means both share one SQLite
   // database (separate connections, WAL mode).
+  // Dynamic import: agentfs-sdk's "./just-bash" subpath export only declares
+  // an "import" condition, which tsx's CJS-based resolver cannot satisfy at
+  // static-import time. Resolving it at call time routes through the ESM
+  // loader and avoids ERR_PACKAGE_PATH_NOT_EXPORTED.
+  const { agentfs: createAgentFs } = await import("agentfs-sdk/just-bash");
   const agent = await AgentFS.open({ path: dbPath });
   const fileSystem = await createAgentFs(agent);
   const bash = await initBash(config, fileSystem);

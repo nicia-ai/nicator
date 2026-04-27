@@ -41,6 +41,44 @@ function createMockClient(
   } as unknown as Anthropic;
 }
 
+function createInspectableMockClient(
+  responses: ReadonlyArray<Partial<Anthropic.Message>>,
+): {
+  client: Anthropic;
+  createMock: ReturnType<typeof vi.fn>;
+} {
+  let callIndex = 0;
+  const createMock = vi.fn(
+    (params: unknown, options?: { signal?: AbortSignal }) => {
+      const signal = options?.signal;
+      if (signal?.aborted) {
+        throw new DOMException("The operation was aborted.", "AbortError");
+      }
+      const response = responses[callIndex++];
+      return Promise.resolve({
+        id: `msg_${callIndex}`,
+        type: "message" as const,
+        role: "assistant" as const,
+        content: [textBlock("done")],
+        model: "claude-sonnet-4-6",
+        stop_reason: "end_turn" as const,
+        stop_sequence: undefined,
+        usage: { input_tokens: 10, output_tokens: 5 },
+        ...response,
+      });
+    },
+  );
+
+  return {
+    client: {
+      messages: {
+        create: createMock,
+      },
+    } as unknown as Anthropic,
+    createMock,
+  };
+}
+
 /** Mock client where create() hangs until the signal aborts. */
 function createHangingMockClient(): Anthropic {
   return {
@@ -115,6 +153,64 @@ describe("runSkillLoop", () => {
 
     await expect(promise).rejects.toBeInstanceOf(HarnessError);
     await expect(promise).rejects.toHaveProperty("code", "limit_exceeded");
+  });
+
+  it("returns a tool_result block for every tool_use in the same assistant message", async () => {
+    const { client, createMock } = createInspectableMockClient([
+      {
+        content: [
+          toolUseBlock("tu_1", "read_artifact", { artifact_id: "a1" }),
+          toolUseBlock("tu_2", "read_artifact", { artifact_id: "a2" }),
+        ],
+      },
+      { content: [textBlock("done")] },
+    ]);
+
+    const toolCalls: Array<{ name: string; input: unknown }> = [];
+    const result = await runSkillLoop(client, {
+      system: "test",
+      messages: [{ role: "user", content: "hi" }],
+      tools: [
+        {
+          name: "read_artifact",
+          description: "read",
+          input_schema: { type: "object" as const, properties: {} },
+        },
+      ],
+      onToolCall: (name, input) => {
+        toolCalls.push({ name, input });
+        return Promise.resolve({ ok: true, name, input });
+      },
+    });
+
+    expect(result.text).toBe("done");
+    expect(toolCalls).toEqual([
+      { name: "read_artifact", input: { artifact_id: "a1" } },
+      { name: "read_artifact", input: { artifact_id: "a2" } },
+    ]);
+
+    const secondCallParams = createMock.mock.calls[1]?.[0] as {
+      messages: Array<{ role: string; content: unknown }>;
+    };
+    const toolResultMessage = secondCallParams.messages.at(-1) as {
+      role: string;
+      content: Array<{
+        type: string;
+        tool_use_id: string;
+        content: string;
+      }>;
+    };
+
+    expect(toolResultMessage.role).toBe("user");
+    expect(toolResultMessage.content).toHaveLength(2);
+    expect(toolResultMessage.content.map((b) => b.type)).toEqual([
+      "tool_result",
+      "tool_result",
+    ]);
+    expect(toolResultMessage.content.map((b) => b.tool_use_id)).toEqual([
+      "tu_1",
+      "tu_2",
+    ]);
   });
 });
 

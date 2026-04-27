@@ -1,10 +1,10 @@
-# KWB-007 · gap-analysis
+# GAP-001 · gap-analysis
 #
 # A vendor contract and an internal requirements document are inconsistent on
 # multiple points. Faithfulness is heavily weighted because this is a legal
 # document task where fabricated gaps are actively harmful.
 
-id: kwb-007
+id: gap-001
 category: gap-analysis
 name: Vendor contract vs. internal requirements
 description: >-
@@ -128,5 +128,5 @@ passFail:
     Must identify the three primary gaps (uptime SLA, support response time,
     data retention period) without hallucinating gaps that don't exist.
 
-expectedSkills:
+forbiddenSkills:
   - researcher

@@ -55,7 +55,7 @@ export type CreateOperationOptions = Readonly<{
   inputTokens: number;
   outputTokens: number;
   type: "tool_call" | "hitl_response";
-  execute: () => Promise<unknown>;
+  execute: (operationId: string) => Promise<unknown>;
   artifactType: "json" | "text" | "hitl_decision";
   artifactName: string;
   artifactMimeType?: string;
@@ -78,7 +78,12 @@ function enforceOperationLimit(
 
 export async function createOperation(
   options: CreateOperationOptions,
-): Promise<{ succeeded: boolean; result?: unknown; error?: string }> {
+): Promise<{
+  succeeded: boolean;
+  operationId: string;
+  result?: unknown;
+  error?: string;
+}> {
   const { repo, runId, taskId, operationNumber, maxOperations } = options;
 
   enforceOperationLimit(operationNumber, maxOperations);
@@ -100,7 +105,7 @@ export async function createOperation(
 
   try {
     const startMs = Date.now();
-    const result = await options.execute();
+    const result = await options.execute(operationId);
     const latencyMs = Date.now() - startMs;
     const resultString = stringifyOutput(result);
 
@@ -119,7 +124,7 @@ export async function createOperation(
       }),
       repo.artifacts.createAndLinkProduced(artifact, operationId),
     ]);
-    return { succeeded: true, result };
+    return { succeeded: true, operationId, result };
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     await repo.operations.update(operationId, {
@@ -128,7 +133,7 @@ export async function createOperation(
       completedAt: now(),
     });
     if (isHarnessError(error)) throw error;
-    return { succeeded: false, error: errorMessage };
+    return { succeeded: false, operationId, error: errorMessage };
   }
 }
 
@@ -136,12 +141,16 @@ export async function createOperation(
 // Helpers
 // ---------------------------------------------------------------------------
 
+const ARTIFACT_ID_UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function recordConsumesEdges(
   repo: Repository,
   taskId: string,
   artifactIds: readonly string[],
 ): Promise<void> {
+  const validIds = artifactIds.filter((id) => ARTIFACT_ID_UUID_RE.test(id));
   await Promise.all(
-    artifactIds.map((artId) => repo.artifacts.addConsumesEdge(taskId, artId)),
+    validIds.map((artId) => repo.artifacts.addConsumesEdge(taskId, artId)),
   );
 }

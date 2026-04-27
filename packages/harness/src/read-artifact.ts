@@ -51,17 +51,64 @@ type ResolvedArtifact = Readonly<{
   content: string;
 }>;
 
+async function rejectReadArtifactForInvalidInput(
+  options: DispatchOptions,
+  error: z.ZodError,
+): Promise<DispatchResult> {
+  const {
+    runId,
+    rootTaskId,
+    toolInput,
+    toolUseId,
+    taskSequenceNumber,
+    config,
+  } = options;
+  const childTaskId = await spawnChildTask(
+    config.repo,
+    runId,
+    rootTaskId,
+    "tool",
+    toolInput,
+    taskSequenceNumber,
+    READ_ARTIFACT_TOOL_NAME,
+  );
+  await config.repo.tasks.update(childTaskId, {
+    status: "failed",
+    updatedAt: now(),
+  });
+  const issues = error.issues
+    .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
+    .join("; ");
+  return {
+    succeeded: false,
+    additionalTokens: 0,
+    toolResultContent:
+      `Invalid ${READ_ARTIFACT_TOOL_NAME} tool input: ${issues}. Re-emit ` +
+      `the call with a valid artifact_id.`,
+    toolUseId,
+    childTaskId,
+  };
+}
+
 /**
  * Fetch and validate an artifact by ID, scoped to a run.
  * Returns the artifact data or an error object. Never throws for
  * expected failures (not found, wrong run, invalid ID).
  */
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function resolveArtifact(
   repo: Repository,
   artifactId: string,
   runId: string,
   knownRunArtifactIds?: ReadonlyArray<string>,
 ): Promise<ResolvedArtifact | { error: string }> {
+  if (!UUID_RE.test(artifactId)) {
+    return {
+      error: `Invalid artifact_id: "${artifactId}" is not a valid UUID. Use the full artifact IDs shown in your context, not truncated prefixes or source document IDs.`,
+    };
+  }
   try {
     const artifact = await repo.artifacts.get(artifactId);
     if (!artifact) {
@@ -112,7 +159,11 @@ export async function handleReadArtifact(
   } = options;
   const { repo } = config;
 
-  const { artifact_id } = ReadArtifactInputSchema.parse(toolInput);
+  const parsed = ReadArtifactInputSchema.safeParse(toolInput);
+  if (!parsed.success) {
+    return rejectReadArtifactForInvalidInput(options, parsed.error);
+  }
+  const { artifact_id } = parsed.data;
 
   const childTaskId = await spawnChildTask(
     repo,

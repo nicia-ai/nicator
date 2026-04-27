@@ -4,11 +4,13 @@ import type { nicatorGraph } from "../graph.js";
 import type {
   AgentDefinition,
   Artifact,
+  ArtifactType,
   Compaction,
   Operation,
   Run,
   Skill,
   Task,
+  TaskRole,
 } from "../schema.js";
 
 export type NicatorStore = Store<typeof nicatorGraph>;
@@ -39,4 +41,19 @@ export type ArtifactProvenance = Readonly<{
   task?: Task;
   run?: Run;
   consumedBy: ReadonlyArray<Task>;
+}>;
+
+export type ArtifactLookupFilters = Readonly<{
+  nameContains?: string;
+  type?: ArtifactType;
+  producedBySubagent?: string;
+  taskRole?: TaskRole;
+  includeInputArtifacts?: boolean;
+  limit?: number;
+}>;
+
+export type ArtifactLookupEntry = Readonly<{
+  artifact: Artifact;
+  source: "produced" | "input";
+  producerTask?: Task;
 }>;

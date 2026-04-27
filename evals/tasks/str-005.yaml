@@ -1,0 +1,129 @@
+# STR-005 · steering
+#
+# Pair C — crd-001 isolation test. Ad-hoc dispatch with heavy explicit steering.
+#
+# This is a lighter-weight version of crd-001 that isolates the dispatch-mode
+# selection question from the content-debate topology. The system prompt tells
+# the model exactly which tool to call (`agent`, not the `skill` tool) with
+# exactly which names. If this test fails, the dispatch-mode bias is severe
+# enough that even explicit naming cannot steer the model toward `agent`.
+#
+# This test does NOT have a structural negative pair — its counter-signal is
+# the baseline observation from other tests. If str-001 passes (skill-based
+# steering works) but str-005 fails, we know ad-hoc dispatch is specifically
+# harder to steer than skill-based dispatch — the problem lives in the tool
+# presentation layer, not in general steering.
+
+id: str-005
+category: steering
+name: Heavy steering — ad-hoc named dispatch
+description: >-
+  Tests whether heavy, explicit steering can force the model to use the
+  `agent` tool (ad-hoc, named-role dispatch) rather than the `skill` tool.
+  Isolation of the crd-001 failure mode.
+
+sources:
+  - id: src-bull
+    title: Evidence — favorable
+    tokenCount: 80
+    content: |
+      Remote work improves productivity: 78% of employees report higher
+      output, 82% prefer hybrid arrangements, and company office costs
+      drop by an average of 30% when remote-first policies are adopted.
+
+  - id: src-bear
+    title: Evidence — unfavorable
+    tokenCount: 80
+    content: |
+      Remote work erodes culture: employee engagement scores drop 12 points
+      on average, new-hire ramp time increases 40%, and cross-team
+      collaboration metrics decline measurably after 18 months of fully
+      remote operation.
+
+question: |
+  Should a 200-person company adopt a fully remote work policy? Weigh the
+  evidence from both sources and produce a recommendation.
+
+referenceFacts:
+  - id: fact-1
+    description: Output references evidence from at least one source
+    canonical: "remote"
+    weight: 1
+
+passFail:
+  description: >-
+    Expected graph shape is three ad-hoc agents named `advocate_for`,
+    `advocate_against`, and `synthesizer`, created via the `agent` tool
+    (NOT the `skill` tool). No invokes edges to any Skill node.
+
+definitionOverrides:
+  systemPrompt: |
+    You are a multi-agent coordinator. For this task you will organize a
+    structured debate between three independent agents.
+
+    Create exactly three agents using the `agent` tool, with exactly these names:
+      1. `advocate_for` — write a prompt that tells this agent to argue in
+         favor of the proposition, using only favorable evidence.
+      2. `advocate_against` — write a prompt that tells this agent to argue
+         against the proposition, using only unfavorable evidence.
+      3. `synthesizer` — write a prompt that tells this agent to read both
+         advocates' outputs and produce a balanced recommendation.
+
+    Do not activate any pre-registered skills via the `skill` tool for this
+    task — the roles above are custom and should be created as agents. Do
+    not use additional names. Do not create more than three agents.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+    - name: summarizer
+      version: "1.0.0"
+      policy:
+        type: always
+  limits:
+    maxTasksPerRun: 10
+    maxOperationsPerTask: 3
+    maxTokensPerRun: 200000
+
+graphAssertions:
+  - type: run_status
+    status: completed
+    description: "Run should complete successfully"
+
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: advocate_for
+    description: "advocate_for sub-agent must exist (ad-hoc dispatch)"
+
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: advocate_against
+    description: "advocate_against sub-agent must exist (ad-hoc dispatch)"
+
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: synthesizer
+    description: "synthesizer sub-agent must exist (ad-hoc dispatch)"
+
+  - type: task_count
+    match:
+      role: subagent
+    min: 3
+    max: 3
+    description: "Exactly 3 sub-agents — no extras, no retries"
+
+  - type: task_absent
+    match:
+      role: subagent
+      subagentName: researcher
+    description: "researcher skill must NOT be invoked — prompt forbids skill-based dispatch"
+
+  - type: task_absent
+    match:
+      role: subagent
+      subagentName: summarizer
+    description: "summarizer skill must NOT be invoked — prompt forbids skill-based dispatch"

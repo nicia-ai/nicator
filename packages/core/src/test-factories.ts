@@ -23,6 +23,8 @@ export function makeDefinition(
     name: "test-agent",
     description: "Test agent definition",
     systemPrompt: "You are a test agent.",
+    subagentResultMode: "inline",
+    autoFinalizeFromSubagent: undefined,
     skills: [{ name: "test-skill", version: "1.0.0" }],
     limits: {
       maxTasksPerRun: 50,
@@ -114,5 +116,7 @@ export function makeSkill(name = "test-skill", version = "1.0.0"): Skill {
     name,
     version,
     description: "A test skill",
+    allowDirectTools: true,
+    allowReadArtifact: false,
   };
 }

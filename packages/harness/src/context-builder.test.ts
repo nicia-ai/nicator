@@ -365,9 +365,13 @@ describe("buildContext — custom contextWeights", () => {
 function buildConversation(
   pairCount: number,
   toolUseIdToTaskId?: Map<string, string>,
+  toolResultContents?: ReadonlyArray<string>,
 ): ConversationState {
   const recentMessages: ConversationState["recentMessages"] = [];
   for (let index = 0; index < pairCount; index++) {
+    const toolResultContent =
+      toolResultContents?.[index] ??
+      `result from tool ${index} — ${"x".repeat(200)}`;
     recentMessages.push(
       {
         role: "assistant",
@@ -386,7 +390,7 @@ function buildConversation(
           {
             type: "tool_result" as const,
             tool_use_id: `tool-use-${index}`,
-            content: `result from tool ${index} — ${"x".repeat(200)}`,
+            content: toolResultContent,
           },
         ],
       },
@@ -618,6 +622,44 @@ describe("compressOlderTurns — score-aware protection", () => {
     // Should still compress (no protection without lineage)
     expect(result.recentMessages).toHaveLength(6);
     expect(result.toolUseIdToTaskId.has("tool-use-0")).toBe(false);
+  });
+
+  it("preserves exact output_artifact_ids from compressed turns", async () => {
+    const definition = makeDefinition();
+    const run = makeRun(definition.id);
+
+    const artifactIds = [
+      "11111111-1111-4111-8111-111111111111",
+      "22222222-2222-4222-8222-222222222222",
+    ];
+    const state = buildConversation(4, undefined, [
+      [
+        'Subagent "extract-claims" completed successfully.',
+        "[dispatch metadata] subagent_name: extract-claims",
+        `[dispatch metadata] output_artifact_id: ${artifactIds[0]}`,
+      ].join("\n"),
+      [
+        'Subagent "extract-claims" completed successfully.',
+        "[dispatch metadata] subagent_name: extract-claims",
+        `[dispatch metadata] output_artifact_id: ${artifactIds[1]}`,
+      ].join("\n"),
+      `result from tool 2 — ${"x".repeat(200)}`,
+      `result from tool 3 — ${"x".repeat(200)}`,
+    ]);
+    const config = compressionConfig(undefined);
+
+    const result = await compressOlderTurns(state, config, run.id, definition);
+
+    const historyText =
+      typeof result.historyMessage?.content === "string" ?
+        result.historyMessage.content
+      : "";
+    expect(historyText).toContain(
+      "[Preserved exact output_artifact_ids from compressed turns]",
+    );
+    for (const artifactId of artifactIds) {
+      expect(historyText).toContain(`- output_artifact_id: ${artifactId}`);
+    }
   });
 });
 

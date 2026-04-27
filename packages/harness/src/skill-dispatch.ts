@@ -1,13 +1,19 @@
 import {
+  AGENT_TOOL_NAME,
   type AgentDefinition,
   HarnessError,
   HUMAN_APPROVAL_SKILL_NAME,
-  SPAWN_SUBAGENT_WITH_SKILL_TOOL_NAME,
+  now,
+  SKILL_TOOL_NAME,
 } from "@nicator/core";
 import type { ParsedToolUse } from "@nicator/sdk";
 import { z } from "zod";
 
-import { recordConsumesEdges } from "./operations.js";
+import {
+  ArtifactQueryInputSchema,
+  resolveArtifactQuery,
+} from "./artifact-tools.js";
+import { recordConsumesEdges, spawnChildTask } from "./operations.js";
 import { enforcePolicy } from "./policy.js";
 import {
   READ_ARTIFACT_TOOL,
@@ -24,11 +30,152 @@ import type { DispatchOptions, DispatchResult } from "./types.js";
 // Shared helpers
 // ---------------------------------------------------------------------------
 
-function resolveArtifactIds(
-  explicit: ReadonlyArray<string> | undefined,
-  injected: ReadonlyArray<string>,
-): ReadonlyArray<string> {
-  return explicit !== undefined && explicit.length > 0 ? explicit : injected;
+/**
+ * Verify that every requested artifact_id exists in the graph.
+ *
+ * Models under multi-stage dispatch pressure will invent plausible-looking
+ * UUIDs for downstream artifact_ids when they batch calls ahead of the
+ * upstream artifacts actually existing. Accepting those silently creates
+ * orphan child tasks with broken consumes edges. Fail loudly instead so
+ * the model sees a tool error and can retry with real IDs from its context.
+ */
+const DISPATCH_UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+async function findMissingArtifactIds(
+  repo: DispatchOptions["config"]["repo"],
+  artifactIds: ReadonlyArray<string>,
+): Promise<string[]> {
+  if (artifactIds.length === 0) return [];
+  const results = await Promise.all(
+    artifactIds.map(async (id) => {
+      if (!DISPATCH_UUID_RE.test(id)) return { id, exists: false };
+      return { id, exists: (await repo.artifacts.get(id)) !== undefined };
+    }),
+  );
+  return results.filter((r) => !r.exists).map((r) => r.id);
+}
+
+/**
+ * Build a failed DispatchResult for a malformed tool input. The model
+ * occasionally emits tool_use blocks with missing required fields; we
+ * want the model to see the validation error as a tool result instead
+ * of aborting the whole run.
+ */
+async function rejectDispatchForInvalidInput(
+  options: DispatchOptions,
+  toolName: string,
+  error: z.ZodError,
+): Promise<DispatchResult> {
+  const {
+    runId,
+    rootTaskId,
+    toolInput,
+    toolUseId,
+    taskSequenceNumber,
+    config,
+  } = options;
+  const childTaskId = await spawnChildTask(
+    config.repo,
+    runId,
+    rootTaskId,
+    "tool",
+    toolInput,
+    taskSequenceNumber,
+    toolName,
+  );
+  await config.repo.tasks.update(childTaskId, {
+    status: "failed",
+    updatedAt: now(),
+  });
+  const issues = error.issues
+    .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
+    .join("; ");
+  return {
+    succeeded: false,
+    additionalTokens: 0,
+    toolResultContent:
+      `Invalid ${toolName} tool input: ${issues}. Re-emit the call with ` +
+      `all required fields populated.`,
+    toolUseId,
+    childTaskId,
+  };
+}
+
+async function rejectDispatchForMissingArtifacts(
+  options: DispatchOptions,
+  missing: ReadonlyArray<string>,
+  toolName: string,
+): Promise<DispatchResult> {
+  const {
+    runId,
+    rootTaskId,
+    toolInput,
+    toolUseId,
+    taskSequenceNumber,
+    config,
+  } = options;
+  const childTaskId = await spawnChildTask(
+    config.repo,
+    runId,
+    rootTaskId,
+    "tool",
+    toolInput,
+    taskSequenceNumber,
+    toolName,
+  );
+  await config.repo.tasks.update(childTaskId, {
+    status: "failed",
+    updatedAt: now(),
+  });
+  const errorMessage =
+    `Cannot dispatch: the following artifact_ids do not exist in the graph: ` +
+    `${missing.map((id) => `"${id}"`).join(", ")}. ` +
+    `Only use artifact_ids that appear in your "Completed Tasks" context. ` +
+    `Do not invent UUIDs — if an upstream task has not completed yet, wait ` +
+    `for it to appear in your context before referencing its output.`;
+  return {
+    succeeded: false,
+    additionalTokens: 0,
+    toolResultContent: errorMessage,
+    toolUseId,
+    childTaskId,
+  };
+}
+
+async function rejectDispatchForEmptyArtifactQuery(
+  options: DispatchOptions,
+  toolName: string,
+): Promise<DispatchResult> {
+  const {
+    runId,
+    rootTaskId,
+    toolInput,
+    toolUseId,
+    taskSequenceNumber,
+    config,
+  } = options;
+  const childTaskId = await spawnChildTask(
+    config.repo,
+    runId,
+    rootTaskId,
+    "subagent",
+    toolInput,
+    taskSequenceNumber,
+    toolName,
+  );
+  await config.repo.tasks.update(childTaskId, {
+    status: "failed",
+    updatedAt: now(),
+  });
+  return {
+    succeeded: false,
+    additionalTokens: 0,
+    toolResultContent:
+      "Artifact query matched no artifacts in the current run. Narrow the query only after the upstream stage has completed, or wait for the artifact to be created.",
+    toolUseId,
+    childTaskId,
+  };
 }
 
 async function handleReadArtifact(
@@ -50,10 +197,11 @@ async function handleReadArtifact(
 // Input schemas
 // ---------------------------------------------------------------------------
 
-export const SpawnSubagentWithSkillInputSchema = z.object({
+export const SkillToolInputSchema = z.object({
   skill_name: z.string(),
   task_input: z.string(),
   artifact_ids: z.array(z.string()).optional(),
+  artifact_query: ArtifactQueryInputSchema.optional(),
 });
 
 /**
@@ -67,8 +215,8 @@ export function willRequireHitl(
   definition: AgentDefinition,
 ): boolean {
   if (tc.toolName === HUMAN_APPROVAL_SKILL_NAME) return true;
-  if (tc.toolName === SPAWN_SUBAGENT_WITH_SKILL_TOOL_NAME) {
-    const parsed = SpawnSubagentWithSkillInputSchema.safeParse(tc.toolInput);
+  if (tc.toolName === SKILL_TOOL_NAME) {
+    const parsed = SkillToolInputSchema.safeParse(tc.toolInput);
     if (parsed.success) {
       const skillRef = definition.skills.find(
         (s) => s.name === parsed.data.skill_name,
@@ -80,29 +228,49 @@ export function willRequireHitl(
 }
 
 // ---------------------------------------------------------------------------
-// Skill activation handler
+// Skill tool handler — activates a pre-registered skill
 // ---------------------------------------------------------------------------
 
-export async function handleSkillActivation(
+export async function handleSkillCall(
   options: DispatchOptions,
 ): Promise<DispatchResult> {
-  const {
-    runId,
-    rootTaskId,
-    definition,
-    toolInput,
-    injectedArtifactIds,
-    config,
-  } = options;
+  const { runId, rootTaskId, definition, toolInput, config } = options;
   const { repo, workspace } = config;
 
-  const { skill_name, task_input, artifact_ids } =
-    SpawnSubagentWithSkillInputSchema.parse(toolInput);
-
-  const effectiveArtifactIds = resolveArtifactIds(
-    artifact_ids,
-    injectedArtifactIds,
+  const parsed = SkillToolInputSchema.safeParse(toolInput);
+  if (!parsed.success) {
+    return rejectDispatchForInvalidInput(
+      options,
+      SKILL_TOOL_NAME,
+      parsed.error,
+    );
+  }
+  const { skill_name, task_input, artifact_ids, artifact_query } = parsed.data;
+  let effectiveArtifactIds: ReadonlyArray<string>;
+  try {
+    effectiveArtifactIds = await resolveDispatchArtifactIds(
+      repo,
+      runId,
+      artifact_ids,
+      artifact_query,
+    );
+  } catch (error) {
+    if (error instanceof HarnessError && error.code === "validation_error") {
+      return rejectDispatchForEmptyArtifactQuery(options, SKILL_TOOL_NAME);
+    }
+    throw error;
+  }
+  const missingArtifactIds = await findMissingArtifactIds(
+    repo,
+    effectiveArtifactIds,
   );
+  if (missingArtifactIds.length > 0) {
+    return rejectDispatchForMissingArtifacts(
+      options,
+      missingArtifactIds,
+      SKILL_TOOL_NAME,
+    );
+  }
 
   const skillRef = definition.skills.find((s) => s.name === skill_name);
   const resolved = await repo.agents.resolveSkill(
@@ -147,6 +315,8 @@ export async function handleSkillActivation(
     repo,
     effectiveArtifactIds,
   );
+  const allowDirectToolAccess = skill.allowDirectTools;
+  const allowReadArtifact = skill.allowDirectTools || skill.allowReadArtifact;
 
   return dispatchSubagent(options, {
     name: skill_name,
@@ -154,8 +324,8 @@ export async function handleSkillActivation(
     consumesArtifactIds: effectiveArtifactIds,
     systemPrompt: prompt,
     initialMessage: buildSubagentInput(task_input, artifactReferences),
-    directToolImpls: config.toolRegistry.list(),
-    extraTools: [READ_ARTIFACT_TOOL],
+    directToolImpls: allowDirectToolAccess ? config.toolRegistry.list() : [],
+    ...(allowReadArtifact ? { extraTools: [READ_ARTIFACT_TOOL] } : {}),
     outputArtifactName: `${skill_name}_output`,
     skillId: skill.id,
     ...(skill.maxIterations === undefined ?
@@ -166,28 +336,57 @@ export async function handleSkillActivation(
 }
 
 // ---------------------------------------------------------------------------
-// Ad-hoc subagent spawn — agent constructs its own prompt
+// Agent tool handler — creates a custom-role agent with a user-written prompt
 // ---------------------------------------------------------------------------
 
-export const SpawnSubagentInputSchema = z.object({
+export const AgentToolInputSchema = z.object({
   name: z.string(),
   prompt: z.string(),
   task_input: z.string(),
   artifact_ids: z.array(z.string()).optional(),
+  artifact_query: ArtifactQueryInputSchema.optional(),
 });
 
-export async function handleSubagentSpawn(
+export async function handleAgentCall(
   options: DispatchOptions,
 ): Promise<DispatchResult> {
-  const { toolInput, injectedArtifactIds, config } = options;
+  const { toolInput, config } = options;
 
-  const { name, prompt, task_input, artifact_ids } =
-    SpawnSubagentInputSchema.parse(toolInput);
-
-  const effectiveArtifactIds = resolveArtifactIds(
-    artifact_ids,
-    injectedArtifactIds,
+  const parsed = AgentToolInputSchema.safeParse(toolInput);
+  if (!parsed.success) {
+    return rejectDispatchForInvalidInput(
+      options,
+      AGENT_TOOL_NAME,
+      parsed.error,
+    );
+  }
+  const { name, prompt, task_input, artifact_ids, artifact_query } =
+    parsed.data;
+  let effectiveArtifactIds: ReadonlyArray<string>;
+  try {
+    effectiveArtifactIds = await resolveDispatchArtifactIds(
+      config.repo,
+      options.runId,
+      artifact_ids,
+      artifact_query,
+    );
+  } catch (error) {
+    if (error instanceof HarnessError && error.code === "validation_error") {
+      return rejectDispatchForEmptyArtifactQuery(options, AGENT_TOOL_NAME);
+    }
+    throw error;
+  }
+  const missingArtifactIds = await findMissingArtifactIds(
+    config.repo,
+    effectiveArtifactIds,
   );
+  if (missingArtifactIds.length > 0) {
+    return rejectDispatchForMissingArtifacts(
+      options,
+      missingArtifactIds,
+      AGENT_TOOL_NAME,
+    );
+  }
 
   const artifactReferences = await loadArtifactReferences(
     config.repo,
@@ -213,17 +412,47 @@ export async function handleSubagentSpawn(
 
 type ArtifactRef = Readonly<{ id: string; name: string; type: string }>;
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 async function loadArtifactReferences(
   repo: DispatchOptions["config"]["repo"],
   artifactIds: ReadonlyArray<string>,
 ): Promise<ReadonlyArray<ArtifactRef>> {
   if (artifactIds.length === 0) return [];
+  const validIds = artifactIds.filter((id) => UUID_RE.test(id));
   const artifacts = await Promise.all(
-    artifactIds.map((id) => repo.artifacts.get(id)),
+    validIds.map((id) => repo.artifacts.get(id)),
   );
   return artifacts
     .filter((a): a is NonNullable<typeof a> => a != undefined)
     .map((a) => ({ id: a.id, name: a.name, type: a.type }));
+}
+
+async function resolveDispatchArtifactIds(
+  repo: DispatchOptions["config"]["repo"],
+  runId: string,
+  explicitArtifactIds: ReadonlyArray<string> | undefined,
+  artifactQuery: z.infer<typeof ArtifactQueryInputSchema> | undefined,
+): Promise<ReadonlyArray<string>> {
+  const resolvedIds = new Set<string>(explicitArtifactIds);
+  if (artifactQuery) {
+    const matches = await resolveArtifactQuery({
+      repo,
+      runId,
+      query: artifactQuery,
+    });
+    if (matches.length === 0) {
+      throw new HarnessError(
+        "Artifact query matched no artifacts in the current run.",
+        "validation_error",
+      );
+    }
+    for (const match of matches) {
+      resolvedIds.add(match.artifact.id);
+    }
+  }
+  return [...resolvedIds];
 }
 
 function buildSubagentInput(

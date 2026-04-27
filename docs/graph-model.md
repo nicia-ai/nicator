@@ -330,12 +330,11 @@ hierarchy: root → delegated subagents → (future: deeper nesting).
 `Task → Skill`
 Properties: none
 
-Created for skill-backed subagent Tasks (those spawned via
-`spawn_subagent_with_skill`). Links the Task to the Skill node for the
-invoked version. The `invokes` edge is the authoritative way to determine
-whether a subagent used a skill — this information does not live on the Task
-node itself. Root, tool, hitl, and ad-hoc subagents (spawned via
-`spawn_subagent`) have no `invokes` edge.
+Created for skill-backed subagent Tasks (those created via the `skill` tool).
+Links the Task to the Skill node for the invoked version. The `invokes` edge
+is the authoritative way to determine whether a subagent used a skill — this
+information does not live on the Task node itself. Root, tool, hitl, and
+ad-hoc agents (created via the `agent` tool) have no `invokes` edge.
 
 ### `has_operation`
 

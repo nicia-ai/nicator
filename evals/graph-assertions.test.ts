@@ -397,6 +397,8 @@ describe("graph assertions", () => {
       name: "researcher",
       version: "1.0.0",
       description: "Research skill",
+      allowDirectTools: true,
+      allowReadArtifact: false,
     };
 
     it("passes when task has invokes edge to skill", () => {
@@ -623,6 +625,113 @@ describe("graph assertions", () => {
           pattern: "limit_exceeded",
           description: "test",
         }],
+        lineage,
+      );
+      expect(result?.passed).toBe(false);
+    });
+  });
+
+  describe("run_output_matches_artifact", () => {
+    it("passes when run output includes the artifact content", () => {
+      const lineage = makeLineage({
+        tasks: [
+          {
+            subagentName: "synthesizer",
+            status: "completed",
+            sequenceNumber: 1,
+            artifacts: [
+              {
+                id: "art-1",
+                name: "synthesizer_output",
+                content: "GAP-01 | HIGH | Disaster Recovery",
+                type: "text",
+              },
+            ],
+          },
+        ],
+      });
+      (lineage.run as { output: string }).output =
+        "GAP-01 | HIGH | Disaster Recovery\nDocs: NCE-POL-008, NCE-AUD-004";
+
+      const [result] = evaluateAssertions(
+        [
+          {
+            type: "run_output_matches_artifact",
+            task: { subagentName: "synthesizer" },
+            mode: "contains",
+            description: "test",
+          },
+        ],
+        lineage,
+      );
+      expect(result?.passed).toBe(true);
+    });
+
+    it("passes on exact normalized match", () => {
+      const lineage = makeLineage({
+        tasks: [
+          {
+            subagentName: "synthesizer",
+            status: "completed",
+            sequenceNumber: 1,
+            artifacts: [
+              {
+                id: "art-1",
+                name: "synthesizer_output",
+                content: "GAP-01 | HIGH | Disaster Recovery\nDocs: A, B",
+                type: "text",
+              },
+            ],
+          },
+        ],
+      });
+      (lineage.run as { output: string }).output =
+        "GAP-01 | HIGH | Disaster Recovery  Docs: A, B";
+
+      const [result] = evaluateAssertions(
+        [
+          {
+            type: "run_output_matches_artifact",
+            task: { subagentName: "synthesizer" },
+            mode: "exact",
+            description: "test",
+          },
+        ],
+        lineage,
+      );
+      expect(result?.passed).toBe(true);
+    });
+
+    it("fails when run output diverges from the artifact", () => {
+      const lineage = makeLineage({
+        tasks: [
+          {
+            subagentName: "synthesizer",
+            status: "completed",
+            sequenceNumber: 1,
+            artifacts: [
+              {
+                id: "art-1",
+                name: "synthesizer_output",
+                content: "GAP-01 | HIGH | Disaster Recovery",
+                type: "text",
+              },
+            ],
+          },
+        ],
+      });
+      (lineage.run as { output: string }).output =
+        "Executive summary only.";
+
+      const [result] = evaluateAssertions(
+        [
+          {
+            type: "run_output_matches_artifact",
+            task: { subagentName: "synthesizer" },
+            mode: "contains",
+            description: "test",
+          },
+        ],
         lineage,
       );
       expect(result?.passed).toBe(false);

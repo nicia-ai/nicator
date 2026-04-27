@@ -1,6 +1,6 @@
 [
   {
-    "taskId": "kwb-001",
+    "taskId": "syn-001",
     "agent": "harness",
     "outputText": "The discrepancy stems from different asset definitions. Meridian Capital and Acorn's own press release both report $87.4M in cash and cash equivalents at Q3-end (September 30, 2024). Stonebridge Research reports $72.4M, but their figure includes both cash equivalents AND short-term investments — a broader category. The $15M difference is consistent with short-term investments held by Acorn that Stonebridge includes in their liquidity measure.\n\nAdditionally, Meridian notes a $15M revolving credit draw in mid-September that was repaid by October 3rd. This was a transient draw for a vendor prepayment and does not reflect a liquidity concern.\n\nFor an investor: The correct Q3-end cash figure is $87.4M. Stonebridge's lower number reflects a different measurement methodology, not a weaker balance sheet. The 14 months of runway (per Meridian) is the more meaningful metric.",
     "pass": true,
@@ -16,7 +16,7 @@
     "labeledAt": "2025-03-15T10:00:00.000Z"
   },
   {
-    "taskId": "kwb-001",
+    "taskId": "syn-001",
     "agent": "baseline",
     "outputText": "Meridian Capital reports $87.4M in cash, Stonebridge reports $72.4M, and the press release reports $87.4M. Two out of three sources agree on $87.4M, so this is likely the correct figure. Stonebridge may have used different data or a different reporting date. The company also drew $15M on a credit facility during the quarter.",
     "pass": false,
@@ -32,7 +32,7 @@
     "labeledAt": "2025-03-15T10:15:00.000Z"
   },
   {
-    "taskId": "kwb-007",
+    "taskId": "gap-001",
     "agent": "harness",
     "outputText": "Gap Analysis: DataPipe MSA vs Internal Requirements\n\n1. UPTIME SLA (Section 4.1 vs Requirement 1)\n   Contract: 99.5% monthly uptime\n   Requirement: 99.9% monthly uptime\n   Gap: Contract uptime is 0.4 percentage points below requirement.\n\n2. UPTIME MONITORING (Section 4.1 vs Requirement 1)\n   Contract: Measured by DataPipe's internal monitoring system\n   Requirement: Must use independent third-party monitoring\n   Gap: Self-reporting does not meet the independent monitoring requirement.\n\n3. MAINTENANCE WINDOWS (Section 4.1 vs Requirement 1)\n   Contract: Up to 4 hours/month\n   Requirement: May not exceed 2 hours/month\n   Gap: Contract allows double the permitted maintenance window.\n\n4. SUPPORT RESPONSE (Section 4.2 vs Requirement 2)\n   Contract: P1 acknowledgment within 2 business hours\n   Requirement: P1 acknowledgment within 1 hour, 24/7\n   Gap: Both the response time (2x) and availability window (business hours vs 24/7) fall short.\n\n5. DATA RETENTION (Section 4.3 vs Requirement 3)\n   Contract: 30-day minimum retention, longer at additional cost\n   Requirement: 90-day minimum included in base pricing\n   Gap: Retention period is one-third of requirement, and the contract charges extra.\n\n6. SECURITY CERTIFICATION (Section 4.5 vs Requirement 5)\n   Contract: SOC 2 Type I\n   Requirement: SOC 2 Type II\n   Gap: Type I demonstrates controls exist; Type II demonstrates they operated effectively over time.\n\n7. PENETRATION TEST ACCESS (Section 4.5 vs Requirement 5)\n   Contract: Results available under NDA\n   Requirement: Results must be available without NDA\n   Gap: NDA requirement conflicts with internal access standard.\n\nAreas of compliance: Geographic processing (Section 4.4) meets Requirement 4.",
     "pass": true,
@@ -48,7 +48,7 @@
     "labeledAt": "2025-03-15T10:30:00.000Z"
   },
   {
-    "taskId": "kwb-007",
+    "taskId": "gap-001",
     "agent": "baseline",
     "outputText": "The DataPipe contract has several gaps compared to requirements:\n\n- Uptime is 99.5% vs required 99.9%\n- Support response is 2 business hours vs required 1 hour 24/7\n- Data retention is 30 days vs required 90 days\n- SOC 2 Type I vs required Type II\n\nThe geographic processing and OSHA requirements appear to be met.",
     "pass": false,

@@ -160,22 +160,48 @@ passFail:
     reduction) and the bear case (at minimum the $2.3M incident), and must
     explicitly acknowledge trade-offs. A one-sided recommendation fails.
 
-expectedSkills:
+forbiddenSkills:
   - researcher
   - summarizer
 
 definitionOverrides:
   systemPrompt: >-
-    You are a multi-agent coordinator running a structured debate. You
-    manage three named agents: bull (argues FOR adoption), bear (argues
-    AGAINST adoption), and judge (synthesizes both perspectives).
+    You are a multi-agent coordinator running a structured debate. Use
+    the `agent` tool to create exactly three named agents — do not activate
+    any pre-registered skills via the `skill` tool.
 
-    Dispatch bull and bear concurrently — each receives only its assigned
-    source documents. Once both complete, dispatch the judge with both
-    sets of findings. The judge produces the final executive briefing.
+    Execute in TWO SEPARATE TURNS. This is critical — do not shortcut.
 
-    Do not allow agents to see each other's sources or findings until the
-    judge phase. This isolation ensures genuinely independent analysis.
+    **Turn 1** — dispatch bull AND bear in the same turn (parallel tool calls):
+
+    1. **bull** — argues FOR adoption. Put the favorable source documents
+       directly into its task_input as quoted text. Do NOT pass artifact_ids.
+    2. **bear** — argues AGAINST adoption. Put the unfavorable source
+       documents directly into its task_input as quoted text. Do NOT pass
+       artifact_ids.
+
+    After bull and bear complete, their outputs will appear in your context
+    under "Completed Tasks" with real artifact_ids you can see.
+
+    **Turn 2** — dispatch judge in a SEPARATE subsequent turn:
+
+    3. **judge** — synthesizes both perspectives into a balanced executive
+       briefing. Pass the ACTUAL artifact_ids of bull's and bear's outputs
+       (copy them exactly from your "Completed Tasks" context — do not
+       guess or invent UUIDs) via the `artifact_ids` parameter. Do not
+       pass any other artifacts to judge.
+
+    Do NOT dispatch judge in the same turn as bull and bear. You cannot
+    know bull's or bear's artifact_ids until they appear in your context,
+    which only happens after their dispatches complete. Dispatching judge
+    prematurely with invented artifact_ids will fail.
+
+    Scoped visibility: bull and bear must not see each other's sources or
+    findings. The harness enforces this — only pass what each agent needs.
+
+    Each agent should produce its analysis directly as text output from
+    the provided material. Do not have them make additional tool calls
+    or skill activations — just analyze and respond.
   skills:
     - name: researcher
       version: "1.0.0"
@@ -187,7 +213,7 @@ definitionOverrides:
         type: always
   limits:
     maxTasksPerRun: 30
-    maxOperationsPerTask: 5
+    maxOperationsPerTask: 20
     maxTokensPerRun: 500000
 graphAssertions:
   # --- Run completion ---
@@ -218,8 +244,8 @@ graphAssertions:
     match:
       role: subagent
     min: 3
-    max: 3
-    description: "Exactly 3 agent-role tasks"
+    max: 10
+    description: "3 required agent roles; retries may produce extras"
 
   # --- DAG ordering: judge after both advocates ---
   - type: task_order

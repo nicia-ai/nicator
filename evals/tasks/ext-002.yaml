@@ -1,10 +1,10 @@
-# KWB-011 · extraction
+# EXT-002 · extraction
 #
 # A product requirements document with nested conditions and exceptions.
 # The extraction task tests ability to handle conditional logic — facts
 # that are true only under specific circumstances.
 
-id: kwb-011
+id: ext-002
 category: extraction
 name: Conditional requirements extraction
 description: >-
@@ -91,5 +91,5 @@ passFail:
     Must correctly handle conditional facts — PGP requires Enterprise + public
     key, not just Enterprise. Indefinite retention requires Compliance Archive.
 
-expectedSkills:
+forbiddenSkills:
   - researcher

@@ -1,0 +1,60 @@
+# STR-002 · steering
+#
+# Pair A (moderate/body) — negative side.
+# Same moderate steering as str-001, but a task that does NOT fit the "research
+# question" shape the directive is conditioned on. Tests whether moderate
+# steering over-applies — the model should recognize the task is not research-
+# shaped and refrain from invoking the researcher skill.
+#
+# Pair with: str-001. Both sides must pass.
+
+id: str-002
+category: steering
+name: Moderate steering — researcher should not fire on trivial task
+description: >-
+  Same moderate system-prompt steering as str-001, but the task is a simple
+  arithmetic question that does not require research. Tests whether the model
+  respects the conditional nature of the directive ("for research questions").
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 20
+    content: |
+      No source documents are provided. This is a direct arithmetic question.
+
+question: |
+  What is 47 multiplied by 83? Provide just the numeric answer.
+
+referenceFacts:
+  - id: fact-1
+    description: Returns the correct product (3901)
+    canonical: "3901"
+    weight: 1
+
+passFail:
+  description: >-
+    Researcher skill must NOT be invoked for a trivial arithmetic question.
+    Tests that conditional steering respects task shape.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a research assistant. You have a `researcher` skill available
+    for research questions. For research-shaped questions, use the
+    researcher skill.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+
+graphAssertions:
+  - type: run_status
+    status: completed
+    description: "Run should complete successfully"
+
+  - type: task_absent
+    match:
+      role: subagent
+      subagentName: researcher
+    description: "Researcher should NOT be invoked for a trivial arithmetic task"

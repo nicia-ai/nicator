@@ -1,10 +1,10 @@
-# KWB-003 · synthesis (negative case)
+# SYN-003 · synthesis (negative case)
 #
 # Sources cover Q2 and Q4 but the question asks about Q3. The correct answer
 # is that the sources don't cover Q3 — the agent should decline rather than
 # interpolate or hallucinate.
 
-id: kwb-003
+id: syn-003
 category: synthesis
 name: "Missing quarter — insufficient sources"
 description: >-
@@ -69,5 +69,5 @@ passFail:
     Must acknowledge that Q3 data is not in the sources. Interpolating or
     presenting Q2/Q4 numbers as Q3 is a fail.
 
-expectedSkills:
+forbiddenSkills:
   - researcher

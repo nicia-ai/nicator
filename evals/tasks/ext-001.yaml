@@ -1,11 +1,11 @@
-# KWB-010 · extraction
+# EXT-001 · extraction
 #
 # A dense compliance document with specific thresholds, dates, and entity
 # names. The task requires extracting exactly the facts asked for — no more,
 # no less. Tests precision: fabricating an extra requirement is a faithfulness
 # failure.
 
-id: kwb-010
+id: ext-001
 category: extraction
 name: Compliance threshold extraction
 description: >-
@@ -98,5 +98,5 @@ passFail:
     Must correctly extract at least 4 of 5 facts. PII threshold, assessment
     deadline, and breach notification are required.
 
-expectedSkills:
+forbiddenSkills:
   - researcher

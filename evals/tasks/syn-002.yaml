@@ -1,9 +1,9 @@
-# KWB-002 · synthesis
+# SYN-002 · synthesis
 #
 # Two market research reports with different methodologies reach the same
 # directional conclusion but with significantly different quantitative claims.
 
-id: kwb-002
+id: syn-002
 category: synthesis
 name: Divergent market size estimates
 description: >-
@@ -93,5 +93,5 @@ passFail:
     Must explain the methodology difference (survey vs transaction) and identify
     shadow SaaS as the primary driver of the gap.
 
-expectedSkills:
+forbiddenSkills:
   - researcher

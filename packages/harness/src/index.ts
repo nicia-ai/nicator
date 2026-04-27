@@ -13,7 +13,7 @@ export {
 export { buildSystemPrompt, type RunBudget } from "./system-prompt.js";
 export type {
   HarnessConfig,
-  InputDocument,
+  InputArtifact,
   Logger,
   RuntimeContext,
   ToolImplementation,

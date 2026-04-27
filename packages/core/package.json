@@ -18,7 +18,7 @@
     "fix": "eslint --fix . && prettier --write --ignore-path ../../.prettierignore ."
   },
   "dependencies": {
-    "@nicia-ai/typegraph": "^0.19.0",
+    "@nicia-ai/typegraph": "^0.20.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
