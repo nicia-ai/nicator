@@ -1,148 +1,33 @@
-import type {
-  Artifact,
-  HitlHandler,
-  Operation,
-  OperationPatch,
-  Repository,
-  RunPatch,
-  Task,
-  TaskPatch,
-} from "@nicator/core";
-import { generateId, now } from "@nicator/core";
-import type { Anthropic } from "@nicator/sdk";
-import { describe, expect, it, vi } from "vitest";
+/**
+ * Integration tests for policy enforcement against a real TypeGraph-backed
+ * Repository. Exercises the policy-before-operation invariant: a denied
+ * invocation leaves no subagent Task or Operation in the graph.
+ */
+import { generateId } from "@nicator/core";
+import { makeTask } from "@nicator/core/test-factories";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { enforcePolicy } from "./policy.js";
-import { createEmptyToolRegistry } from "./registries.js";
-import type { HarnessConfig } from "./types.js";
+import { createTestHarness, type TestHarness } from "./test-harness.js";
 
-// ---------------------------------------------------------------------------
-// Mock repo — minimal subset needed for policy tests
-// ---------------------------------------------------------------------------
+let harness: TestHarness;
 
-function createMockRepo() {
-  const _runs = new Map<string, Record<string, unknown>>();
-  const _tasks = new Map<string, Record<string, unknown>>();
-  const _operations = new Map<string, Record<string, unknown>>();
-  const _artifacts = new Map<string, Artifact>();
-
-  return {
-    _runs,
-    _tasks,
-    _operations,
-    _artifacts,
-    agents: {
-      getDefinition: vi.fn(),
-      createDefinition: vi.fn(),
-      listDefinitions: vi.fn(),
-      registerSkill: vi.fn(),
-    },
-    runs: {
-      get: vi.fn(),
-      create: vi.fn(),
-      update(id: string, patch: RunPatch) {
-        const existing = _runs.get(id);
-        if (existing) _runs.set(id, { ...existing, ...patch });
-        return Promise.resolve();
-      },
-      listRecent: vi.fn(),
-    },
-    tasks: {
-      create(task: Task) {
-        _tasks.set(task.id, { ...task });
-        return Promise.resolve();
-      },
-      update(id: string, patch: TaskPatch) {
-        const existing = _tasks.get(id);
-        if (existing) _tasks.set(id, { ...existing, ...patch });
-        return Promise.resolve();
-      },
-      getCount: vi.fn().mockResolvedValue(0),
-      countCompletedByName(runId: string, subagentName: string) {
-        return Promise.resolve(
-          [..._tasks.values()].filter(
-            (t) =>
-              t["runId"] === runId &&
-              t["subagentName"] === subagentName &&
-              t["status"] === "completed",
-          ).length,
-        );
-      },
-      getForRun(runId: string) {
-        return Promise.resolve(
-          [..._tasks.values()].filter(
-            (t) => t["runId"] === runId,
-          ) as unknown as Task[],
-        );
-      },
-    },
-    operations: {
-      create(operation: Operation) {
-        _operations.set(operation.id, { ...operation });
-        return Promise.resolve();
-      },
-      update(id: string, patch: OperationPatch) {
-        const existing = _operations.get(id);
-        if (existing) _operations.set(id, { ...existing, ...patch });
-        return Promise.resolve();
-      },
-      getForTask(taskId: string, _runId: string) {
-        return Promise.resolve(
-          [..._operations.values()].filter(
-            (o) => o["taskId"] === taskId,
-          ) as unknown as Operation[],
-        );
-      },
-    },
-    artifacts: {
-      create(artifact: Artifact) {
-        _artifacts.set(artifact.id, { ...artifact });
-        return Promise.resolve();
-      },
-      createAndLinkProduced: vi.fn().mockResolvedValue(undefined),
-      linkProduced: vi.fn().mockResolvedValue(undefined),
-      linkInputToRun: vi.fn().mockResolvedValue(undefined),
-      get: vi.fn(),
-      getIdsForOperation: vi.fn().mockResolvedValue([]),
-      getForRun: vi.fn().mockResolvedValue([]),
-      addConsumesEdge: vi.fn().mockResolvedValue(undefined),
-    },
-    compactions: { create: vi.fn().mockResolvedValue(undefined) },
-    lineage: { getRunLineage: vi.fn() },
-  };
+async function seedRun(h: TestHarness) {
+  const definition = await h.seedDefinition({ skills: [] });
+  return h.seedRunWithRoot(definition.id);
 }
 
-const APPROVE_HITL: HitlHandler = {
-  requestApproval: () => Promise.resolve("approved"),
-};
+beforeEach(async () => {
+  harness = await createTestHarness();
+});
 
-const DENY_HITL: HitlHandler = {
-  requestApproval: () => Promise.resolve("denied"),
-};
-
-function buildConfig(
-  repo: ReturnType<typeof createMockRepo>,
-  hitlHandler: HitlHandler = APPROVE_HITL,
-): HarnessConfig {
-  return {
-    repo: repo as unknown as Repository,
-    anthropic: {} as Anthropic,
-    toolRegistry: createEmptyToolRegistry(),
-    hitlHandler,
-    env: { date: "2026-04-05" },
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
+afterEach(() => {
+  harness.dispose();
+});
 
 describe("enforcePolicy", () => {
   it("allows invocation with 'always' policy", async () => {
-    const repo = createMockRepo();
-    const config = buildConfig(repo);
-    const runId = generateId();
-    repo._runs.set(runId, { id: runId, status: "running" });
+    const { run, rootTaskId } = await seedRun(harness);
 
     await expect(
       enforcePolicy(
@@ -150,17 +35,16 @@ describe("enforcePolicy", () => {
           policy: { type: "always" },
           subagentName: "test-skill",
           toolInput: {},
-          runId,
-          rootTaskId: generateId(),
+          runId: run.id,
+          rootTaskId,
         },
-        config,
+        harness.config,
       ),
     ).resolves.toBeUndefined();
   });
 
   it("denies invocation with 'never' policy", async () => {
-    const repo = createMockRepo();
-    const config = buildConfig(repo);
+    const { run, rootTaskId } = await seedRun(harness);
 
     await expect(
       enforcePolicy(
@@ -168,21 +52,17 @@ describe("enforcePolicy", () => {
           policy: { type: "never" },
           subagentName: "blocked-skill",
           toolInput: {},
-          runId: generateId(),
-          rootTaskId: generateId(),
+          runId: run.id,
+          rootTaskId,
         },
-        config,
+        harness.config,
       ),
     ).rejects.toThrow("denied by policy");
   });
 
   it("approves with require_hitl_approval when human approves", async () => {
-    const repo = createMockRepo();
-    const runId = generateId();
-    const rootTaskId = generateId();
-    repo._runs.set(runId, { id: runId, status: "running" });
-
-    const config = buildConfig(repo, APPROVE_HITL);
+    harness.hitl.enqueue("approved");
+    const { run, rootTaskId } = await seedRun(harness);
 
     await expect(
       enforcePolicy(
@@ -193,45 +73,71 @@ describe("enforcePolicy", () => {
           },
           subagentName: "sensitive-skill",
           toolInput: { skill_name: "sensitive-skill" },
-          runId,
+          runId: run.id,
           rootTaskId,
           maxOperationsPerTask: 3,
         },
-        config,
+        harness.config,
       ),
     ).resolves.toBeUndefined();
+
+    const operations = await harness.repo.operations.getForTask(
+      rootTaskId,
+      run.id,
+    );
+    expect(operations).toHaveLength(1);
+    expect(operations[0]!.type).toBe("hitl_response");
+    expect(operations[0]!.status).toBe("succeeded");
   });
 
   it("denies with require_hitl_approval when human denies", async () => {
-    const repo = createMockRepo();
-    const runId = generateId();
-    const rootTaskId = generateId();
-    repo._runs.set(runId, { id: runId, status: "running" });
-
-    const config = buildConfig(repo, DENY_HITL);
-
-    await expect(
-      enforcePolicy(
-        {
-          policy: {
-            type: "require_hitl_approval",
-            approverPrompt: "Allow?",
+    const denyHarness = await createTestHarness({
+      hitl: { defaultDecision: "denied" },
+    });
+    try {
+      const { run, rootTaskId } = await seedRun(denyHarness);
+      await expect(
+        enforcePolicy(
+          {
+            policy: {
+              type: "require_hitl_approval",
+              approverPrompt: "Allow?",
+            },
+            subagentName: "sensitive-skill",
+            toolInput: {},
+            runId: run.id,
+            rootTaskId,
           },
-          subagentName: "sensitive-skill",
-          toolInput: {},
-          runId,
-          rootTaskId,
+          denyHarness.config,
+        ),
+      ).rejects.toThrow("denied by human approver");
+    } finally {
+      denyHarness.dispose();
+    }
+  });
+
+  it("interpolates approver prompt template variables", async () => {
+    const { run, rootTaskId } = await seedRun(harness);
+
+    await enforcePolicy(
+      {
+        policy: {
+          type: "require_hitl_approval",
+          approverPrompt: "Allow {{skill_name}} with {{command}}?",
         },
-        config,
-      ),
-    ).rejects.toThrow("denied by human approver");
+        subagentName: "runner",
+        toolInput: { skill_name: "runner", command: "rm -rf /" },
+        runId: run.id,
+        rootTaskId,
+      },
+      harness.config,
+    );
+
+    expect(harness.hitl.calls[0]!.prompt).toBe("Allow runner with rm -rf /?");
   });
 
   it("allows with max_calls_per_run when under limit", async () => {
-    const repo = createMockRepo();
-    const runId = generateId();
-
-    const config = buildConfig(repo);
+    const { run, rootTaskId } = await seedRun(harness);
 
     await expect(
       enforcePolicy(
@@ -239,34 +145,27 @@ describe("enforcePolicy", () => {
           policy: { type: "max_calls_per_run", limit: 3 },
           subagentName: "limited-skill",
           toolInput: {},
-          runId,
-          rootTaskId: generateId(),
+          runId: run.id,
+          rootTaskId,
         },
-        config,
+        harness.config,
       ),
     ).resolves.toBeUndefined();
   });
 
   it("denies with max_calls_per_run when at limit", async () => {
-    const repo = createMockRepo();
-    const runId = generateId();
+    const { run, rootTaskId } = await seedRun(harness);
 
-    // Simulate 3 completed skill tasks
     for (let index = 0; index < 3; index++) {
-      const taskId = generateId();
-      repo._tasks.set(taskId, {
-        id: taskId,
-        runId,
+      const task = makeTask(run.id, index + 1, {
+        id: generateId(),
         role: "subagent",
         subagentName: "limited-skill",
         status: "completed",
-        sequenceNumber: index + 1,
-        createdAt: now(),
-        updatedAt: now(),
+        parentTaskId: rootTaskId,
       });
+      await harness.repo.tasks.create(task);
     }
-
-    const config = buildConfig(repo);
 
     await expect(
       enforcePolicy(
@@ -274,11 +173,39 @@ describe("enforcePolicy", () => {
           policy: { type: "max_calls_per_run", limit: 3 },
           subagentName: "limited-skill",
           toolInput: {},
-          runId,
-          rootTaskId: generateId(),
+          runId: run.id,
+          rootTaskId,
         },
-        config,
+        harness.config,
       ),
     ).rejects.toThrow("exceeded max_calls_per_run");
+  });
+
+  it("counts only tasks of the same subagentName toward max_calls_per_run", async () => {
+    const { run, rootTaskId } = await seedRun(harness);
+
+    for (let index = 0; index < 3; index++) {
+      const task = makeTask(run.id, index + 1, {
+        id: generateId(),
+        role: "subagent",
+        subagentName: "other-skill",
+        status: "completed",
+        parentTaskId: rootTaskId,
+      });
+      await harness.repo.tasks.create(task);
+    }
+
+    await expect(
+      enforcePolicy(
+        {
+          policy: { type: "max_calls_per_run", limit: 3 },
+          subagentName: "limited-skill",
+          toolInput: {},
+          runId: run.id,
+          rootTaskId,
+        },
+        harness.config,
+      ),
+    ).resolves.toBeUndefined();
   });
 });

@@ -1,4 +1,4 @@
-# KWB-008 · gap-analysis
+# GAP-002 · gap-analysis
 #
 # An employee handbook and a state labor law summary. The handbook is mostly
 # compliant but has two gaps. One gap is obvious (wrong overtime threshold);
@@ -6,7 +6,7 @@
 # detection accuracy and false-positive discipline — the handbook is compliant
 # on several other points that should NOT be flagged.
 
-id: kwb-008
+id: gap-002
 category: gap-analysis
 name: Employee handbook vs. labor law compliance
 description: >-
@@ -80,6 +80,7 @@ referenceFacts:
   - id: no-gap-minimum-wage
     description: "Minimum wage is compliant ($16.50 > $15.75) — should NOT be flagged"
     canonical: "16.50"
+    expected: absent
     weight: 0
 
 rubricWeights:
@@ -95,5 +96,5 @@ passFail:
     Must find both gaps (overtime threshold and missing meal break). Must NOT
     hallucinate gaps that don't exist (e.g., minimum wage is compliant).
 
-expectedSkills:
+forbiddenSkills:
   - researcher

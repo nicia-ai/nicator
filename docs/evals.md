@@ -16,13 +16,16 @@ same 40%. This matters for the research question this harness is designed to ans
 _does structured skill decomposition improve performance on knowledge work tasks, and
 if so, by how much and on what task types?_
 
-**Current status of that question:** The eval suite has not yet demonstrated
-that skill decomposition improves outcomes. The observed gains come from two
-other components: system prompt framing (the primary driver) and tool access
-via skills. The graph infrastructure has been validated for behavioral
-correctness testing and multi-agent scoping, but not yet for outcome
-improvement. See [What the results show](#what-the-results-show) for the
-honest breakdown.
+**Current status of that question:** The checked-in reports demonstrate a
+factual-accuracy win on synthesis-style tasks, but the tracked judge-scored
+report (`1d3c75ba`) still has the harness losing on judge quality. Treat
+steering, coordination, decomposition-value, and rescoring sections as
+methodology plus historical notes unless the cited run appears in
+[`evals/results/MANIFEST.md`](../evals/results/MANIFEST.md). Skill
+decomposition improving outcomes beyond what system-prompt framing and tool
+access provide is not yet demonstrated. See [What the results show](#what-the-results-show)
+for the honest breakdown and [`docs/layered-evals.md`](layered-evals.md) for
+the steering-layer methodology.
 
 ## What we measure
 
@@ -82,72 +85,74 @@ Most recent clean run (9 KWB tasks, `--no-judge`, run `3251f5b8`):
 
 | Task          | Category             | Harness  | Baseline  | Delta       |
 | ------------- | -------------------- | -------- | --------- | ----------- |
-| kwb-001       | synthesis            | 100%     | 83%       | +17pp       |
-| kwb-002       | synthesis            | 100%     | 100%      | —           |
-| kwb-003       | synthesis (negative) | 100%     | 0%        | +100pp      |
-| kwb-007       | gap-analysis         | 100%     | 100%      | —           |
-| kwb-008       | gap-analysis         | 100%     | 100%      | —           |
-| kwb-010       | extraction           | 100%     | 80%       | +20pp       |
-| kwb-011       | extraction           | 100%     | 100%      | —           |
-| kwb-020       | decision-support     | 100%     | 100%      | —           |
-| kwb-021       | decision-support     | 100%     | 100%      | —           |
+| syn-001       | synthesis            | 100%     | 83%       | +17pp       |
+| syn-002       | synthesis            | 100%     | 100%      | —           |
+| syn-003       | synthesis (negative) | 100%     | 0%        | +100pp      |
+| gap-001       | gap-analysis         | 100%     | 100%      | —           |
+| gap-002       | gap-analysis         | 100%     | 100%      | —           |
+| ext-001       | extraction           | 100%     | 80%       | +20pp       |
+| ext-002       | extraction           | 100%     | 100%      | —           |
+| dec-001       | decision-support     | 100%     | 100%      | —           |
+| dec-002       | decision-support     | 100%     | 100%      | —           |
 | **Aggregate** |                      | **100%** | **84.8%** | **+15.2pp** |
 
 The harness wins on 3 of 9 tasks and ties on the other 6. It never loses.
 The wins are:
 
-- **kwb-003** (negative case): The baseline hallucinated an answer to a
+- **syn-003** (negative case): The baseline hallucinated an answer to a
   question the sources cannot answer. The harness correctly declined. This is
   the harness system prompt earning its keep — the structured framing around
   source faithfulness prevents fabrication.
-- **kwb-001** (conflicting reports): The baseline missed one of three
+- **syn-001** (conflicting reports): The baseline missed one of three
   discrepancies between analyst reports. The harness caught all three.
-- **kwb-010** (extraction): The baseline missed a compliance threshold. The
+- **ext-001** (extraction): The baseline missed a compliance threshold. The
   harness extracted all of them.
 
-### Hard knowledge-work tasks (kwb-040 – kwb-043)
+### Hard knowledge-work tasks (syn-005 – dec-003)
 
 The original 9 tasks use 200–400 token source documents with directly
 extractable facts. These 4 tasks use 5–8k token documents with multi-hop
 reasoning, cross-document contradictions, and buried findings. They were
 added to address reviewer feedback that the original eval was too easy.
 
-5-run results (paired t-test, all significant at p < .05):
+Historical 5-run results (paired t-test, all significant at p < .05). These
+raw runs are not tracked in this branch; rerun and add them to the manifest
+before treating the table as auditable evidence:
 
 | Task          | Category         | Harness   | Baseline (mean ± 95% CI) | Delta       | p-value |
 | ------------- | ---------------- | --------- | ------------------------ | ----------- | ------- |
-| kwb-040       | synthesis        | 100.0%    | 42.0% ± 4.5%             | +58.0pp     | < .001  |
-| kwb-041       | extraction       | 100.0%    | 50.8% ± 10.3%            | +49.2pp     | < .001  |
-| kwb-042       | gap-analysis     | 92.3%     | 72.3% ± 10.3%            | +20.0pp     | 0.011   |
-| kwb-043       | decision-support | 100.0%    | 68.0% ± 14.5%            | +32.0pp     | < .01   |
+| syn-005       | synthesis        | 100.0%    | 42.0% ± 4.5%             | +58.0pp     | < .001  |
+| ext-003       | extraction       | 100.0%    | 50.8% ± 10.3%            | +49.2pp     | < .001  |
+| gap-003       | gap-analysis     | 92.3%     | 72.3% ± 10.3%            | +20.0pp     | 0.011   |
+| dec-003       | decision-support | 100.0%    | 68.0% ± 14.5%            | +32.0pp     | < .01   |
 | **Aggregate** |                  | **98.1%** | **58.3%**                | **+39.8pp** |         |
 
 The baseline drops from 84.8% (original 9 tasks) to 55.8% on these harder
-tasks. The harness holds at 98% — its one miss is kwb-042's SOC 2 Type II
+tasks. The harness holds at 98% — its one miss is gap-003's SOC 2 Type II
 confirmation buried late in an audit report (fact-6, weight 1).
 
 What the baseline consistently misses:
 
-- **kwb-040**: Pipeline conversion discrepancy (CIM says 92%, its own
+- **syn-005**: Pipeline conversion discrepancy (CIM says 92%, its own
   Appendix C shows 74%), undisclosed related-party receivable (QoE footnote 7),
   NWC impact on bank closing conditions.
-- **kwb-041**: Order Form overrides MSA's 90-day termination notice to 180
+- **ext-003**: Order Form overrides MSA's 90-day termination notice to 180
   days (Section 10.4 cross-reference), liability cap based on defined "Fees"
   excluding Implementation Fees.
-- **kwb-042**: Elasticsearch AES-128 vs policy-required AES-256 (audit says
+- **gap-003**: Elasticsearch AES-128 vs policy-required AES-256 (audit says
   "acceptable" but policy has no discretionary exception). Also flags pen
   testing as a gap when it exceeds requirements — a false positive.
-- **kwb-043**: Lakestream Standard tier caps at 100 TB but Year 3 needs
+- **dec-003**: Lakestream Standard tier caps at 100 TB but Year 3 needs
   210 TB (buried in Appendix B footnote).
 
 These are all multi-hop failures: the baseline reads each section
 independently but doesn't connect facts across sections or documents.
 
-### Skill decomposition task (kwb-030)
+### Skill decomposition task (syn-004)
 
 The 9 original KWB tasks are self-contained — all answers are in the source
 documents, so skill decomposition has nothing to add (0 skills invoked, 0
-operations). `kwb-030` tests whether decomposition helps when the answer
+operations). `syn-004` tests whether decomposition helps when the answer
 requires external research.
 
 The task provides an internal memo asking for an AI regulation comparison
@@ -175,25 +180,38 @@ without the skill/inner-loop abstraction.
 
 ### What the results show
 
-The eval results demonstrate three things clearly and leave one question open.
+The eval results demonstrate four things clearly and leave one question
+partially answered.
 
 **Demonstrated: system prompt framing is the primary value driver.** On the
-13 document-based KWB tasks (kwb-001 through kwb-043, excluding kwb-030),
-the harness completed with zero skill activations. It won (+15.2pp on the
-original 9, +39.8pp on the harder 4) through its system prompt — structured
-framing around source faithfulness prevents hallucination and improves
-multi-hop extraction across long documents.
+13 document-based KWB tasks (syn-001 through dec-003, excluding syn-004),
+the harness completed with zero skill activations on source-provided tasks.
+It won (+15.2pp on the original 9, +39.8pp on the harder 4) through its
+system prompt — structured framing around source faithfulness prevents
+hallucination and improves multi-hop extraction across long documents.
 
 **Demonstrated: tool access adds value when answers require external data.**
-kwb-030 shows +18pp from web research. But this tests tool availability, not
-the skill decomposition layer. A flat agent with tool access would likely
-produce the same gain.
+syn-004 shows +18pp from web research. After the `skill`/`agent` tool rename,
+the researcher skill now activates correctly on research-dependent tasks.
 
-**Demonstrated: graph infrastructure enables behavioral testing.** The 14
-dispatch, HITL, and limits tasks validate that the harness machinery works
-correctly using graph assertions — structural predicates that would be
-difficult to express without the graph model. The coordination eval (crd-001)
-validates multi-agent scoping via `consumes` and `consumes_absent` edges.
+**Designed: user steering propagation.** The steering eval matrix
+(`str-001` through `str-006`) validates whether system-prompt directives
+propagate to dispatch decisions at both moderate and heavy intensity, whether
+negative steering (don't invoke on non-matching tasks) is respected, and
+whether skill descriptions alone can steer invocation when the task matches.
+Historical local runs reportedly passed this matrix, but the corresponding
+reports are not checked in. See [`docs/layered-evals.md`](layered-evals.md)
+for the methodology.
+
+**Demonstrated: graph infrastructure enables behavioral testing.** The
+dispatch, HITL, limits, and coordination tasks validate harness machinery
+using graph assertions: named-role dispatch via the `agent` tool, DAG
+ordering, cross-agent artifact consumption, and scoped visibility via
+`consumes` and `consumes_absent` edges. The important branch claim is the
+infrastructure: structural failures are deterministic step grades and now
+gate pass/fail when a task defines graph or skill assertions. Current
+checked-in behavioral reports are historical and include failures; rerun
+the relevant suites and commit reports before citing a clean pass rate.
 
 **Demonstrated: context weights are load-bearing.** The weight sweep
 (ctx-003/ctx-004) validates that the default weight configuration is the
@@ -202,41 +220,96 @@ tasks within budget. Three alternative configs fail on ctx-004's tight 50K
 budget. Token efficiency varies 2x across configs. See the
 [Weight sweep](#weight-sweep) section for the full results table.
 
-**Not yet demonstrated: skill decomposition improving outcomes.** No eval
-task currently shows that decomposing work into multiple skills with artifact
-routing produces better answers than a single-pass approach with the same
-tools. The eval suite needs tasks where multi-skill coordination and artifact
-provenance are what make the difference — not just tool access or system
-prompt quality.
+**Partly demonstrated: harness output quality beats baseline on factual
+accuracy.** The checked-in synthesis judge report (`1d3c75ba`) shows harness
+factual accuracy 100% vs baseline 88.3% (+11.7pp), but judge quality 85.7%
+vs baseline 92.8% (-7.2pp). A later local run reportedly flipped the judge
+delta after prompt tightening, but its raw JSON/report is not tracked, so it
+is not branch evidence yet. `expectedSkills` has been replaced with
+`requiredSkills` / `forbiddenSkills`; source-provided tasks now assert
+`forbiddenSkills: [researcher]`, turning "correctly skipped" from a silent
+warn into a positive pass when rerun under the current gate rules.
 
-This is a real gap, and the reviewer who asks "is the skill system justified?"
-is asking the right question. The current answer: the skill machinery
-(versioned manifests, inner loops, SKILL.md parsing, policy enforcement) is
-not justified by outcome improvement on these evals. It is justified by two
-things the evals don't measure:
+**Measured: decomposition is content-equivalent to flat at current
+model capability and task scale.** A dedicated `decomposition-value`
+task category isolates the decomposition effect: the "baseline"
+column for these tasks runs a _flat-harness_ variant (same wrapper,
+same tools, `skills: []`, default system prompt), so a delta between
+decomposed and flat measures decomposition specifically, holding
+prompt and tools constant. Across four tasks spanning 4K–28K tokens
+and varied shapes (cross-source synthesis, arithmetic joins,
+per-item fact extraction), the harness has not produced a content-
+quality advantage over the flat-harness baseline. On `dcv-004`, local
+rescoring suggested the regex delta was mostly surface-form sensitivity
+rather than real content difference, but those rescore artifacts are not
+checked in. The current auditable claim is the methodological one:
+decomposition-value tasks compare decomposed harness against flat harness,
+not direct API, so future deltas isolate decomposition rather than prompt
+or tool access.
 
-1. **Auditability at the skill boundary.** When a skill runs, its operations
-   are scoped to a child task with typed `produces`/`consumes` edges. This
-   means "which skill produced this claim?" and "what sources did it use?"
-   are graph traversals, not log archaeology. The value is not better answers
-   — it is answers you can audit. The behavioral evals (dispatch, HITL,
-   coordination categories) validate that this machinery works correctly, but
-   they don't measure whether it changes downstream decisions.
+Summary of `dcv-*` results:
 
-2. **The boundary hypothesis is untested, not refuted.** The hypothesis in
-   [docs/why.md](why.md) § The boundary question predicts that skill
-   decomposition pays off when evidence is fragmented across sources _and_
-   faithfulness constraints are strict. The current KWB tasks test
-   faithfulness (long documents, strict source requirements) but use
-   self-contained source material — there is no fragmentation requiring
-   multi-skill coordination. An eval that provides 10+ contradictory sources
-   requiring retrieve → extract → cross-reference → synthesize would be the
-   real test. It does not exist yet.
+- `dcv-001` — null: flat matched decomposed on a 10-document, ~4K-token
+  diligence task.
+- `dcv-002` and `dcv-003` — null: increased scale and arithmetic pressure,
+  but flat still kept up once scoring bugs were removed.
+- `dcv-004` — 12 independent vendor dossiers, each with plausible
+  distractors for the authoritative fact; local rescoring indicated content
+  parity, but this needs a committed report/rescore artifact before it is
+  cited as evidence.
 
-Until that eval exists, the honest position is: the skill system is
-load-bearing infrastructure for auditability and policy enforcement, with an
-untested hypothesis that it will also improve outcomes on sufficiently complex
-tasks.
+The honest position: the skill system is load-bearing infrastructure for
+auditability, policy enforcement, steering, and graph-routed artifact flow.
+What remains unproven is a content-quality advantage from decomposition on
+workloads larger or more budget-constrained than the current corpora.
+Pipeline _reliability_ at complex multi-stage shapes emerged as a distinct
+question during this work; see the `reliability` category below for its
+dedicated measurement.
+
+### Synthesis tasks with judge scoring (post-rename, run `1d3c75ba`)
+
+| Task          | Category             | Harness (F) | Baseline (F) | Harness (J) | Baseline (J) |
+| ------------- | -------------------- | ----------- | ------------ | ----------- | ------------ |
+| syn-001       | synthesis            | 100%        | 67%          | 0.833       | 0.942        |
+| syn-002       | synthesis            | 100%        | 100%         | 0.900       | 0.900        |
+| syn-003       | synthesis (negative) | 100%        | 75%          | 0.883       | 0.950        |
+| syn-004       | synthesis (research) | 100%        | 100%         | 0.784       | 0.850        |
+| syn-005       | synthesis (hard)     | 100%        | 100%         | 0.884       | 1.000        |
+| **Aggregate** |                      | **100%**    | **88.3%**    | **0.857**   | **0.928**    |
+
+(F) = factual accuracy, (J) = judge composite. syn-004 is the only task
+that activated the researcher skill (1 skill/run); the rest answered from
+provided sources.
+
+### Steering eval matrix
+
+The v1 matrix below is the intended behavioral coverage. Local historical
+runs reportedly passed the full matrix, but those result artifacts are not
+tracked in this branch. Rerun and commit reports before using this as a
+published 6/6 result. See [`docs/layered-evals.md`](layered-evals.md) for
+the methodology and diagnostic patterns.
+
+| Test    | Intensity | Pos/Neg          | Result   | Skills invoked |
+| ------- | --------- | ---------------- | -------- | -------------- |
+| str-001 | moderate  | positive         | **PASS** | `[researcher]` |
+| str-002 | moderate  | negative         | **PASS** | `[]`           |
+| str-003 | heavy     | positive         | **PASS** | `[researcher]` |
+| str-004 | heavy     | negative         | **PASS** | `[]`           |
+| str-005 | heavy     | positive (adhoc) | **PASS** | `[]` (agent)   |
+| str-006 | —         | desc-only        | **PASS** | `[researcher]` |
+
+Key finding: `str-006` (skill-description-only steering, neutral system
+prompt) passed — the model invoked researcher based solely on the skill's
+description. Pre-rename runs showed zero skill invocations in the same
+setup. The `skill`/`agent` tool rename improved skill selection fidelity
+as a side effect.
+
+### Behavioral task reliability (tracked reports `a345f39c`, `2e370910`, `341e6044`)
+
+Dispatch, HITL, and limits categories re-run April 8–9. See generated
+reports listed in [`evals/results/MANIFEST.md`](../evals/results/MANIFEST.md)
+for per-task breakdowns. These reports predate automatic graph gating, so
+pass/fail should be re-read through the current scorer.
 
 ### Multi-run statistical analysis (6 runs, with LLM judge)
 
@@ -248,44 +321,28 @@ Earlier multi-run analysis with judge scoring:
 | Judge quality    | 93.8%   | 90.0%    | +3.8pp | **0.017 (significant)** |
 | Pass rate        | 100%    | 96.3%    | +3.7pp | —                       |
 
-Synthesis is the only category with a significant delta (p=0.003).
-
-### Behavioral task reliability
-
-Earlier runs showed failures on dispatch, HITL, and limits tasks — runs not
-completing, graph assertions failing. A root cause was that tool
-implementations (web-fetch, web-search) threw `HarnessError` on HTTP errors
-(403, 429, etc.), killing the entire run instead of returning the error to
-the model. This has been fixed — tools now return error objects, letting the
-model retry with a different URL or query.
-
-Behavioral evals should be re-run to measure residual failure rates. Run
-them with:
-
-```bash
-pnpm eval --category dispatch --no-judge
-pnpm eval --category hitl --no-judge
-```
-
-The stored results are in `evals/results/`. Run `pnpm eval:report` to render
-the most recent result, or `pnpm eval:multi-run --last N` for statistical
-cross-run analysis.
+Synthesis is the only category with a significant delta (p=0.003). These
+numbers predate the `skill`/`agent` tool rename and may be stale; a
+post-rename multi-run analysis would confirm whether the steering
+improvements changed the distribution.
 
 ## Task design
 
 Outcome tasks are drawn from the `KnowledgeWorkBench` (KWB) suite. Behavioral and
 limits tasks test harness mechanics independently of answer quality.
 
-| Category           | Prefix | N   | Description                                                     |
-| ------------------ | ------ | --- | --------------------------------------------------------------- |
-| `synthesis`        | kwb    | 5   | Synthesize claims across sources; kwb-030 requires web research |
-| `extraction`       | kwb    | 3   | Extract structured facts from dense unstructured text           |
-| `gap-analysis`     | kwb    | 3   | Identify inconsistencies or gaps across sources                 |
-| `decision-support` | kwb    | 3   | Produce a recommendation given evidence and constraints         |
-| `dispatch`         | dsp    | 5   | Behavioral: tool vs. skill dispatch decisions                   |
-| `hitl`             | hitl   | 4   | Behavioral: approval trigger precision and ordering             |
-| `limits`           | lim    | 5   | Constraint enforcement boundary conditions                      |
-| `coordination`     | crd    | 3   | Multi-agent coordination: dispatch, scoping, data flow          |
+| Category              | Prefix | N   | Description                                                     |
+| --------------------- | ------ | --- | --------------------------------------------------------------- |
+| `synthesis`           | kwb    | 5   | Synthesize claims across sources; syn-004 requires web research |
+| `extraction`          | kwb    | 3   | Extract structured facts from dense unstructured text           |
+| `gap-analysis`        | kwb    | 3   | Identify inconsistencies or gaps across sources                 |
+| `decision-support`    | kwb    | 3   | Produce a recommendation given evidence and constraints         |
+| `dispatch`            | dsp    | 5   | Behavioral: tool vs. skill dispatch decisions                   |
+| `hitl`                | hitl   | 4   | Behavioral: approval trigger precision and ordering             |
+| `limits`              | lim    | 5   | Constraint enforcement boundary conditions                      |
+| `coordination`        | crd    | 3   | Multi-agent coordination: dispatch, scoping, data flow          |
+| `decomposition-value` | dcv    | 4   | Mechanism: decomposed vs flat-harness content-quality delta     |
+| `reliability`         | rel    | 3   | Mechanism: pipeline clean-process rate vs depth                 |
 
 Tasks are defined as YAML fixtures in `evals/tasks/`. Each file contains context
 documents, a question, reference answers for factual dimensions, and a rubric
@@ -296,43 +353,103 @@ and a _ceiling_ (full credit requires the kind of decomposition the harness enab
 Tasks where the baseline scores full credit are still included — they demonstrate
 where harness overhead is not justified.
 
+### Purpose metadata
+
+`category` remains the capability axis: synthesis, extraction, gap analysis,
+dispatch, HITL, coordination, and so on. A second metadata axis now captures
+_why_ the eval exists:
+
+| `metadata.purpose` | Question                                                                     | Typical use                   |
+| ------------------ | ---------------------------------------------------------------------------- | ----------------------------- |
+| `forecast`         | Will the harness handle workloads we realistically expect before production? | release confidence            |
+| `stress`           | How much headroom do we have on harder but still plausible workloads?        | pre-prod boundary finding     |
+| `mechanism`        | Does a specific harness feature create value?                                | research / hypothesis testing |
+
+Supporting fields in task YAML:
+
+- `metadata.realism`: `prod-derived`, `prod-shaped`, or `synthetic`
+- `metadata.releaseGate`: `blocker`, `advisory`, or `research`
+- `metadata.comparisonMode`: `direct-api`, `flat-harness`, or `none`
+- `metadata.workloadFamily`, `metadata.hypothesis`, `metadata.stressAxes`
+
+Behavioral tasks can also override harness behavior directly in
+`definitionOverrides`. For decomposition research, the most important knob is
+`definitionOverrides.subagentResultMode: artifact_only`, which forces child
+dispatches to return only an `output_artifact_id` instead of inlining the full
+child output back into coordinator chat history. For artifact-heavy pipelines,
+the coordinator can now also pass `artifact_query` to `agent` and
+`answer_from_artifact`, letting the harness resolve graph-backed artifact IDs
+server-side instead of copying UUIDs through compressed chat history.
+
+Most legacy tasks do not need explicit tags. The loader infers defaults from
+`category`:
+
+- outcome categories (`synthesis`, `extraction`, `gap-analysis`,
+  `decision-support`) default to `forecast` + `blocker`
+- behavioral / infrastructure categories (`dispatch`, `hitl`, `limits`,
+  `context`, `coordination`, `steering`) default to `mechanism` + `research`
+- `decomposition-value` defaults to `mechanism` + `research` with
+  `comparisonMode: flat-harness`
+
+Tasks can override any of those defaults in YAML. We use that for hard but still
+plausible outcome tasks such as `syn-005`, `ext-003`, `gap-003`, and `dec-003`,
+which are tagged as `stress`.
+
+Tasks can also set `metadata.parked: true` (with a human-readable
+`metadata.parkedReason`) to remove themselves from every derived suite and
+from the default `pnpm eval` run. Parked tasks remain reachable via
+`pnpm eval --task <id>` or `pnpm eval --category <name>`, which both count
+as explicit opt-in. Use this when a task's infrastructure is useful enough
+to keep around but its current signal is not trustworthy as a suite metric.
+
+### Derived suites
+
+Named suites are derived from metadata, not from category:
+
+| Suite                    | Definition                                            |
+| ------------------------ | ----------------------------------------------------- |
+| `prod-gate`              | `purpose=forecast` and `releaseGate=blocker`          |
+| `preprod-headroom`       | `purpose in {forecast, stress}`                       |
+| `research`               | `purpose=mechanism`                                   |
+| `decomposition-research` | `purpose=mechanism` and `comparisonMode=flat-harness` |
+
 ### Task inventory
 
-All 33 tasks in `evals/tasks/`, grouped by category:
+All 47 tasks in `evals/tasks/`, grouped by category:
 
-**Synthesis** (`kwb-001` – `kwb-003`, `kwb-030`, `kwb-040`) — synthesize claims across multiple source documents.
+**Synthesis** (`syn-001` – `syn-003`, `syn-004`, `syn-005`) — synthesize claims across multiple source documents.
 
 | ID        | Name                                     | Boundary tested                                                                                                                          |
 | --------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `kwb-001` | Conflicting analyst reports              | Discrepancy detection across 3 sources                                                                                                   |
-| `kwb-002` | Methodological divergence                | Same direction, different quant claims                                                                                                   |
-| `kwb-003` | Missing quarter (negative)               | Sources lack data for the question — should decline, not interpolate                                                                     |
-| `kwb-030` | Research-dependent regulatory comparison | Answer requires web research — first task exercising skill decomposition                                                                 |
-| `kwb-040` | Due diligence reconciliation             | Multi-hop across 3 long docs (7.8k tokens); footnote contradictions, restated EBITDA, pipeline conversion discrepancy buried in appendix |
+| `syn-001` | Conflicting analyst reports              | Discrepancy detection across 3 sources                                                                                                   |
+| `syn-002` | Methodological divergence                | Same direction, different quant claims                                                                                                   |
+| `syn-003` | Missing quarter (negative)               | Sources lack data for the question — should decline, not interpolate                                                                     |
+| `syn-004` | Research-dependent regulatory comparison | Answer requires web research — first task exercising skill decomposition                                                                 |
+| `syn-005` | Due diligence reconciliation             | Multi-hop across 3 long docs (7.8k tokens); footnote contradictions, restated EBITDA, pipeline conversion discrepancy buried in appendix |
 
-**Extraction** (`kwb-010` – `kwb-011`, `kwb-041`) — extract structured facts from dense text.
+**Extraction** (`ext-001` – `ext-002`, `ext-003`) — extract structured facts from dense text.
 
 | ID        | Name                      | Boundary tested                                                                                                                                  |
 | --------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `kwb-010` | Compliance thresholds     | Precision: fabricating an extra fact is a faithfulness failure                                                                                   |
-| `kwb-011` | Conditional requirements  | Nested conditions and exceptions in a PRD                                                                                                        |
-| `kwb-041` | Cross-referenced contract | Multi-hop through layered definitions (4.9k tokens); exception-to-exception chains, Order Form overrides MSA, defined term changes liability cap |
+| `ext-001` | Compliance thresholds     | Precision: fabricating an extra fact is a faithfulness failure                                                                                   |
+| `ext-002` | Conditional requirements  | Nested conditions and exceptions in a PRD                                                                                                        |
+| `ext-003` | Cross-referenced contract | Multi-hop through layered definitions (4.9k tokens); exception-to-exception chains, Order Form overrides MSA, defined term changes liability cap |
 
-**Gap analysis** (`kwb-007` – `kwb-008`, `kwb-042`) — identify inconsistencies or gaps across sources.
+**Gap analysis** (`gap-001` – `gap-002`, `gap-003`) — identify inconsistencies or gaps across sources.
 
 | ID        | Name                         | Boundary tested                                                                                                                    |
 | --------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `kwb-007` | Contract vs. requirements    | Legal documents — fabricated gaps are actively harmful                                                                             |
-| `kwb-008` | Handbook vs. labor law       | One obvious gap + one subtle gap                                                                                                   |
-| `kwb-042` | Security policy gap analysis | Real gaps buried in footnotes, red herrings that exceed requirements (7.2k tokens); audit says "acceptable" but policy is stricter |
+| `gap-001` | Contract vs. requirements    | Legal documents — fabricated gaps are actively harmful                                                                             |
+| `gap-002` | Handbook vs. labor law       | One obvious gap + one subtle gap                                                                                                   |
+| `gap-003` | Security policy gap analysis | Real gaps buried in footnotes, red herrings that exceed requirements (7.2k tokens); audit says "acceptable" but policy is stricter |
 
-**Decision support** (`kwb-020` – `kwb-021`, `kwb-043`) — produce a recommendation with reasoning.
+**Decision support** (`dec-001` – `dec-002`, `dec-003`) — produce a recommendation with reasoning.
 
 | ID        | Name                                        | Boundary tested                                                                                                                                       |
 | --------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `kwb-020` | Cloud migration vendors                     | Specific recommendation required, not just comparison                                                                                                 |
-| `kwb-021` | Contract renewal, conflicting stakeholders  | CFO vs. engineering vs. compliance deadline                                                                                                           |
-| `kwb-043` | Vendor evaluation with buried disqualifiers | 4 sources (7.6k tokens); data residency failure in control plane fine print, capacity limit in appendix footnote, pricing gotcha requiring arithmetic |
+| `dec-001` | Cloud migration vendors                     | Specific recommendation required, not just comparison                                                                                                 |
+| `dec-002` | Contract renewal, conflicting stakeholders  | CFO vs. engineering vs. compliance deadline                                                                                                           |
+| `dec-003` | Vendor evaluation with buried disqualifiers | 4 sources (7.6k tokens); data residency failure in control plane fine print, capacity limit in appendix footnote, pricing gotcha requiring arithmetic |
 
 **Dispatch** (`dsp-001` – `dsp-005`) — behavioral evals for tool vs. skill dispatch.
 
@@ -409,6 +526,77 @@ the fact — the harness does not prevent the coordinator from passing
 undeclared sources in `task_input`. The `reads` filter (cross-agent artifact
 visibility) is harness-enforced.
 
+**Decomposition Value** (`dcv-001` – `dcv-004`) — mechanism evals that compare
+decomposed harness runs against a flat-harness baseline while holding tools and
+wrapper constant.
+
+| ID        | Name                                           | Boundary tested                                                                                                           |
+| --------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `dcv-001` | Acquisition diligence discrepancies            | 10 short docs / ~4K tokens; null result showing flat long-context reasoning is enough at small scale                      |
+| `dcv-002` | MeridianHealth compliance audit                | 20 docs / ~16K tokens; stricter fact matching and graph assertions, but flat still matches decomposed                     |
+| `dcv-003` | Harbor Claims Exchange arithmetic control gaps | 11 docs / ~27.9K tokens; arithmetic joins and longer docs, showing scale alone is still insufficient                      |
+| `dcv-004` | Vendor compliance matrix — breadth-at-scale    | 12 vendor dossiers with per-vendor distractors; requires committed rescore artifacts before citing content-parity claims. |
+
+**Reliability** (`rel-001` – `rel-003`) — mechanism evals that measure the
+coordinator's clean-process rate as pipeline depth grows, independent of
+content quality.
+
+| ID        | Name                                  | Boundary tested                                                                  |
+| --------- | ------------------------------------- | -------------------------------------------------------------------------------- |
+| `rel-001` | Reliability — 3-stage serial pipeline | Baseline depth: two ad-hoc stages + one final skill, trivial per-stage work      |
+| `rel-002` | Reliability — 4-stage serial pipeline | One extra intermediate ad-hoc stage; isolates the effect of a single added stage |
+| `rel-003` | Reliability — 5-stage serial pipeline | Deepest v1 measurement; together with rel-001/002 produces a depth curve         |
+
+Reliability tasks set `metadata.comparisonMode: none` — there is no flat-
+harness or direct-API comparison because the signal is the harness's own
+pass rate across repeated runs, not a harness-vs-baseline delta. Each task
+has zero `referenceFacts`; pass/fail is driven entirely by graph assertions
+and the `requireZeroFailingStepGrades` gate.
+
+Run with multiple runs to get a reliability estimate:
+
+```bash
+# Single reliability task, 10 runs
+pnpm eval --task rel-001 --runs 10 --no-judge
+
+# All three reliability tasks, 10 runs each
+pnpm eval --category reliability --runs 10 --no-judge
+```
+
+The aggregate of interest is the fraction of harness runs that pass per
+task. Use `pnpm eval:multi-run --last N` to compute it across multiple
+result files.
+
+**First measurement (10 runs × 3 tasks = 30 run-instances, claude-sonnet-4-6):**
+
+| Task    | Depth | Structural-only (task_count + task_order) | End-to-end (includes artifact_content) |
+| ------- | ----- | ----------------------------------------- | -------------------------------------- |
+| rel-001 | 3     | **100%**                                  | 30% (3/10)                             |
+| rel-002 | 4     | **100%**                                  | 80% (8/10)                             |
+| rel-003 | 5     | **100%**                                  | 60% (6/10)                             |
+
+Two signals, separately informative:
+
+1. **Structural dispatch correctness is 100% at all tested depths.** The
+   coordinator always dispatches the correct stage chain in the correct
+   order. We have not yet found the depth at which dispatch-chain
+   correctness degrades on a trivial-work pipeline.
+
+2. **End-to-end content flow is non-monotonic (30% / 80% / 60%) and
+   limited by child-agent / skill compliance, not by coordinator depth.**
+   All observed failures are a single mode: the `stage-final` skill
+   either skips its `read_artifact` call or reads empty content and
+   falls back to emitting `upstream_stage: unknown`. Operation counts
+   confirm: failed runs consistently have fewer operations than passed
+   runs at the same depth, indicating skipped tool calls rather than
+   coordinator mis-dispatch.
+
+The earlier ~22% completion rate on the removed original dcv-004 was
+therefore **not** primarily a dispatch-depth failure; it combined
+dispatch-level issues (since resolved) with content-work complexity in
+the stage skills themselves. The reliability eval cleanly isolates
+dispatch correctness from content compliance.
+
 ### Weight sweep
 
 The default context-builder weights (downstream: 0.35, recency: 0.30,
@@ -475,6 +663,33 @@ highest weight (0.35) and is the most efficient single dimension; recency
 gets the second-highest (0.30) and its absence is catastrophic on tight
 budgets. The balanced combination outperforms any single-dimension approach.
 
+### Per-fact LLM-judge rescoring
+
+For mechanism tasks whose factual matchers turn out to be surface-form
+sensitive, the `eval:rescore` command rescores existing result files with
+an LLM judge that tolerates reasonable paraphrasing:
+
+```bash
+# Rescore specific runs by 8-char prefix
+pnpm eval:rescore --task dcv-004 --runs <run-prefix-1> <run-prefix-2>
+
+# Rescore the N most recent result files for a task
+pnpm eval:rescore --task dcv-004 --last 5
+```
+
+The judge (claude-opus-4-6, temperature 0) sees the full response and the
+task's reference-fact descriptions, and returns one pass/fail verdict per
+fact. Writes a comparison markdown + JSON sidecar to
+`evals/results/rescore-*.md`. Use when a factual regex misses semantically
+correct facts due to phrasing variation — the judge column is the one to
+cite, and the regex/judge disagreement count shows how much of the
+headline delta was scorer noise.
+
+No per-fact rescore output is currently tracked in this branch. Before citing
+a rescored `dcv-*` claim, commit the corresponding `rescore-*.md` and either
+commit or archive the raw JSON bundle referenced from
+[`evals/results/MANIFEST.md`](../evals/results/MANIFEST.md).
+
 ## Judge reliability
 
 LLM judges are unreliable in predictable ways. We mitigate four known failure modes:
@@ -522,8 +737,14 @@ pnpm eval
 # Single category
 pnpm eval --category synthesis
 
+# Purpose slice
+pnpm eval --purpose forecast
+
+# Derived suite
+pnpm eval --suite prod-gate
+
 # Single task
-pnpm eval --task kwb-001
+pnpm eval --task syn-001
 
 # Skip LLM judge (fast mode, factual dimensions only)
 pnpm eval --no-judge
@@ -537,7 +758,25 @@ pnpm eval --runs 5 --no-judge
 ```
 
 Results are written to `evals/results/` as JSON. The `pnpm eval:report` command
-renders a markdown summary table for a single run.
+renders a markdown summary table for a single run, including rollups by
+category, purpose, release gate, and derived suite. Pass/fail rows are
+re-evaluated against the current task YAML definitions when available, so if a
+task's gate changes later (for example adding a process-fidelity requirement)
+older runs will display the current semantics rather than the serialized
+historical verdict.
+
+Runner filters can be combined:
+
+```bash
+# Forecast-only synthesis tasks
+pnpm eval --category synthesis --purpose forecast
+
+# Research suite focused on decomposition
+pnpm eval --suite decomposition-research --no-judge
+
+# Exclude mechanism tests from a broad run
+pnpm eval --exclude-purpose mechanism
+```
 
 ### Multi-run analysis
 
@@ -555,10 +794,12 @@ pnpm eval:multi-run
 pnpm eval:multi-run --runs abc123 def456 e78901
 ```
 
-The multi-run report computes per-metric mean, standard deviation, and 95%
-confidence intervals (t-distribution, not z — critical for N < 30). A paired
-t-test on per-run harness-vs-baseline aggregate scores determines whether the
-observed delta is statistically significant. Results are written to
+The multi-run report computes per-metric mean, sample standard deviation, and
+95% confidence intervals (t-distribution, not z — critical for N < 30). The
+Markdown tables display means with 95% confidence intervals, not standard
+deviations. A paired t-test on per-run harness-vs-baseline aggregate scores
+determines whether the observed delta is statistically significant. Results are
+written to
 `evals/results/multi-run-{timestamp}.json` and printed as markdown.
 
 Five runs is the practical minimum for significance testing. Three runs will

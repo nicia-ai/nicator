@@ -1,12 +1,17 @@
 import type { AgentDefinition, Skill } from "@nicator/core";
 import {
+  buildAgentTool,
   buildDirectToolDefinitions,
-  buildSpawnSubagentTool,
-  buildSpawnSubagentWithSkillTool,
+  buildSkillTool,
   type Tool,
 } from "@nicator/sdk";
 
 import { HUMAN_APPROVAL_TOOL } from "./approval.js";
+import {
+  ANSWER_FROM_ARTIFACT_TOOL,
+  LOOKUP_ARTIFACTS_TOOL,
+  WRITE_ARTIFACT_TOOL,
+} from "./artifact-tools.js";
 import { READ_ARTIFACT_TOOL } from "./read-artifact.js";
 import type { HarnessConfig, ToolImplementation } from "./types.js";
 
@@ -35,10 +40,13 @@ export async function resolveAgentCapabilities(
         inputSchema: impl.tool.inputSchema,
       })),
     ),
-    buildSpawnSubagentTool(),
-    ...(skills.length > 0 ? [buildSpawnSubagentWithSkillTool(skills)] : []),
+    buildAgentTool(),
+    ...(skills.length > 0 ? [buildSkillTool(skills)] : []),
     HUMAN_APPROVAL_TOOL,
     READ_ARTIFACT_TOOL,
+    LOOKUP_ARTIFACTS_TOOL,
+    WRITE_ARTIFACT_TOOL,
+    ANSWER_FROM_ARTIFACT_TOOL,
   ];
 
   return { sdkTools, toolImpls, skills };

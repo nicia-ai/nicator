@@ -1,0 +1,200 @@
+# REL-002 · reliability
+#
+# 4-stage serial dispatch pipeline. One stage deeper than rel-001 to
+# measure whether reliability degrades as pipeline depth grows by a
+# single stage.
+#
+# Pipeline:
+#
+#   stage1 -> stage2 -> stage3 -> stage-final
+#
+# Each intermediate stage is an ad-hoc agent; the final stage is the
+# stage-final skill. Per-stage work is trivial. A run passes iff
+# every graph assertion is satisfied.
+
+id: rel-002
+category: reliability
+metadata:
+  purpose: mechanism
+  realism: synthetic
+  releaseGate: research
+  comparisonMode: none
+  workloadFamily: pipeline-reliability
+  hypothesis: >-
+    A 4-stage serial pipeline with trivial per-stage work should
+    complete cleanly in the majority of runs. Compared against
+    rel-001, this isolates the effect of a single additional stage.
+  stressAxes:
+    - pipeline_depth
+name: Reliability — 4-stage serial pipeline
+description: >-
+  Four-stage serial dispatch pipeline with trivial per-stage work.
+  stage1, stage2, stage3 are ad-hoc agents; stage-final is a skill.
+  Each stage reads the previous stage's output artifact and writes a
+  small JSON artifact. A run passes only if every graph assertion is
+  satisfied.
+
+sources: []
+inputArtifacts: []
+
+question: >-
+  Execute a 4-stage serial pipeline. Follow the decomposition
+  instructions in the system prompt exactly.
+
+referenceFacts: []
+
+passFail:
+  requireZeroFailingStepGrades: true
+  description: >-
+    A pass requires every graph assertion to hold. There is no
+    factual-accuracy component on this task.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a pipeline coordinator. Your only job is to dispatch a
+    fixed four-stage pipeline and let the harness finalize from the
+    last stage's artifact. Do not produce prose, do not perform any
+    other tool calls, and do not improvise extra stages.
+
+    **Phase 1 — Dispatch stage1 (ad-hoc agent).**
+    Emit exactly one `agent` tool call with `name: "stage1"`. Pass no
+    `artifact_ids`. The task_input must be exactly:
+
+      Emit a single `write_artifact` call with type=json, name="stage1-output",
+      content='{"stage":1,"marker":"alpha"}'. Then stop. Do not read or
+      write anything else. Do not narrate.
+
+    Wait for stage1 to complete and produce one output artifact.
+
+    **Phase 2 — Dispatch stage2 (ad-hoc agent).**
+    Emit exactly one `agent` tool call with `name: "stage2"`. Pass
+    `artifact_ids: [<stage1's output_artifact_id>]`. The task_input
+    must be exactly:
+
+      Read the provided artifact with read_artifact. Then emit a single
+      write_artifact call with type=json, name="stage2-output",
+      content='{"stage":2,"upstream_stage":1,"marker":"beta"}'. Then stop.
+      Do not read or write anything else. Do not narrate.
+
+    Wait for stage2 to complete and produce one output artifact.
+
+    **Phase 3 — Dispatch stage3 (ad-hoc agent).**
+    Emit exactly one `agent` tool call with `name: "stage3"`. Pass
+    `artifact_ids: [<stage2's output_artifact_id>]`. The task_input
+    must be exactly:
+
+      Read the provided artifact with read_artifact. Then emit a single
+      write_artifact call with type=json, name="stage3-output",
+      content='{"stage":3,"upstream_stage":2,"marker":"gamma"}'. Then stop.
+      Do not read or write anything else. Do not narrate.
+
+    Wait for stage3 to complete and produce one output artifact.
+
+    **Phase 4 — Dispatch stage-final (skill).**
+    Emit exactly one `skill` tool call with `skill_name: "stage-final"`.
+    Pass `artifact_ids: [<stage3's output_artifact_id>]` and a short
+    task_input telling the skill to confirm the pipeline reached the
+    final stage.
+
+    The harness auto-finalizes the run from stage-final's artifact.
+    Do not emit any further tool calls after stage-final completes.
+    Do not produce a final text answer — the harness captures the
+    stage-final artifact content as the run output.
+  subagentResultMode: artifact_only
+  autoFinalizeFromSubagent: stage-final
+  skills:
+    - name: stage-final
+      version: "1.0.0"
+      policy:
+        type: always
+  limits:
+    maxTasksPerRun: 20
+    maxOperationsPerTask: 10
+    maxTokensPerRun: 300000
+
+graphAssertions:
+  - type: run_status
+    status: completed
+    description: "Run must complete"
+
+  - type: task_count
+    match:
+      role: subagent
+      subagentName: stage1
+    min: 1
+    max: 1
+    description: "exactly one stage1 agent dispatch must exist"
+
+  - type: task_count
+    match:
+      role: subagent
+      subagentName: stage2
+    min: 1
+    max: 1
+    description: "exactly one stage2 agent dispatch must exist"
+
+  - type: task_count
+    match:
+      role: subagent
+      subagentName: stage3
+    min: 1
+    max: 1
+    description: "exactly one stage3 agent dispatch must exist"
+
+  - type: task_count
+    match:
+      role: subagent
+      subagentName: stage-final
+    min: 1
+    max: 1
+    description: "exactly one stage-final skill dispatch must exist"
+
+  - type: task_order
+    first:
+      role: subagent
+      subagentName: stage1
+    then:
+      role: subagent
+      subagentName: stage2
+    description: "stage1 must precede stage2"
+
+  - type: task_order
+    first:
+      role: subagent
+      subagentName: stage2
+    then:
+      role: subagent
+      subagentName: stage3
+    description: "stage2 must precede stage3"
+
+  - type: task_order
+    first:
+      role: subagent
+      subagentName: stage3
+    then:
+      role: subagent
+      subagentName: stage-final
+    description: "stage3 must precede stage-final"
+
+  # See rel-001 for why `consumes` assertions are omitted.
+
+  - type: run_output_matches_artifact
+    task:
+      role: subagent
+      subagentName: stage-final
+    mode: exact
+    description: "run output must exactly match stage-final's artifact content"
+
+  - type: artifact_content
+    task:
+      role: subagent
+      subagentName: stage-final
+    pattern: 'PIPELINE_COMPLETE'
+    description: "final artifact must contain the pipeline-complete marker"
+
+  - type: artifact_content
+    task:
+      role: subagent
+      subagentName: stage-final
+    pattern: 'upstream_stage:\s*3\b'
+    description: "final artifact must identify the immediate upstream stage as 3 (i.e. stage3's content flowed through)"

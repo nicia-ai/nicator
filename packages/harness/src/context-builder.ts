@@ -474,7 +474,17 @@ async function compressSummaryTier(
     maxTokens: COMPRESSION_MAX_TOKENS,
   });
 
-  const summary = result.text;
+  const outputArtifactIds = [
+    ...new Set(
+      tasks.flatMap((entry) => entry.artifacts.map((artifact) => artifact.id)),
+    ),
+  ];
+  const preservedOutputArtifactRegistry =
+    renderExactOutputArtifactRegistry(outputArtifactIds);
+  const summary =
+    preservedOutputArtifactRegistry ?
+      `${result.text}\n\n${preservedOutputArtifactRegistry}`
+    : result.text;
 
   await config.repo.compactions.create({
     id: generateId(),
@@ -605,6 +615,28 @@ function extractTextFromMessages(
   return parts.join("\n");
 }
 
+const OUTPUT_ARTIFACT_ID_RE =
+  /output_artifact_id:\s*([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/gi;
+
+function collectOutputArtifactIds(text: string): string[] {
+  const ids: string[] = [];
+  for (const match of text.matchAll(OUTPUT_ARTIFACT_ID_RE)) {
+    const id = match[1];
+    if (id) ids.push(id);
+  }
+  return ids;
+}
+
+function renderExactOutputArtifactRegistry(
+  ids: ReadonlyArray<string>,
+): string | undefined {
+  if (ids.length === 0) return undefined;
+  return [
+    "[Preserved exact output_artifact_ids from compressed turns]",
+    ...ids.map((id) => `- output_artifact_id: ${id}`),
+  ].join("\n");
+}
+
 export async function compressOlderTurns(
   state: ConversationState,
   config: HarnessConfig,
@@ -688,27 +720,49 @@ export async function compressOlderTurns(
 
   const summary = result.text;
 
+  const existingHistory =
+    state.historyMessage && typeof state.historyMessage.content === "string" ?
+      state.historyMessage.content
+    : "";
+  const preservedOutputArtifactIds = [
+    ...new Set([
+      ...collectOutputArtifactIds(existingHistory),
+      ...collectOutputArtifactIds(textToCompress),
+    ]),
+  ];
+  const preservedOutputArtifactRegistry = renderExactOutputArtifactRegistry(
+    preservedOutputArtifactIds,
+  );
+  const summaryWithRegistry =
+    preservedOutputArtifactRegistry ?
+      `${summary}\n\n${preservedOutputArtifactRegistry}`
+    : summary;
+
   await config.repo.compactions.create({
     id: generateId(),
     runId,
     input: textToCompress,
-    summary,
+    summary: summaryWithRegistry,
     inputTokens: result.inputTokens,
     outputTokens: result.outputTokens,
     createdAt: now(),
   });
 
-  config.onCompression?.(runId, summary);
+  config.onCompression?.(runId, summaryWithRegistry);
 
   // Merge compressed content into history message
-  const existingHistory =
-    state.historyMessage && typeof state.historyMessage.content === "string" ?
-      state.historyMessage.content
-    : "";
   const updatedHistory =
     existingHistory ?
-      `${existingHistory}\n\n[Compressed from ${compressPairCount} earlier turns]\n${summary}`
-    : `[Compressed from ${compressPairCount} earlier turns]\n${summary}`;
+      [
+        existingHistory,
+        "",
+        `[Compressed from ${compressPairCount} earlier turns]`,
+        summaryWithRegistry,
+      ].join("\n")
+    : [
+        `[Compressed from ${compressPairCount} earlier turns]`,
+        summaryWithRegistry,
+      ].join("\n");
 
   const newerTokenEstimate = estimateTokens(newerText);
 

@@ -1,4 +1,9 @@
-import { ContextWeightsSchema, PolicySchema, WorkspaceSchema } from "@nicator/core";
+import {
+  ContextWeightsSchema,
+  PolicySchema,
+  SubagentResultModeSchema,
+  WorkspaceSchema,
+} from "@nicator/core";
 import { z } from "zod";
 import { GraphAssertionSchema } from "./graph-assertions";
 import { StepGradingResultSchema } from "./step-graders";
@@ -17,8 +22,243 @@ export const TaskCategorySchema = z.enum([
   "limits",
   "context",
   "coordination",
+  "steering",
+  /**
+   * Tasks designed to isolate the decomposition effect. For these
+   * tasks the "baseline" column runs the same harness wrapper but
+   * with `skills: []` and the default eval system prompt, forcing a
+   * single-pass answer through the same operational surface. The
+   * delta to the full decomposed harness measures the value added by
+   * skill decomposition specifically, holding prompt/tools constant.
+   */
+  "decomposition-value",
+  /**
+   * Tasks that measure pipeline execution reliability as complexity
+   * grows, independent of content quality. Each task specifies a
+   * fixed multi-stage dispatch chain with trivial per-stage work. A
+   * run passes only if every graph assertion is satisfied. The
+   * aggregate signal is the fraction of runs that pass — the
+   * coordinator's clean-process rate at that pipeline complexity.
+   * No flat-harness comparison (harness-only).
+   */
+  "reliability",
 ]);
 export type TaskCategory = z.infer<typeof TaskCategorySchema>;
+
+export const EvalPurposeSchema = z.enum(["forecast", "stress", "mechanism"]);
+export type EvalPurpose = z.infer<typeof EvalPurposeSchema>;
+
+export const EvalRealismSchema = z.enum([
+  "prod-derived",
+  "prod-shaped",
+  "synthetic",
+]);
+export type EvalRealism = z.infer<typeof EvalRealismSchema>;
+
+export const EvalReleaseGateSchema = z.enum([
+  "blocker",
+  "advisory",
+  "research",
+]);
+export type EvalReleaseGate = z.infer<typeof EvalReleaseGateSchema>;
+
+export const EvalComparisonModeSchema = z.enum([
+  "none",
+  "direct-api",
+  "flat-harness",
+]);
+export type EvalComparisonMode = z.infer<typeof EvalComparisonModeSchema>;
+
+export const EvalSuiteSchema = z.enum([
+  "prod-gate",
+  "preprod-headroom",
+  "research",
+  "decomposition-research",
+]);
+export type EvalSuite = z.infer<typeof EvalSuiteSchema>;
+
+export const TaskMetadataSchema = z.object({
+  purpose: EvalPurposeSchema.optional(),
+  realism: EvalRealismSchema.optional(),
+  releaseGate: EvalReleaseGateSchema.optional(),
+  comparisonMode: EvalComparisonModeSchema.optional(),
+  workloadFamily: z.string().optional(),
+  hypothesis: z.string().optional(),
+  stressAxes: z.array(z.string()).optional(),
+  /**
+   * When true, the task is excluded from every derived suite and from
+   * default `pnpm eval` runs. It is still reachable via `--task <id>` or
+   * `--category <name>`, so the scaffold remains runnable for iteration
+   * while no longer contributing to headline suite metrics.
+   */
+  parked: z.boolean().optional(),
+  /** Human-readable reason the task is parked; shown in reports. */
+  parkedReason: z.string().optional(),
+});
+export type TaskMetadata = z.infer<typeof TaskMetadataSchema>;
+
+export const ResolvedTaskMetadataSchema = z.object({
+  purpose: EvalPurposeSchema,
+  realism: EvalRealismSchema,
+  releaseGate: EvalReleaseGateSchema,
+  comparisonMode: EvalComparisonModeSchema,
+  workloadFamily: z.string().optional(),
+  hypothesis: z.string().optional(),
+  stressAxes: z.array(z.string()),
+  suites: z.array(EvalSuiteSchema),
+  parked: z.boolean(),
+  parkedReason: z.string().optional(),
+});
+export type ResolvedTaskMetadata = z.infer<typeof ResolvedTaskMetadataSchema>;
+
+const CATEGORY_METADATA_DEFAULTS: Readonly<
+  Record<
+    TaskCategory,
+    Pick<
+      ResolvedTaskMetadata,
+      "purpose" | "realism" | "releaseGate" | "comparisonMode"
+    >
+  >
+> = {
+  synthesis: {
+    purpose: "forecast",
+    realism: "prod-shaped",
+    releaseGate: "blocker",
+    comparisonMode: "direct-api",
+  },
+  extraction: {
+    purpose: "forecast",
+    realism: "prod-shaped",
+    releaseGate: "blocker",
+    comparisonMode: "direct-api",
+  },
+  "gap-analysis": {
+    purpose: "forecast",
+    realism: "prod-shaped",
+    releaseGate: "blocker",
+    comparisonMode: "direct-api",
+  },
+  "decision-support": {
+    purpose: "forecast",
+    realism: "prod-shaped",
+    releaseGate: "blocker",
+    comparisonMode: "direct-api",
+  },
+  dispatch: {
+    purpose: "mechanism",
+    realism: "synthetic",
+    releaseGate: "research",
+    comparisonMode: "direct-api",
+  },
+  hitl: {
+    purpose: "mechanism",
+    realism: "synthetic",
+    releaseGate: "research",
+    comparisonMode: "direct-api",
+  },
+  limits: {
+    purpose: "mechanism",
+    realism: "synthetic",
+    releaseGate: "research",
+    comparisonMode: "direct-api",
+  },
+  context: {
+    purpose: "mechanism",
+    realism: "synthetic",
+    releaseGate: "research",
+    comparisonMode: "direct-api",
+  },
+  coordination: {
+    purpose: "mechanism",
+    realism: "synthetic",
+    releaseGate: "research",
+    comparisonMode: "direct-api",
+  },
+  steering: {
+    purpose: "mechanism",
+    realism: "synthetic",
+    releaseGate: "research",
+    comparisonMode: "direct-api",
+  },
+  "decomposition-value": {
+    purpose: "mechanism",
+    realism: "synthetic",
+    releaseGate: "research",
+    comparisonMode: "flat-harness",
+  },
+  reliability: {
+    purpose: "mechanism",
+    realism: "synthetic",
+    releaseGate: "research",
+    comparisonMode: "none",
+  },
+};
+
+type TaskMetadataCarrier = Readonly<{
+  category: TaskCategory;
+  metadata?: TaskMetadata | undefined;
+}>;
+
+export function resolveTaskMetadata(
+  task: TaskMetadataCarrier,
+): ResolvedTaskMetadata {
+  const defaults = CATEGORY_METADATA_DEFAULTS[task.category];
+  const metadata = task.metadata ?? {};
+
+  const parked = metadata.parked ?? false;
+
+  const resolvedBase: Omit<ResolvedTaskMetadata, "suites"> = {
+    purpose: metadata.purpose ?? defaults.purpose,
+    realism: metadata.realism ?? defaults.realism,
+    releaseGate: metadata.releaseGate ?? defaults.releaseGate,
+    comparisonMode: metadata.comparisonMode ?? defaults.comparisonMode,
+    ...(metadata.workloadFamily ?
+      { workloadFamily: metadata.workloadFamily }
+    : {}),
+    ...(metadata.hypothesis ? { hypothesis: metadata.hypothesis } : {}),
+    stressAxes: metadata.stressAxes ?? [],
+    parked,
+    ...(metadata.parkedReason ? { parkedReason: metadata.parkedReason } : {}),
+  };
+
+  // Parked tasks are excluded from every derived suite. They remain
+  // reachable only through explicit `--task` or `--category` selection.
+  const suites: EvalSuite[] = [];
+  if (!parked) {
+    if (
+      resolvedBase.purpose === "forecast" &&
+      resolvedBase.releaseGate === "blocker"
+    ) {
+      suites.push("prod-gate", "preprod-headroom");
+    } else if (
+      resolvedBase.purpose === "forecast" ||
+      resolvedBase.purpose === "stress"
+    ) {
+      suites.push("preprod-headroom");
+    }
+    if (resolvedBase.purpose === "mechanism") {
+      suites.push("research");
+    }
+    if (
+      resolvedBase.purpose === "mechanism" &&
+      resolvedBase.comparisonMode === "flat-harness"
+    ) {
+      suites.push("decomposition-research");
+    }
+  }
+
+  return {
+    ...resolvedBase,
+    suites,
+  };
+}
+
+export function taskBelongsToSuite(
+  task: TaskMetadataCarrier,
+  suite: EvalSuite,
+): boolean {
+  return resolveTaskMetadata(task).suites.includes(suite);
+}
 
 export const SourceDocumentSchema = z.object({
   id: z.string(),
@@ -35,6 +275,8 @@ export type SourceDocument = z.infer<typeof SourceDocumentSchema>;
  *
  * Matching is case-insensitive substring by default. Supply `pattern` for
  * regex matching when the fact has multiple acceptable surface forms.
+ * Supply `requiredPatterns` when the output must include multiple distinct
+ * anchors (for example, two document IDs plus the conflicting values).
  */
 export const ReferenceFactSchema = z.object({
   id: z.string(),
@@ -43,8 +285,17 @@ export const ReferenceFactSchema = z.object({
   canonical: z.string(),
   /** Optional regex pattern — if provided, takes precedence over canonical */
   pattern: z.string().optional(),
-  /** Weight for this fact in the factual accuracy score. Default: 1. */
-  /** Weight 0 means the fact is tracked but excluded from scoring (e.g., compliance checks that should NOT match). */
+  /** Optional regex patterns that must ALL match. Takes precedence over `pattern`. */
+  requiredPatterns: z.array(z.string()).min(1).optional(),
+  /**
+   * Whether this fact should be present or absent. `absent` facts are negative
+   * checks: matching them means the output asserted something it should not.
+   */
+  expected: z.enum(["present", "absent"]).default("present"),
+  /**
+   * Weight for present facts in the factual accuracy score. Default: 1.
+   * Weight 0 means the fact is tracked but excluded from the weighted score.
+   */
   weight: z.number().nonnegative().default(1),
   /** If true, this fact is a fabricated canary that exists only in source documents.
    *  Used by the weight sweep to distinguish context-dependent facts from
@@ -77,6 +328,14 @@ export const PassFailCriteriaSchema = z.object({
   requiredFactIds: z.array(z.string()).default([]),
   /** Minimum judge composite score (0-1) to pass. */
   minJudgeComposite: z.number().min(0).max(1).optional(),
+  /**
+   * If true, any failing step grade (for example graph-assertion or
+   * required-skill failures) causes the harness run to fail the binary
+   * pass/fail gate. This is useful for mechanism tasks where a factual
+   * win should not count as a clean pass unless the intended process was
+   * actually followed.
+   */
+  requireZeroFailingStepGrades: z.boolean().default(false),
   /** Custom description of what "pass" means for this task, shown in reports. */
   description: z.string(),
 });
@@ -85,9 +344,17 @@ export type PassFailCriteria = z.infer<typeof PassFailCriteriaSchema>;
 export const EvalTaskSchema = z.object({
   id: z.string().regex(/^[a-z]+-\d{3}$/),
   category: TaskCategorySchema,
+  metadata: TaskMetadataSchema.optional(),
   name: z.string(),
   description: z.string(),
-  sources: z.array(SourceDocumentSchema).min(1).max(6),
+  sources: z.array(SourceDocumentSchema).max(6),
+  /**
+   * Artifacts the runner seeds into the run at startup. The agent reads
+   * their content on demand via `read_artifact`. Use when the content
+   * should flow through the context builder's scoring path rather than
+   * being inlined into the prompt.
+   */
+  inputArtifacts: z.array(SourceDocumentSchema).optional(),
   question: z.string(),
   /** Facts checked deterministically. May be empty for purely open-ended tasks. */
   referenceFacts: z.array(ReferenceFactSchema).default([]),
@@ -99,11 +366,19 @@ export const EvalTaskSchema = z.object({
    */
   passFail: PassFailCriteriaSchema,
   /**
-   * Expected skill sequence for the harness execution.
-   * If the harness deviates significantly, flagged in process metrics.
-   * Not enforced — deviation isn't penalized, just noted.
+   * Skills that MUST be invoked for the run to pass decomposition grading.
+   * Missing required skills produce a `fail` step grade. Use for tasks
+   * where decomposition is the thing under test (e.g. research tasks that
+   * genuinely require the researcher skill).
    */
-  expectedSkills: z.array(z.string()).optional(),
+  requiredSkills: z.array(z.string()).optional(),
+  /**
+   * Skills that MUST NOT be invoked. Any invocation produces a `fail` step
+   * grade. Use for tasks where firing a skill would be a wasted detour or
+   * introduce noise (e.g. source-provided synthesis tasks where invoking
+   * researcher would hit the web unnecessarily).
+   */
+  forbiddenSkills: z.array(z.string()).optional(),
   /**
    * If true, the correct answer is "I cannot answer this from the sources" or
    * similar. Tests the agent's ability to decline rather than fabricate.
@@ -128,6 +403,8 @@ export const EvalTaskSchema = z.object({
   definitionOverrides: z
     .object({
       systemPrompt: z.string().optional(),
+      subagentResultMode: SubagentResultModeSchema.optional(),
+      autoFinalizeFromSubagent: z.string().min(1).optional(),
       skills: z
         .array(
           z.object({
@@ -186,10 +463,17 @@ declare const __compositeScore: unique symbol;
 export type CompositeScore = number & Readonly<{ [__compositeScore]: true }>;
 
 /** Zod schema that parses an integer 0-3 and brands it as DimensionScore. */
-export const DimensionScoreSchema = z.number().int().min(0).max(3) as unknown as z.ZodType<DimensionScore>;
+export const DimensionScoreSchema = z
+  .number()
+  .int()
+  .min(0)
+  .max(3) as unknown as z.ZodType<DimensionScore>;
 
 /** Zod schema that parses a float 0-1 and brands it as CompositeScore. */
-export const CompositeScoreSchema = z.number().min(0).max(1) as unknown as z.ZodType<CompositeScore>;
+export const CompositeScoreSchema = z
+  .number()
+  .min(0)
+  .max(1) as unknown as z.ZodType<CompositeScore>;
 
 /** Cast a validated number in [0,1] to CompositeScore. Use only after validation. */
 export function asCompositeScore(value: number): CompositeScore {
@@ -206,6 +490,7 @@ export const FactualScoreSchema = z.object({
     z.object({
       factId: z.string(),
       matched: z.boolean(),
+      expected: z.enum(["present", "absent"]).default("present"),
       weight: z.number(),
     }),
   ),
@@ -270,6 +555,7 @@ export type JudgeResult = z.infer<typeof JudgeResultSchema>;
 export const TaskResultSchema = z.object({
   taskId: z.string(),
   category: TaskCategorySchema,
+  metadata: ResolvedTaskMetadataSchema.optional(),
   harnessOutput: ModelOutputSchema,
   baselineOutput: ModelOutputSchema,
   harnessMetrics: HarnessRunMetricsSchema,
@@ -325,11 +611,42 @@ export const EvalReportSchema = z.object({
         n: z.number().int().positive(),
       }),
     ),
+    byPurpose: z
+      .record(
+        z.string(),
+        z.object({
+          harness: z.number().min(0).max(1),
+          baseline: z.number().min(0).max(1),
+          n: z.number().int().positive(),
+        }),
+      )
+      .optional(),
+    byReleaseGate: z
+      .record(
+        z.string(),
+        z.object({
+          harness: z.number().min(0).max(1),
+          baseline: z.number().min(0).max(1),
+          n: z.number().int().positive(),
+        }),
+      )
+      .optional(),
+    bySuite: z
+      .record(
+        z.string(),
+        z.object({
+          harness: z.number().min(0).max(1),
+          baseline: z.number().min(0).max(1),
+          n: z.number().int().positive(),
+        }),
+      )
+      .optional(),
     passRate: z
       .object({
         harness: z.number().min(0).max(1),
         baseline: z.number().min(0).max(1),
         total: z.number().int().nonnegative(),
+        baselineTotal: z.number().int().nonnegative().optional(),
       })
       .optional(),
     failureModes: z
@@ -353,7 +670,7 @@ export type EvalReport = z.infer<typeof EvalReportSchema>;
 // ---------------------------------------------------------------------------
 
 export const StatSummarySchema = z.object({
-  n: z.number().int().positive(),
+  n: z.number().int().nonnegative(),
   mean: z.number(),
   stddev: z.number().nonnegative(),
   ci95Lower: z.number(),
@@ -362,9 +679,11 @@ export const StatSummarySchema = z.object({
 export type StatSummary = z.infer<typeof StatSummarySchema>;
 
 export const PairedTestResultSchema = z.object({
-  n: z.number().int().positive(),
+  n: z.number().int().nonnegative(),
   meanDelta: z.number(),
   stddevDelta: z.number().nonnegative(),
+  ci95Lower: z.number().optional(),
+  ci95Upper: z.number().optional(),
   tStatistic: z.number(),
   /** Two-tailed p-value from paired t-test */
   pValue: z.number().min(0).max(1),
@@ -399,6 +718,33 @@ export const MultiRunSummarySchema = z.object({
       n: z.number().int().positive(),
     }),
   ),
+  byPurpose: z.record(
+    z.string(),
+    z.object({
+      harness: StatSummarySchema,
+      baseline: StatSummarySchema,
+      delta: PairedTestResultSchema,
+      n: z.number().int().positive(),
+    }),
+  ),
+  byReleaseGate: z.record(
+    z.string(),
+    z.object({
+      harness: StatSummarySchema,
+      baseline: StatSummarySchema,
+      delta: PairedTestResultSchema,
+      n: z.number().int().positive(),
+    }),
+  ),
+  bySuite: z.record(
+    z.string(),
+    z.object({
+      harness: StatSummarySchema,
+      baseline: StatSummarySchema,
+      delta: PairedTestResultSchema,
+      n: z.number().int().positive(),
+    }),
+  ),
 });
 export type MultiRunSummary = z.infer<typeof MultiRunSummarySchema>;
 
@@ -408,22 +754,35 @@ export type MultiRunSummary = z.infer<typeof MultiRunSummarySchema>;
 
 export type ComparisonRow = Readonly<{
   label: string;
-  harness: number;
-  baseline: number;
-  delta: number;
+  harness: number | null;
+  baseline: number | null;
+  delta: number | null;
 }>;
 
 export type CategoryRow = Readonly<{
   category: string;
   n: number;
-  harness: number;
-  baseline: number;
-  delta: number;
+  harness: number | null;
+  baseline: number | null;
+  delta: number | null;
+}>;
+
+export type MetadataRow = Readonly<{
+  label: string;
+  n: number;
+  harness: number | null;
+  baseline: number | null;
+  delta: number | null;
 }>;
 
 export type TaskRow = Readonly<{
   taskId: string;
   category: string;
+  purpose: EvalPurpose;
+  releaseGate: EvalReleaseGate;
+  harnessPass: boolean;
+  baselinePass: boolean | null;
+  stepFailCount: number;
   factualHarness: number | null;
   factualBaseline: number | null;
   judgeHarness: number | null;
@@ -451,6 +810,9 @@ export type ReportView = Readonly<{
   aggregate: ReadonlyArray<ComparisonRow>;
   inconclusiveCount: number;
   byCategory: ReadonlyArray<CategoryRow>;
+  byPurpose: ReadonlyArray<MetadataRow>;
+  byReleaseGate: ReadonlyArray<MetadataRow>;
+  bySuite: ReadonlyArray<MetadataRow>;
   processMetrics: Readonly<{
     avgSkillsPerRun: number;
     avgOperationsPerRun: number;
@@ -466,3 +828,12 @@ export type ReportView = Readonly<{
   }> | null;
   limitations: ReadonlyArray<string>;
 }>;
+
+/**
+ * Every document associated with a task, regardless of delivery path.
+ * Used by baseline / judge / calibration code that must see the full
+ * universe of source material.
+ */
+export function allTaskDocuments(task: EvalTask): SourceDocument[] {
+  return [...task.sources, ...(task.inputArtifacts ?? [])];
+}

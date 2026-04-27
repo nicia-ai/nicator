@@ -1,4 +1,7 @@
 import {
+  AGENT_TOOL_NAME,
+  type AgentDefinition,
+  ANSWER_FROM_ARTIFACT_TOOL_NAME,
   buildArtifact,
   CONTEXT_BUDGET_RATIO,
   DEFAULT_MAX_TOKENS,
@@ -12,8 +15,7 @@ import {
   now,
   RECENT_TURN_BUDGET_RATIO,
   type Repository,
-  SPAWN_SUBAGENT_TOOL_NAME,
-  SPAWN_SUBAGENT_WITH_SKILL_TOOL_NAME,
+  SKILL_TOOL_NAME,
   stringifyOutput,
   type Task,
 } from "@nicator/core";
@@ -26,6 +28,13 @@ import {
 } from "@nicator/sdk";
 
 import { parseApprovalToolInput, requestHumanApproval } from "./approval.js";
+import {
+  handleAnswerFromArtifact,
+  handleLookupArtifacts,
+  handleWriteArtifact,
+  LOOKUP_ARTIFACTS_TOOL_NAME,
+  WRITE_ARTIFACT_TOOL_NAME,
+} from "./artifact-tools.js";
 import { resolveAgentCapabilities } from "./capabilities.js";
 import { buildContext, compressOlderTurns } from "./context-builder.js";
 import {
@@ -38,8 +47,8 @@ import {
   READ_ARTIFACT_TOOL_NAME,
 } from "./read-artifact.js";
 import {
-  handleSkillActivation,
-  handleSubagentSpawn,
+  handleAgentCall,
+  handleSkillCall,
   willRequireHitl,
 } from "./skill-dispatch.js";
 import { materializeSkills } from "./skill-loader.js";
@@ -49,7 +58,7 @@ import type {
   DispatchOptions,
   DispatchResult,
   HarnessConfig,
-  InputDocument,
+  InputArtifact,
   ToolImplementation,
 } from "./types.js";
 
@@ -98,9 +107,13 @@ export async function runAgent(
       await materializeSkills(repo, config.workspace);
     }
 
-    // Ingest input documents as artifacts linked to the run
-    if (config.inputDocuments && config.inputDocuments.length > 0) {
-      await ingestInputDocuments(repo, runId, config.inputDocuments);
+    if (config.inputArtifacts && config.inputArtifacts.length > 0) {
+      await ingestInputArtifacts(
+        repo,
+        runId,
+        rootTaskId,
+        config.inputArtifacts,
+      );
     }
 
     const { sdkTools, toolImpls, skills } = await resolveAgentCapabilities(
@@ -116,6 +129,7 @@ export async function runAgent(
     let taskSequenceNumber = 1;
     let totalTokens = run.totalTokensUsed;
     let consecutiveFailures = 0;
+    let turnCounter = 0;
 
     const conversation: ConversationState = {
       historyMessage: undefined,
@@ -158,6 +172,18 @@ export async function runAgent(
           totalTokensUsed: totalTokens,
           updatedAt: now(),
         });
+        if (
+          await maybeAutoFinalizeFromSubagentArtifact({
+            definition,
+            repo,
+            runId,
+            rootTaskId,
+            workspace: config.workspace,
+            nextSequenceNumber: taskSequenceNumber,
+          })
+        ) {
+          return;
+        }
       }
 
       const taskCount = await repo.tasks.getCount(runId);
@@ -254,6 +280,24 @@ export async function runAgent(
       });
 
       const toolCalls = parseAllToolUses(result.response);
+      turnCounter++;
+
+      if (process.env["DEBUG_COORDINATOR_TURNS"]) {
+        const assistantText = result.response.content
+          .filter(
+            (b): b is Extract<typeof b, { type: "text" }> => b.type === "text",
+          )
+          .map((b) => b.text)
+          .join("\n")
+          .slice(0, 800);
+        const toolLines = toolCalls.map((tc) => {
+          const input = JSON.stringify(tc.toolInput).slice(0, 300);
+          return `    → ${tc.toolName}(${input})`;
+        });
+        console.error(
+          `\n[coord turn ${turnCounter}] text=${JSON.stringify(assistantText)}\n${toolLines.join("\n")}`,
+        );
+      }
 
       if (toolCalls.length === 0) {
         if (pendingTasks.size > 0) {
@@ -261,75 +305,13 @@ export async function runAgent(
           await Promise.race(pendingTasks.values());
           continue;
         }
-        // Capture workspace files as file_reference artifacts before completion
-        if (config.workspace) {
-          const snapshots = await config.workspace.captureOutputs();
-          if (snapshots.length > 0) {
-            // Workspace capture gets its own child task + operation so the
-            // graph has proper provenance for file_reference artifacts.
-            const captureTaskId = await spawnChildTask(
-              repo,
-              runId,
-              rootTaskId,
-              "tool",
-              { captured: snapshots.length },
-              taskCount + 1,
-              "workspace_capture",
-            );
-
-            const captureOpId = generateId();
-            const timestamp = now();
-
-            await repo.operations.create({
-              id: captureOpId,
-              taskId: captureTaskId,
-              runId,
-              type: "tool_call",
-              status: "succeeded",
-              operationNumber: 1,
-              input: { captured: snapshots.length },
-              output: { files: snapshots.length },
-              inputTokens: 0,
-              outputTokens: 0,
-              createdAt: timestamp,
-              completedAt: timestamp,
-            });
-
-            // Parallelize hashing; sequential create for version chaining.
-            const artifacts = await Promise.all(
-              snapshots.map((snap) =>
-                buildArtifact(
-                  "file_reference",
-                  snap.path.split("/").pop() ?? snap.path,
-                  snap.content,
-                  snap.mimeType,
-                ),
-              ),
-            );
-            for (const artifact of artifacts) {
-              await repo.artifacts.createAndLinkProduced(
-                artifact,
-                captureOpId,
-                runId,
-              );
-            }
-
-            await repo.tasks.update(captureTaskId, {
-              status: "completed",
-              updatedAt: now(),
-            });
-          }
-        }
-
-        await repo.tasks.update(rootTaskId, {
-          status: "completed",
-          updatedAt: now(),
-        });
-        await repo.runs.update(runId, {
-          status: "completed",
-          output: result.text,
-          updatedAt: now(),
-          completedAt: now(),
+        await completeRunWithOutput({
+          repo,
+          runId,
+          rootTaskId,
+          outputText: result.text,
+          workspace: config.workspace,
+          nextSequenceNumber: taskCount + 1,
         });
         return;
       }
@@ -354,7 +336,15 @@ export async function runAgent(
       // Pre-allocate sequence numbers for concurrent dispatch
       const baseSeq = taskSequenceNumber;
 
-      // Dispatch concurrent calls in parallel with gather timeout
+      // Dispatch concurrent calls in parallel. Agent/skill subagent
+      // dispatches take much longer than the gather timeout (they run their
+      // own LLM loops) and the coordinator almost always needs their output
+      // in the next turn. If we let those fall into the pending background
+      // path, the coordinator proceeds with "Task in progress" placeholders
+      // and hallucinates artifact_ids for downstream dispatches. So wait for
+      // subagent dispatches to completion, but keep the gather-with-timeout
+      // fast path for direct tools (bash, web-search) whose results can
+      // legitimately arrive out of band.
       const concurrentPromises = concurrentCalls.map((tc, index) =>
         dispatchToolCall({
           runId,
@@ -371,9 +361,16 @@ export async function runAgent(
         }),
       );
 
+      const isSubagentDispatch = (tc: ParsedToolUse): boolean =>
+        tc.toolName === AGENT_TOOL_NAME || tc.toolName === SKILL_TOOL_NAME;
+
       const gathered = await gatherWithTimeout(
         concurrentPromises,
         DISPATCH_GATHER_TIMEOUT_MS,
+        (index) => {
+          const tc = concurrentCalls[index];
+          return tc ? isSubagentDispatch(tc) : false;
+        },
       );
 
       // Build a map from toolUseId → result for ordering.
@@ -445,6 +442,7 @@ export async function runAgent(
       const toolResultBlocks: ToolResultBlock[] = [];
       let batchFailures = 0;
       let batchSuccesses = 0;
+      let finalizedOutputText: string | undefined;
 
       const tokensBeforeDispatch = totalTokens;
       for (const tc of toolCalls) {
@@ -468,6 +466,9 @@ export async function runAgent(
           });
           if (dr.succeeded) {
             batchSuccesses++;
+            if (dr.finalOutputText !== undefined) {
+              finalizedOutputText = dr.finalOutputText;
+            }
           } else {
             batchFailures++;
           }
@@ -507,6 +508,31 @@ export async function runAgent(
           updatedAt: now(),
         });
       }
+
+      if (
+        await maybeAutoFinalizeFromSubagentArtifact({
+          definition,
+          repo,
+          runId,
+          rootTaskId,
+          workspace: config.workspace,
+          nextSequenceNumber: taskSequenceNumber,
+        })
+      ) {
+        return;
+      }
+
+      if (finalizedOutputText !== undefined) {
+        await completeRunWithOutput({
+          repo,
+          runId,
+          rootTaskId,
+          outputText: finalizedOutputText,
+          workspace: config.workspace,
+          nextSequenceNumber: taskSequenceNumber,
+        });
+        return;
+      }
     }
   } catch (error: unknown) {
     const message =
@@ -514,16 +540,60 @@ export async function runAgent(
       : error instanceof Error ? error.message
       : String(error);
 
-    await repo.runs.update(runId, {
-      status: "failed",
-      error: message,
-      updatedAt: now(),
-      completedAt: now(),
-    });
+    // Best-effort failure marker; don't mask the original error if the row
+    // is missing (e.g. caller passed an unknown runId).
+    try {
+      await repo.runs.update(runId, {
+        status: "failed",
+        error: message,
+        updatedAt: now(),
+        completedAt: now(),
+      });
+    } catch {
+      /* swallow */
+    }
 
     if (error instanceof HarnessError) throw error;
     throw new HarnessError(message, "skill_execution_failed", error);
   }
+}
+
+async function maybeAutoFinalizeFromSubagentArtifact(options: {
+  definition: AgentDefinition;
+  repo: Repository;
+  runId: string;
+  rootTaskId: string;
+  workspace: HarnessConfig["workspace"];
+  nextSequenceNumber: number;
+}): Promise<boolean> {
+  const { definition, repo, runId, rootTaskId, workspace, nextSequenceNumber } =
+    options;
+
+  if (!definition.autoFinalizeFromSubagent) {
+    return false;
+  }
+
+  const matches = await repo.artifacts.lookupForRun(runId, {
+    producedBySubagent: definition.autoFinalizeFromSubagent,
+    limit: 20,
+  });
+  const artifact = matches.find(
+    (entry) => entry.producerTask?.status === "completed",
+  )?.artifact;
+
+  if (!artifact) {
+    return false;
+  }
+
+  await completeRunWithOutput({
+    repo,
+    runId,
+    rootTaskId,
+    outputText: artifact.content,
+    workspace,
+    nextSequenceNumber,
+  });
+  return true;
 }
 
 // ---------------------------------------------------------------------------
@@ -543,12 +613,24 @@ async function dispatchToolCall(
     return handleReadArtifact(options);
   }
 
-  if (toolName === SPAWN_SUBAGENT_WITH_SKILL_TOOL_NAME) {
-    return handleSkillActivation(options);
+  if (toolName === LOOKUP_ARTIFACTS_TOOL_NAME) {
+    return handleLookupArtifacts(options);
   }
 
-  if (toolName === SPAWN_SUBAGENT_TOOL_NAME) {
-    return handleSubagentSpawn(options);
+  if (toolName === WRITE_ARTIFACT_TOOL_NAME) {
+    return handleWriteArtifact(options);
+  }
+
+  if (toolName === ANSWER_FROM_ARTIFACT_TOOL_NAME) {
+    return handleAnswerFromArtifact(options);
+  }
+
+  if (toolName === SKILL_TOOL_NAME) {
+    return handleSkillCall(options);
+  }
+
+  if (toolName === AGENT_TOOL_NAME) {
+    return handleAgentCall(options);
   }
 
   const toolImpl = config.toolRegistry.resolve(toolName);
@@ -560,6 +642,85 @@ async function dispatchToolCall(
     `Unknown tool "${toolName}" — not a registered tool, skill, or system tool`,
     "invalid_tool_call",
   );
+}
+
+async function completeRunWithOutput(options: {
+  repo: Repository;
+  runId: string;
+  rootTaskId: string;
+  outputText: string;
+  workspace: HarnessConfig["workspace"];
+  nextSequenceNumber: number;
+}): Promise<void> {
+  const { repo, runId, rootTaskId, outputText, workspace, nextSequenceNumber } =
+    options;
+
+  if (workspace) {
+    const snapshots = await workspace.captureOutputs();
+    if (snapshots.length > 0) {
+      const captureTaskId = await spawnChildTask(
+        repo,
+        runId,
+        rootTaskId,
+        "tool",
+        { captured: snapshots.length },
+        nextSequenceNumber,
+        "workspace_capture",
+      );
+
+      const captureOpId = generateId();
+      const timestamp = now();
+
+      await repo.operations.create({
+        id: captureOpId,
+        taskId: captureTaskId,
+        runId,
+        type: "tool_call",
+        status: "succeeded",
+        operationNumber: 1,
+        input: { captured: snapshots.length },
+        output: { files: snapshots.length },
+        inputTokens: 0,
+        outputTokens: 0,
+        createdAt: timestamp,
+        completedAt: timestamp,
+      });
+
+      const artifacts = await Promise.all(
+        snapshots.map((snap) =>
+          buildArtifact(
+            "file_reference",
+            snap.path.split("/").pop() ?? snap.path,
+            snap.content,
+            snap.mimeType,
+          ),
+        ),
+      );
+      for (const artifact of artifacts) {
+        await repo.artifacts.createAndLinkProduced(
+          artifact,
+          captureOpId,
+          runId,
+        );
+      }
+
+      await repo.tasks.update(captureTaskId, {
+        status: "completed",
+        updatedAt: now(),
+      });
+    }
+  }
+
+  await repo.tasks.update(rootTaskId, {
+    status: "completed",
+    updatedAt: now(),
+  });
+  await repo.runs.update(runId, {
+    status: "completed",
+    output: outputText,
+    updatedAt: now(),
+    completedAt: now(),
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -731,6 +892,7 @@ type GatherOutcome<T> =
 async function gatherWithTimeout<T>(
   promises: ReadonlyArray<Promise<T>>,
   timeoutMs: number,
+  awaitToCompletion?: (index: number) => boolean,
 ): Promise<GatherOutcome<T>[]> {
   if (promises.length === 0) return [];
 
@@ -747,12 +909,28 @@ async function gatherWithTimeout<T>(
     settled.add(index);
   });
 
+  // Promises whose index is flagged must be awaited fully before we consider
+  // the gather complete — they bypass the timeout. Used for subagent
+  // dispatches where the coordinator's next turn directly depends on the
+  // output and cannot tolerate a "pending" placeholder.
+  const mustAwait =
+    awaitToCompletion ?
+      trackers.filter((_, index) => awaitToCompletion(index))
+    : [];
+  const timeoutEligible =
+    awaitToCompletion ?
+      trackers.filter((_, index) => !awaitToCompletion(index))
+    : trackers;
+
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeoutPromise = new Promise<void>((resolve) => {
     timer = setTimeout(resolve, timeoutMs);
   });
 
-  await Promise.race([Promise.allSettled(trackers), timeoutPromise]);
+  await Promise.all([
+    Promise.all(mustAwait),
+    Promise.race([Promise.allSettled(timeoutEligible), timeoutPromise]),
+  ]);
   if (timer !== undefined) clearTimeout(timer);
 
   for (let index = 0; index < promises.length; index++) {
@@ -765,23 +943,67 @@ async function gatherWithTimeout<T>(
 }
 
 // ---------------------------------------------------------------------------
-// Input document ingestion — creates input_document artifacts linked to the run
+// Input artifact ingestion — seeds artifacts the agent can fetch on demand
 // ---------------------------------------------------------------------------
 
-async function ingestInputDocuments(
+const INPUT_INGESTION_TOOL_NAME = "input_ingestion";
+
+/**
+ * Seeds artifacts under a synthetic seq-0 tool task so they flow through
+ * the normal context-builder tiering path. The agent fetches content via
+ * `read_artifact`.
+ */
+async function ingestInputArtifacts(
   repo: Repository,
   runId: string,
-  documents: ReadonlyArray<InputDocument>,
+  rootTaskId: string,
+  artifacts: ReadonlyArray<InputArtifact>,
 ): Promise<void> {
+  // Seq 0 collides with root, but the scoring path filters out the root
+  // task — so the collision has no observable effect on ordering.
+  const ingestionTaskId = await spawnChildTask(
+    repo,
+    runId,
+    rootTaskId,
+    "tool",
+    { count: artifacts.length },
+    0,
+    INPUT_INGESTION_TOOL_NAME,
+  );
+
+  const operationId = generateId();
+  const timestamp = now();
+  const built = await Promise.all(
+    artifacts.map((spec) =>
+      buildArtifact(spec.type, spec.name, spec.content, spec.mimeType),
+    ),
+  );
+  await repo.operations.create({
+    id: operationId,
+    taskId: ingestionTaskId,
+    runId,
+    type: "tool_call",
+    status: "succeeded",
+    operationNumber: 1,
+    input: { count: artifacts.length },
+    output: { ingested: artifacts.length },
+    inputTokens: 0,
+    outputTokens: 0,
+    createdAt: timestamp,
+    completedAt: timestamp,
+  });
+
+  // createAndLinkProduced creates the artifact node; linkInputToRun
+  // requires it to exist. Sequence per-artifact, parallel across.
   await Promise.all(
-    documents.map(async (document) => {
-      const artifact = await buildArtifact(
-        "input_document",
-        document.id,
-        document.content,
-      );
-      await repo.artifacts.create(artifact);
+    built.map(async (artifact) => {
+      await repo.artifacts.createAndLinkProduced(artifact, operationId, runId);
       await repo.artifacts.linkInputToRun(runId, artifact.id);
     }),
   );
+
+  await repo.tasks.update(ingestionTaskId, {
+    status: "completed",
+    updatedAt: now(),
+  });
 }

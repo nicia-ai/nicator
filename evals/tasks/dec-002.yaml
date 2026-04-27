@@ -1,4 +1,4 @@
-# KWB-021 · decision-support
+# DEC-002 · decision-support
 #
 # Conflicting signals about whether to renew a vendor contract. The CFO
 # wants cost reduction, engineering wants to keep the vendor for technical
@@ -6,7 +6,7 @@
 # to frame a decision with competing constraints rather than optimize for
 # one stakeholder.
 
-id: kwb-021
+id: dec-002
 category: decision-support
 name: Vendor renewal with competing stakeholder priorities
 description: >-
@@ -108,5 +108,5 @@ passFail:
     Must address the compliance deadline (non-negotiable constraint) and make a
     specific recommendation. Ignoring the SOC 2 deadline is a fail.
 
-expectedSkills:
+forbiddenSkills:
   - researcher

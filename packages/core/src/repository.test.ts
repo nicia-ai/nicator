@@ -256,6 +256,80 @@ describe("Repository — subgraph traversals", () => {
       ).toBeUndefined();
     });
   });
+
+  describe("lookupForRun", () => {
+    it("filters produced artifacts by subagent name and returns producer metadata", async () => {
+      const matches = await g.repo.artifacts.lookupForRun(g.run.id, {
+        producedBySubagent: g.task1.subagentName ?? "test-skill",
+      });
+
+      expect(matches).toHaveLength(2);
+      expect(matches[0]?.producerTask?.subagentName).toBe(g.task1.subagentName);
+      expect(matches[0]?.artifact.id).toBe(g.artifact2.id);
+      expect(matches[1]?.artifact.id).toBe(g.artifact1.id);
+    });
+
+    it("includes seeded input artifacts when requested", async () => {
+      const inputArtifact = makeArtifact({
+        type: "input_document",
+        name: "seeded-policy",
+        content: "seed input",
+      });
+      await g.repo.artifacts.create(inputArtifact);
+      await g.repo.artifacts.linkInputToRun(g.run.id, inputArtifact.id);
+
+      const matches = await g.repo.artifacts.lookupForRun(g.run.id, {
+        nameContains: "seeded",
+      });
+
+      expect(matches).toHaveLength(1);
+      expect(matches[0]?.artifact.id).toBe(inputArtifact.id);
+      expect(matches[0]?.source).toBe("input");
+      expect(matches[0]?.producerTask).toBeUndefined();
+    });
+
+    it("excludes input_ingestion-produced artifacts when includeInputArtifacts is false", async () => {
+      // Mirror the shape ingestInputArtifacts creates: a synthetic
+      // "input_ingestion" tool task that *produces* each seeded artifact
+      // and a has_input edge on the Run. Both edges exist in prod runs,
+      // so excluding inputs means excluding the produced twin as well.
+      const ingestionTask = makeTask(g.run.id, 0);
+      const ingestionTaskWithName = {
+        ...ingestionTask,
+        role: "tool" as const,
+        subagentName: "input_ingestion",
+      };
+      await g.repo.tasks.create(ingestionTaskWithName);
+      const ingestionOp = makeOperation(ingestionTaskWithName.id, g.run.id, 1);
+      await g.repo.operations.create(ingestionOp);
+
+      const seeded = makeArtifact({
+        type: "input_document",
+        name: "seeded-policy",
+        content: "seed input",
+      });
+      await g.repo.artifacts.create(seeded);
+      await g.repo.artifacts.linkProduced(ingestionOp.id, seeded.id);
+      await g.repo.artifacts.linkInputToRun(g.run.id, seeded.id);
+
+      // With include_input_artifacts:false, the seeded input must not
+      // leak back through the produced-edges path.
+      const matches = await g.repo.artifacts.lookupForRun(g.run.id, {
+        nameContains: "seeded",
+        includeInputArtifacts: false,
+      });
+      expect(matches).toHaveLength(0);
+
+      // With include_input_artifacts:true, the same artifact is returned
+      // exactly once (dedup across the produced + input paths).
+      const withInputs = await g.repo.artifacts.lookupForRun(g.run.id, {
+        nameContains: "seeded",
+        includeInputArtifacts: true,
+      });
+      expect(withInputs).toHaveLength(1);
+      expect(withInputs[0]?.artifact.id).toBe(seeded.id);
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------

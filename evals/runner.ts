@@ -29,13 +29,19 @@ import type {
   ModelOutput,
   FailureMode,
 } from "./schema";
-import type { HarnessRunMetrics } from "./schema";
-import { scoreFactualAccuracy, gradePassFail, computeAggregate } from "./scoring";
+import { resolveTaskMetadata, type HarnessRunMetrics } from "./schema";
+import {
+  scoreFactualAccuracy,
+  gradePassFail,
+  computeAggregate,
+  getFailingGatedStepGrades,
+} from "./scoring";
 import {
   BASELINE_MODEL,
   DEFAULT_EVAL_SKILLS,
   DEFAULT_EVAL_SYSTEM_PROMPT,
   HARNESS_VERSION,
+  RESULTS_DIR,
 } from "./constants";
 import { runJudge } from "./llm-judge/judge";
 import { loadTasks } from "./task-loader";
@@ -65,7 +71,9 @@ async function runBaseline(
   task: EvalTask,
   client: Anthropic,
 ): Promise<ModelOutput> {
-  const sourcesText = task.sources
+  // Baseline always gets every document inline — otherwise we'd compare
+  // "harness with read_artifact access" to "model with no data at all."
+  const sourcesText = allTaskDocuments(task)
     .map((s) => `## ${s.title}\n\n${s.content}`)
     .join("\n\n---\n\n");
 
@@ -96,10 +104,13 @@ async function runBaseline(
 }
 
 import {
+  buildInputArtifactPreamble,
   createEvalWorkspace,
   EVAL_TOOL_REGISTRY,
   loadSkillFixtures,
+  toSeededInputArtifacts,
 } from "./eval-infra";
+import { allTaskDocuments } from "./schema";
 
 // ---------------------------------------------------------------------------
 // Harness runner — real harness invocation
@@ -115,22 +126,47 @@ type HarnessRunResult = Readonly<{
 async function runHarness(
   task: EvalTask,
   client: Anthropic,
+  mode: "decomposed" | "flat" = "decomposed",
 ): Promise<HarnessRunResult> {
-  const { repo } = await createLocalRepo(":memory:");
+  // Optional: persist the graph for post-run investigation.
+  // EVAL_PERSIST_DB=/tmp/run-<task>.db
+  const persistDb = process.env["EVAL_PERSIST_DB"];
+  const dbSuffix = mode === "flat" ? `${task.id}-flat` : task.id;
+  const dbPath = persistDb ? `${persistDb}.${dbSuffix}` : ":memory:";
+  const { repo } = await createLocalRepo(dbPath);
 
   const sourcesText = task.sources
     .map((s, i) => `[Source ${i + 1}: ${s.title}]\n\n${s.content}`)
     .join("\n\n---\n\n");
 
+  const inputArtifactPreamble =
+    task.inputArtifacts?.length ?
+      buildInputArtifactPreamble(task.inputArtifacts.length)
+    : undefined;
+
   const overrides = task.definitionOverrides;
+
+  // Flat mode: strip the task's decomposition-specific system prompt and
+  // skill set. The harness wrapper (tools, operational sections, output
+  // guidance) stays identical, so a delta between flat and decomposed
+  // isolates the decomposition effect from the wrapper effect.
+  const definitionSystemPrompt =
+    mode === "flat" ?
+      DEFAULT_EVAL_SYSTEM_PROMPT
+    : (overrides?.systemPrompt ?? DEFAULT_EVAL_SYSTEM_PROMPT);
+  const definitionSkills =
+    mode === "flat" ? [] : (overrides?.skills ?? [...DEFAULT_EVAL_SKILLS]);
 
   const definition: AgentDefinition = {
     id: generateId(),
     version: 1,
-    name: `eval-${task.id}`,
+    name: `eval-${task.id}${mode === "flat" ? "-flat" : ""}`,
     description: task.description,
-    systemPrompt: overrides?.systemPrompt ?? DEFAULT_EVAL_SYSTEM_PROMPT,
-    skills: overrides?.skills ?? [...DEFAULT_EVAL_SKILLS],
+    systemPrompt: definitionSystemPrompt,
+    subagentResultMode: overrides?.subagentResultMode ?? "inline",
+    autoFinalizeFromSubagent:
+      mode === "flat" ? undefined : overrides?.autoFinalizeFromSubagent,
+    skills: definitionSkills,
     limits: {
       maxTasksPerRun: overrides?.limits?.maxTasksPerRun ?? 20,
       maxOperationsPerTask: overrides?.limits?.maxOperationsPerTask ?? 3,
@@ -151,7 +187,9 @@ async function runHarness(
     agentDefinitionId: definition.id,
     agentDefinitionVersion: definition.version,
     status: "pending",
-    input: `${sourcesText}\n\n---\n\nQuestion: ${task.question}`,
+    input: [sourcesText, inputArtifactPreamble, `Question: ${task.question}`]
+      .filter((s): s is string => Boolean(s))
+      .join("\n\n---\n\n"),
     totalTokensUsed: 0,
     createdAt: now(),
     updatedAt: now(),
@@ -161,17 +199,15 @@ async function runHarness(
   // Fresh workspace per run so eval files don't leak across runs
   const wsOverrides = task.definitionOverrides?.workspace;
   const { workspace, bashTool } = await createEvalWorkspace(runId, {
-    ...(wsOverrides?.outputPaths
-      ? { outputPaths: wsOverrides.outputPaths }
-      : {}),
-    ...(wsOverrides?.initialFiles
-      ? { initialFiles: wsOverrides.initialFiles }
-      : {}),
+    ...(wsOverrides?.outputPaths ?
+      { outputPaths: wsOverrides.outputPaths }
+    : {}),
+    ...(wsOverrides?.initialFiles ?
+      { initialFiles: wsOverrides.initialFiles }
+    : {}),
   });
   const toolRegistry = toolRegistryFromMap([
-    ...EVAL_TOOL_REGISTRY.list().map(
-      (t) => [t.tool.name, t] as const,
-    ),
+    ...EVAL_TOOL_REGISTRY.list().map((t) => [t.tool.name, t] as const),
     ["bash", bashTool],
   ]);
 
@@ -184,6 +220,9 @@ async function runHarness(
       task.hitlBehavior === "deny" ?
         new DenyHitlHandler()
       : new AutoApproveHitlHandler(),
+    ...(task.inputArtifacts?.length ?
+      { inputArtifacts: toSeededInputArtifacts(task.inputArtifacts) }
+    : {}),
   });
 
   const emptyMetrics: TaskResult["harnessMetrics"] = {
@@ -255,11 +294,15 @@ type LineageAnalysis = {
 };
 
 function analyzeLineage(lineage: RunLineage): LineageAnalysis {
-
   const skillsInvoked = [
     ...new Set(
       lineage.tasks
-        .filter((t) => t.task.role === "subagent" && t.skill !== undefined && t.task.subagentName !== undefined)
+        .filter(
+          (t) =>
+            t.task.role === "subagent" &&
+            t.skill !== undefined &&
+            t.task.subagentName !== undefined,
+        )
         .map((t) => t.task.subagentName as string),
     ),
   ];
@@ -271,7 +314,8 @@ function analyzeLineage(lineage: RunLineage): LineageAnalysis {
 
   const successfulOperations = lineage.tasks.reduce(
     (sum, t) =>
-      sum + t.operations.filter((a) => a.operation.status === "succeeded").length,
+      sum +
+      t.operations.filter((a) => a.operation.status === "succeeded").length,
     0,
   );
 
@@ -317,12 +361,13 @@ function runStepGraders(
   const grades: StepGrade[] = [
     gradeSkillDecomposition(
       analysis.metrics.skillsInvoked,
-      task.expectedSkills ?? [],
+      task.requiredSkills ?? [],
+      task.forbiddenSkills ?? [],
     ),
     gradeContextCompression(
       analysis.metrics.compressionApplied,
       analysis.compressedSummary,
-      task.referenceFacts,
+      task.referenceFacts.filter((fact) => fact.expected === "present"),
     ),
     gradeRetryBehavior(
       analysis.metrics.totalOperations,
@@ -357,14 +402,17 @@ function runStepGraders(
 const DEFAULT_CONCURRENCY = 3;
 
 type RunOptions = {
-  category?: string;
+  categories?: string[];
   excludeCategories?: string[];
+  purposes?: string[];
+  excludePurposes?: string[];
+  suites?: string[];
   taskId?: string;
   noJudge?: boolean;
   baselineOnly?: boolean;
   runs?: number;
   concurrency?: number;
-}
+};
 
 /**
  * Creates a logger that prefixes all output with a run tag.
@@ -373,8 +421,10 @@ type RunOptions = {
 function createLogger(tag: string) {
   const prefix = tag ? `[${tag}] ` : "";
   return {
-    log: (...args: unknown[]) => console.log(prefix + args.map(String).join(" ")),
-    error: (...args: unknown[]) => console.error(prefix + args.map(String).join(" ")),
+    log: (...args: unknown[]) =>
+      console.log(prefix + args.map(String).join(" ")),
+    error: (...args: unknown[]) =>
+      console.error(prefix + args.map(String).join(" ")),
   };
 }
 
@@ -383,8 +433,11 @@ async function run(options: RunOptions = {}, tag = ""): Promise<string> {
   const client = new Anthropic();
 
   const tasks = loadTasks({
-    category: options.category,
+    categories: options.categories,
     excludeCategories: options.excludeCategories,
+    purposes: options.purposes,
+    excludePurposes: options.excludePurposes,
+    suites: options.suites,
     taskId: options.taskId,
   });
 
@@ -399,9 +452,23 @@ async function run(options: RunOptions = {}, tag = ""): Promise<string> {
 
   for (const task of tasks) {
     log.log(`\n[${task.id}] ${task.name}`);
+    const metadata = resolveTaskMetadata(task);
+    const hasBaselineComparison = metadata.comparisonMode !== "none";
+
+    // Metadata controls what the "baseline" column means. Most tasks compare
+    // against a direct API call; decomposition-research tasks compare against
+    // a flat harness run so the delta isolates decomposition specifically;
+    // reliability tasks (comparisonMode: "none") have no meaningful baseline
+    // — the signal is the harness's own pass/fail across repeated runs.
+    const baselineRunner: Promise<ModelOutput> =
+      metadata.comparisonMode === "flat-harness" ?
+        runHarness(task, client, "flat").then((r) => r.output)
+      : metadata.comparisonMode === "none" ?
+        Promise.resolve({ text: "", totalTokens: 0, latencyMs: 0 })
+      : runBaseline(task, client);
 
     const [baselineOutput, harnessResult] = await Promise.all([
-      runBaseline(task, client),
+      baselineRunner,
       options.baselineOnly ? Promise.resolve(null) : runHarness(task, client),
     ]);
 
@@ -416,9 +483,13 @@ async function run(options: RunOptions = {}, tag = ""): Promise<string> {
 
     // Run step graders when lineage is available
     const stepGrades =
-      harnessResult?.lineageAnalysis
-        ? runStepGraders(task, harnessResult.lineageAnalysis, harnessResult.lineage)
-        : undefined;
+      harnessResult?.lineageAnalysis ?
+        runStepGraders(
+          task,
+          harnessResult.lineageAnalysis,
+          harnessResult.lineage,
+        )
+      : undefined;
 
     const factualScoreHarness =
       task.referenceFacts.length > 0 ?
@@ -426,13 +497,17 @@ async function run(options: RunOptions = {}, tag = ""): Promise<string> {
       : undefined;
 
     const factualScoreBaseline =
-      task.referenceFacts.length > 0 ?
+      hasBaselineComparison && task.referenceFacts.length > 0 ?
         scoreFactualAccuracy(task, baselineOutput.text)
       : undefined;
 
+    const baselineLabel =
+      metadata.comparisonMode === "flat-harness" ? "flat"
+      : metadata.comparisonMode === "none" ? "no-baseline"
+      : "baseline";
     log.log(
       `  Factual: harness=${factualScoreHarness?.score.toFixed(2) ?? "n/a"} ` +
-        `baseline=${factualScoreBaseline?.score.toFixed(2) ?? "n/a"}`,
+        `${baselineLabel}=${factualScoreBaseline?.score.toFixed(2) ?? "n/a"}`,
     );
 
     let judgeResults: TaskResult["judgeResults"];
@@ -440,7 +515,7 @@ async function run(options: RunOptions = {}, tag = ""): Promise<string> {
     let harnessFailureMode: FailureMode | undefined;
     let baselineFailureMode: FailureMode | undefined;
 
-    if (!options.noJudge && !options.baselineOnly) {
+    if (!options.noJudge && !options.baselineOnly && hasBaselineComparison) {
       log.log(`  Running judge (2 orderings)...`);
       try {
         const judgeOutput = await runJudge(
@@ -466,28 +541,49 @@ async function run(options: RunOptions = {}, tag = ""): Promise<string> {
       } catch (e) {
         log.error(`  Judge failed for ${task.id}:`, e);
       }
+    } else if (
+      !options.noJudge &&
+      !options.baselineOnly &&
+      !hasBaselineComparison
+    ) {
+      log.log(`  Judge:   skipped (comparisonMode=none)`);
     }
 
     const harnessPassFail = gradePassFail(
       task,
       factualScoreHarness,
       judgeScoreAveraged?.harness,
+      stepGrades,
     );
-    const baselinePassFail = gradePassFail(
-      task,
-      factualScoreBaseline,
-      judgeScoreAveraged?.baseline,
-    );
+    const baselinePassFail =
+      hasBaselineComparison ?
+        gradePassFail(task, factualScoreBaseline, judgeScoreAveraged?.baseline)
+      : { pass: false, reason: "No baseline for comparisonMode=none" };
     log.log(
       `  Pass/fail: harness=${harnessPassFail.pass ? "PASS" : "FAIL"} ` +
-        `baseline=${baselinePassFail.pass ? "PASS" : "FAIL"}`,
+        `${hasBaselineComparison ? `baseline=${baselinePassFail.pass ? "PASS" : "FAIL"}` : "baseline=n/a"}`,
     );
     if (!harnessPassFail.pass) {
       log.log(`    Harness: ${harnessPassFail.reason}`);
     }
+    if (hasBaselineComparison && !baselinePassFail.pass) {
+      log.log(`    Baseline: ${baselinePassFail.reason}`);
+    }
+
+    if (
+      getFailingGatedStepGrades(task, stepGrades).length > 0 &&
+      (factualScoreHarness?.score ?? 0) > (factualScoreBaseline?.score ?? 0)
+    ) {
+      log.log(
+        `  Note: harness outperformed ${baselineLabel} on factual score, but process gate failed; this is not a clean win.`,
+      );
+    }
 
     // Log step grade warnings/failures
-    if (stepGrades && (stepGrades.summary.warn > 0 || stepGrades.summary.fail > 0)) {
+    if (
+      stepGrades &&
+      (stepGrades.summary.warn > 0 || stepGrades.summary.fail > 0)
+    ) {
       for (const g of stepGrades.grades) {
         if (g.severity !== "pass") {
           log.log(`  Step [${g.severity}] ${g.aspect}: ${g.finding}`);
@@ -498,6 +594,7 @@ async function run(options: RunOptions = {}, tag = ""): Promise<string> {
     results.push({
       taskId: task.id,
       category: task.category,
+      metadata,
       harnessOutput,
       baselineOutput,
       harnessMetrics,
@@ -527,11 +624,8 @@ async function run(options: RunOptions = {}, tag = ""): Promise<string> {
   };
 
   // Write results
-  mkdirSync(join(__dirname, "results"), { recursive: true });
-  const outPath = join(
-    __dirname,
-    `results/${report.runId.slice(0, 8)}.json`,
-  );
+  mkdirSync(RESULTS_DIR, { recursive: true });
+  const outPath = join(RESULTS_DIR, `${report.runId.slice(0, 8)}.json`);
   writeFileSync(outPath, JSON.stringify(report, null, 2));
   log.log(`\nResults written to ${outPath}`);
 
@@ -564,11 +658,35 @@ const options: RunOptions = {};
 for (let i = 0; i < args.length; i++) {
   if (args[i] === "--category") {
     const v = args[++i];
-    if (v) options.category = v;
+    if (v) {
+      if (!options.categories) options.categories = [];
+      options.categories.push(v);
+    }
   }
   if (args[i] === "--task") {
     const v = args[++i];
     if (v) options.taskId = v;
+  }
+  if (args[i] === "--purpose") {
+    const v = args[++i];
+    if (v) {
+      if (!options.purposes) options.purposes = [];
+      options.purposes.push(v);
+    }
+  }
+  if (args[i] === "--exclude-purpose") {
+    const v = args[++i];
+    if (v) {
+      if (!options.excludePurposes) options.excludePurposes = [];
+      options.excludePurposes.push(v);
+    }
+  }
+  if (args[i] === "--suite") {
+    const v = args[++i];
+    if (v) {
+      if (!options.suites) options.suites = [];
+      options.suites.push(v);
+    }
   }
   if (args[i] === "--exclude-category") {
     const v = args[++i];
@@ -621,9 +739,8 @@ async function runPool(
     }
   }
 
-  const workers = Array.from(
-    { length: Math.min(concurrency, totalRuns) },
-    () => worker(),
+  const workers = Array.from({ length: Math.min(concurrency, totalRuns) }, () =>
+    worker(),
   );
   await Promise.all(workers);
 

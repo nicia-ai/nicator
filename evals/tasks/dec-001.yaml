@@ -1,4 +1,4 @@
-# KWB-020 · decision-support
+# DEC-001 · decision-support
 #
 # Three vendor proposals for a cloud migration. Each has different strengths
 # and weaknesses against stated requirements. The task requires a specific
@@ -8,7 +8,7 @@
 # Ceiling: Makes a specific recommendation tied to the stated priorities,
 # acknowledges the main risk of the chosen vendor, and proposes a mitigation.
 
-id: kwb-020
+id: dec-001
 category: decision-support
 name: Cloud migration vendor selection
 description: >-
@@ -119,5 +119,5 @@ passFail:
     Must identify DataLift's sovereignty issue (non-negotiable disqualifier) and
     make a specific recommendation. A comparison table without a decision is a fail.
 
-expectedSkills:
+forbiddenSkills:
   - researcher

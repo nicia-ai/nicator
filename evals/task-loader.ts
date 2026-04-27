@@ -14,13 +14,22 @@ import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
 import { parse as parseYaml } from "yaml";
 
-import { EvalTaskSchema, type EvalTask } from "./schema";
+import {
+  EvalTaskSchema,
+  type EvalSuite,
+  resolveTaskMetadata,
+  taskBelongsToSuite,
+  type EvalTask,
+} from "./schema";
 
 const TASKS_DIR = join(__dirname, "tasks");
 
 export function loadTasks(filter?: {
-  category?: string | undefined;
+  categories?: string[] | undefined;
   excludeCategories?: string[] | undefined;
+  purposes?: string[] | undefined;
+  excludePurposes?: string[] | undefined;
+  suites?: string[] | undefined;
   taskId?: string | undefined;
 }): EvalTask[] {
   const files = readdirSync(TASKS_DIR)
@@ -65,16 +74,57 @@ export function loadTasks(filter?: {
   }
 
   let filtered = tasks;
-  if (filter?.category) {
-    filtered = filtered.filter((t) => t.category === filter.category);
+  if (filter?.categories && filter.categories.length > 0) {
+    const included = new Set(filter.categories);
+    filtered = filtered.filter((t) => included.has(t.category));
   }
   if (filter?.excludeCategories && filter.excludeCategories.length > 0) {
     const excluded = new Set(filter.excludeCategories);
     filtered = filtered.filter((t) => !excluded.has(t.category));
   }
+  if (filter?.purposes && filter.purposes.length > 0) {
+    const included = new Set(filter.purposes);
+    filtered = filtered.filter((t) => included.has(resolveTaskMetadata(t).purpose));
+  }
+  if (filter?.excludePurposes && filter.excludePurposes.length > 0) {
+    const excluded = new Set(filter.excludePurposes);
+    filtered = filtered.filter((t) => !excluded.has(resolveTaskMetadata(t).purpose));
+  }
+  if (filter?.suites && filter.suites.length > 0) {
+    filtered = filtered.filter((t) =>
+      filter.suites?.some((suite) => taskBelongsToSuite(t, suite as EvalSuite)),
+    );
+  }
   if (filter?.taskId) {
     filtered = filtered.filter((t) => t.id === filter.taskId);
   }
 
+  // Auto-exclude parked tasks unless they were reached via explicit task id
+  // or category selection, which both count as deliberate opt-in.
+  const explicitSelection =
+    (filter?.taskId !== undefined && filter.taskId !== "") ||
+    (filter?.categories !== undefined && filter.categories.length > 0);
+  if (!explicitSelection) {
+    filtered = filtered.filter((t) => !resolveTaskMetadata(t).parked);
+  }
+
   return filtered;
+}
+
+/**
+ * Map of current task definitions keyed by id. Optionally restricted to a
+ * set of ids so historical reports don't force-load unrelated tasks.
+ * Returns an empty map if task loading fails (missing directory, schema
+ * validation errors) so callers can fall back to stored data.
+ */
+export function loadCurrentTaskMap(
+  taskIds?: ReadonlySet<string>,
+): Map<string, EvalTask> {
+  try {
+    const all = loadTasks();
+    const filtered = taskIds ? all.filter((task) => taskIds.has(task.id)) : all;
+    return new Map(filtered.map((task) => [task.id, task]));
+  } catch {
+    return new Map();
+  }
 }

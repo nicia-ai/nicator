@@ -165,7 +165,7 @@ export async function dispatchSubagent(
       },
     });
 
-    await Promise.all([
+    const [, outputArtifactId] = await Promise.all([
       repo.operations.update(operationId, {
         status: "succeeded",
         output: { text: result.text },
@@ -186,10 +186,25 @@ export async function dispatchSubagent(
       updatedAt: now(),
     });
 
+    // Surface the output artifact_id in-band so the coordinator can reference
+    // it in downstream dispatches without waiting for context rebuild. Without
+    // this, models hallucinate plausible-looking UUIDs for the next stage
+    // because their static history message has no visibility into artifacts
+    // produced mid-run.
+    const toolResultContent =
+      definition.subagentResultMode === "artifact_only" ?
+        `Subagent "${spec.name}" completed successfully.\n\n---\n` +
+        `[dispatch metadata] subagent_name: ${spec.name}\n` +
+        `[dispatch metadata] output_artifact_id: ${outputArtifactId}\n` +
+        `This stage is complete. Reuse this output_artifact_id for downstream steps instead of dispatching "${spec.name}" again.\n` +
+        `Use read_artifact on this artifact_id to inspect the full output.`
+      : `${result.text}\n\n---\n` +
+        `[dispatch metadata] output_artifact_id: ${outputArtifactId}`;
+
     return {
       succeeded: true,
       additionalTokens: result.inputTokens + result.outputTokens,
-      toolResultContent: result.text,
+      toolResultContent,
       toolUseId,
       childTaskId,
     };
@@ -225,7 +240,11 @@ export async function dispatchSubagent(
       }),
     ]);
 
-    if (isHarnessError(error)) throw error;
+    // `limit_exceeded` is a per-child-task guard (the subagent blew its own
+    // operation cap). Treat it as a failed dispatch with partial results so
+    // the coordinator can recover — don't kill the whole run. Other
+    // HarnessErrors remain fatal.
+    if (isHarnessError(error) && error.code !== "limit_exceeded") throw error;
 
     const partialNote =
       partialResults.length > 0 ?
@@ -246,7 +265,8 @@ async function createOutputArtifact(
   name: string,
   content: string,
   operationId: string,
-): Promise<void> {
+): Promise<string> {
   const artifact = await buildArtifact("text", name, content);
   await repo.artifacts.createAndLinkProduced(artifact, operationId);
+  return artifact.id;
 }

@@ -256,34 +256,66 @@ passFail:
 definitionOverrides:
   systemPrompt: >-
     You are a multi-agent coordinator running a vendor evaluation with
-    four specialist agents. The agents have a partial ordering:
+    four specialist agents (pricing, technical, compliance, strategist)
+    on a diamond DAG: pricing/technical run in parallel, compliance
+    depends on pricing, and strategist depends on all three.
 
-    1. pricing and technical can run concurrently (no dependencies)
-    2. compliance must run AFTER pricing (it needs tier information to
-       determine HIPAA-compliant costs)
-    3. strategist runs last, after all three specialists complete
+    Execute in THREE SEPARATE TURNS. Do not batch across turns — each
+    dispatch must wait for its upstream artifacts to appear in your
+    "Completed Tasks" context before you reference them.
 
-    Dispatch pricing with the vendor pricing source. Dispatch technical
-    with the architecture comparison source. Once pricing completes,
-    dispatch compliance with the HIPAA requirements source and pricing
-    analysis. Once all three specialists complete, dispatch strategist
-    with all findings.
+    **Turn 1** — dispatch **pricing** AND **technical** in the same turn
+    (parallel tool calls, no dependencies between them):
+    - pricing: put the vendor pricing source document directly into
+      task_input as quoted text. Do NOT pass artifact_ids.
+    - technical: put the architecture comparison source document directly
+      into task_input as quoted text. Do NOT pass artifact_ids.
 
-    Each agent receives only its assigned source documents plus any
-    declared upstream outputs.
-  skills:
-    - name: researcher
-      version: "1.0.0"
-      policy:
-        type: always
-    - name: summarizer
-      version: "1.0.0"
-      policy:
-        type: always
+    After turn 1 completes, pricing's and technical's outputs appear in
+    your context with real artifact_ids.
+
+    **Turn 2** — dispatch **compliance** alone:
+    - compliance reads the HIPAA requirements source and applies it to
+      pricing's tier information.
+    - Put the HIPAA requirements source document directly into task_input
+      as quoted text.
+    - Pass pricing's actual artifact_id (copy it exactly from your
+      "Completed Tasks" context — do not invent UUIDs) via `artifact_ids`.
+    - Do NOT pass technical's artifact_id — compliance doesn't need it.
+
+    After turn 2 completes, compliance's output appears in your context.
+
+    **Turn 3** — dispatch **strategist** alone:
+    - strategist synthesizes all three specialist outputs into a final
+      recommendation.
+    - task_input should be a brief synthesis directive (no source docs).
+    - Pass all three actual artifact_ids (pricing, technical, compliance)
+      via `artifact_ids`, copied exactly from your context.
+
+    Each specialist agent must work PURELY from the text provided in its
+    task_input (and any artifacts you pass via artifact_ids). They must
+    NOT call bash, web-search, web-fetch, or any other tool besides
+    read_artifact. No web searches, no shell scripts, no external lookups.
+    The sources are self-contained; all required information is in the
+    text you give them. Instruct each specialist explicitly in its prompt
+    to produce its analysis as direct text output without calling any
+    tools other than read_artifact.
+
+    Each specialist runs ONCE. If an output looks incomplete, inspect it
+    rather than re-dispatching — retries burn the task budget.
+
+    **Turn 4** — after strategist completes, STOP calling tools. Produce
+    your final recommendation as plain text using strategist's output.
+    Do not dispatch any more agents, do not make any more tool calls.
+    The run ends when you emit a plain-text response after strategist.
+  skills: []
   limits:
     maxTasksPerRun: 30
-    maxOperationsPerTask: 5
+    maxOperationsPerTask: 20
     maxTokensPerRun: 500000
+forbiddenSkills:
+  - researcher
+  - summarizer
 graphAssertions:
   # --- Run completion ---
   - type: run_status
@@ -319,8 +351,8 @@ graphAssertions:
     match:
       role: subagent
     min: 4
-    max: 4
-    description: "Exactly 4 agent-role tasks"
+    max: 10
+    description: "4 required agent roles; retries may produce extras"
 
   # --- Partial ordering: compliance after pricing ---
   - type: task_order

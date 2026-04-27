@@ -242,34 +242,63 @@ passFail:
 definitionOverrides:
   systemPrompt: >-
     You are a multi-agent coordinator running a sequential due diligence
-    pipeline. You manage three agents that must run in order:
+    pipeline. You manage three agents that must run in strict order:
+    extractor → analyst → advisor.
 
-    1. extractor — pulls structured financial data from the CIM
-    2. analyst — cross-references extracted data against the QoE report
-       to identify discrepancies
-    3. advisor — synthesizes the analysis against deal terms into a
-       board recommendation
+    Execute in THREE SEPARATE TURNS. Do not batch stages. Each dispatch
+    must happen in its own turn so you can see the previous stage's
+    output artifact_id in your context before referencing it.
 
-    Dispatch extractor first with the CIM source. Once extractor completes,
-    dispatch analyst with the QoE source and extractor's findings. Once
-    analyst completes, dispatch advisor with the term sheet source and
-    analyst's discrepancy report.
+    **Turn 1** — dispatch **extractor** alone:
+    - extractor pulls structured financial data from the CIM.
+    - Put the CIM source document directly into extractor's task_input
+      as quoted text. Do NOT pass artifact_ids.
 
-    Each agent receives only its assigned source documents plus the
-    previous agent's output. Do not skip stages or combine agents.
-  skills:
-    - name: researcher
-      version: "1.0.0"
-      policy:
-        type: always
-    - name: summarizer
-      version: "1.0.0"
-      policy:
-        type: always
+    After extractor completes, its output will appear in your "Completed
+    Tasks" context with a real artifact_id.
+
+    **Turn 2** — dispatch **analyst** alone:
+    - analyst cross-references extracted data against the QoE report to
+      identify discrepancies.
+    - Put the QoE report source document directly into analyst's
+      task_input as quoted text.
+    - Pass extractor's actual artifact_id (copy it exactly from your
+      context — do not invent UUIDs) via the `artifact_ids` parameter.
+
+    After analyst completes, its output appears in your context with a
+    real artifact_id.
+
+    **Turn 3** — dispatch **advisor** alone:
+    - advisor synthesizes the analysis against deal terms into a board
+      recommendation.
+    - Put the term sheet source document directly into advisor's
+      task_input as quoted text.
+    - Pass analyst's actual artifact_id via `artifact_ids`. Do NOT pass
+      extractor's artifact_id — scoped visibility.
+
+    Each stage agent must work PURELY from the text provided in its
+    task_input (and any artifacts you pass via artifact_ids). They must
+    NOT call bash, web-search, web-fetch, or any other tool besides
+    read_artifact. No web searches, no shell scripts, no external lookups.
+    The sources are self-contained; all required information is in the
+    text you give them. Instruct each stage agent explicitly in its prompt
+    to produce its analysis as direct text output without calling any
+    tools other than read_artifact.
+
+    IMPORTANT for analyst and advisor: you MUST pass upstream outputs via
+    the `artifact_ids` parameter, not by pasting the upstream text into
+    task_input. This creates the data-flow edges the task graph tracks.
+
+    Each stage runs ONCE. If a stage's output looks incomplete, inspect
+    it rather than re-dispatching — retries burn the task budget.
+  skills: []
   limits:
     maxTasksPerRun: 30
-    maxOperationsPerTask: 5
+    maxOperationsPerTask: 20
     maxTokensPerRun: 500000
+forbiddenSkills:
+  - researcher
+  - summarizer
 graphAssertions:
   # --- Run completion ---
   - type: run_status
@@ -299,8 +328,8 @@ graphAssertions:
     match:
       role: subagent
     min: 3
-    max: 3
-    description: "Exactly 3 agent-role tasks"
+    max: 12
+    description: "3 required agent roles; retries may produce extras"
 
   # --- Sequential ordering: extractor → analyst → advisor ---
   - type: task_order

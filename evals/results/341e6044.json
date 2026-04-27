@@ -1,0 +1,390 @@
+{
+  "runId": "341e6044-51e2-4b5a-8d12-a5e5d001a2d5",
+  "timestamp": "2026-04-09T02:44:04.400Z",
+  "harnessVersion": "0.1.0",
+  "modelVersion": "claude-sonnet-4-6",
+  "tasks": [
+    {
+      "taskId": "lim-001",
+      "category": "limits",
+      "harnessOutput": {
+        "text": "",
+        "totalTokens": 3244,
+        "latencyMs": 7783
+      },
+      "baselineOutput": {
+        "text": "I'll research each of the top 5 economies separately to provide accurate, detailed figures.\n\n# 🌍 Top 5 World Economies by GDP (2024) — Detailed Comparison\n\n---\n\n## Research Summary\n\nBased on current available data (IMF World Economic Outlook 2024 projections and World Bank estimates), here is a detailed breakdown:\n\n---\n\n## 📊 The Top 5 Economies at a Glance\n\n| Rank | Country | GDP (Nominal, USD) | GDP Growth Rate | GDP per Capita |\n|------|----------|--------------------|-----------------|----------------|\n| 🥇 1 | 🇺🇸 United States | **$28.78 trillion** | ~2.8% | ~$85,370 |\n| 🥈 2 | 🇨🇳 China | **$18.53 trillion** | ~4.8% | ~$13,140 |\n| 🥉 3 | 🇩🇪 Germany | **$4.59 trillion** | ~0.2% | ~$54,290 |\n| 4 | 🇯🇵 Japan | **$4.11 trillion** | ~0.9% | ~$33,140 |\n| 5 | 🇮🇳 India | **$3.94 trillion** | ~6.8% | ~$2,730 |\n\n---\n\n## 🇺🇸 1. United States — $28.78 Trillion\n\n### Key Economic Indicators\n- **Nominal GDP:** ~$28.78 trillion (2024 est.)\n- **GDP Growth:** ~2.8% (outperforming most developed peers)\n- **GDP per Capita:** ~$85,370 (among the highest globally)\n- **Inflation (2024):** ~3.0% (declining from 2022 peak)\n- **Unemployment:** ~3.9%\n- **Currency:** US Dollar (world's primary reserve currency)\n\n### Economic Composition\n| Sector | Share of GDP |\n|--------|-------------|\n| Services | ~77% |\n| Industry | ~18% |\n| Agriculture | ~1% |\n\n### Strengths\n- ✅ World's largest consumer market (~$18T in personal consumption)\n- ✅ Dominant in technology, finance, defense, and pharmaceuticals\n- ✅ Home to 13 of world's top 20 largest companies by market cap\n- ✅ Deepest capital markets globally (NYSE + NASDAQ ~$50T+ market cap)\n- ✅ Federal Reserve controls the world's reserve currency\n\n### Challenges\n- ⚠️ National debt exceeds **$35 trillion** (~122% of GDP)\n- ⚠️ Rising interest rates affecting housing and credit markets\n- ⚠️ Growing income inequality (Gini coefficient ~0.39)\n\n---\n\n## 🇨🇳 2. China — $18.53 Trillion\n\n### Key Economic Indicators\n- **Nominal GDP:** ~$18.53 trillion (2024 est.)\n- **GDP Growth:** ~4.8% (missing 5% official target)\n- **GDP per Capita:** ~$13,140\n- **GDP (PPP):** ~$35+ trillion *(already #1 on PPP basis)*\n- **Inflation:** ~0.3% (near deflation — a serious concern)\n- **Unemployment (urban):** ~5.1%\n- **Currency:** Chinese Yuan (Renminbi / CNY)\n\n### Economic Composition\n| Sector | Share of GDP |\n|--------|-------------|\n| Services | ~54% |\n| Industry | ~39% |\n| Agriculture | ~7% |\n\n### Strengths\n- ✅ World's largest manufacturer (~28% of global manufacturing output)\n- ✅ Largest exporter of goods globally (~$3.4T in exports)\n- ✅ Massive infrastructure investment via Belt and Road Initiative\n- ✅ Leading in EVs, solar panels, batteries, and rare earth materials\n- ✅ World's largest middle class (~400–500 million people)\n\n### Challenges\n- ⚠️ Severe **real estate crisis** (Evergrande, Country Garden collapses)\n- ⚠️ **Deflationary pressures** and weak domestic consumption\n- ⚠️ Youth unemployment peaked at ~21% in 2023\n- ⚠️ Geopolitical tensions with the US and trade restrictions on semiconductors\n- ⚠️ Aging population and declining birth rate\n\n---\n\n## 🇩🇪 3. Germany — $4.59 Trillion\n\n### Key Economic Indicators\n- **Nominal GDP:** ~$4.59 trillion (2024 est.)\n- **GDP Growth:** ~0.2% (near stagnation/recession territory)\n- **GDP per Capita:** ~$54,290\n- **Inflation:** ~2.3% (easing from 2022 highs)\n- **Unemployment:** ~3.4%\n- **Currency:** Euro (€)\n\n### Economic Composition\n| Sector | Share of GDP |\n|--------|-------------|\n| Services | ~69% |\n| Industry | ~28% |\n| Agriculture | ~1% |\n\n### Strengths\n- ✅ Europe's largest economy and industrial powerhouse\n- ✅ World-class manufacturing: automobiles (VW, BMW, Mercedes), machinery, chemicals\n- ✅ Highly skilled workforce and strong export base (~$2T in exports)\n- ✅ Stable, low-corruption institutional framework\n- ✅ Strong SME (\"Mittelstand\") sector — backbone of the economy\n\n### Challenges\n- ⚠️ **Energy crisis fallout** — loss of cheap Russian gas raised industrial costs dramatically\n- ⚠️ **Deindustrialization risk** — BASF, Volkswagen cutting German operations\n- ⚠️ Aging population and labor shortages\n- ⚠️ Slow digital transformation vs. US and Asian peers\n- ⚠️ Heavy dependence on auto industry facing EV disruption from China\n\n---\n\n## 🇯🇵 4. Japan — $4.11 Trillion\n\n### Key Economic Indicators\n- **Nominal GDP:** ~$4.11 trillion (2024 est.)\n- **GDP Growth:** ~0.9%\n- **GDP per Capita:** ~$33,140\n- **Inflation:** ~2.5% (historically high — Japan battled *deflation* for 30 years)\n- **Unemployment:** ~2.5% (among lowest globally)\n- **Currency:** Japanese Yen (JPY) — significantly weakened in 2024 (~155 ¥/USD)\n\n### Economic Composition\n| Sector | Share of GDP |\n|--------|-------------|\n| Services | ~70% |\n| Industry | ~29% |\n| Agriculture | ~1% |\n\n### Strengths\n- ✅ World leader in robotics, semiconductors, precision manufacturing\n- ✅ Home to global giants: Toyota, Sony, Softbank, Mitsubishi\n- ✅ Extremely low unemployment and high social stability\n- ✅ Bank of Japan ending negative interest rate policy (historic shift in 2024)\n- ✅ Strong trade and investment ties across Asia-Pacific\n\n### Challenges\n- ⚠️ **Demographic crisis** — world's oldest population (29%+ over 65)\n- ⚠️ **Currency weakness** — Yen at 30-year lows, increasing import costs\n- ⚠️ National debt at ~**255% of GDP** (highest in developed world)\n- ⚠️ Low productivity growth and slow corporate reform\n- ⚠️ Japan slipped from #3 to #4 globally (overtaken by Germany in 2023 due to weak yen)\n\n---\n\n## 🇮🇳 5. India — $3.94 Trillion\n\n### Key Economic Indicators\n- **Nominal GDP:** ~$3.94 trillion (2024 est.)\n- **GDP Growth:** ~**6.8%** (fastest among top 5 economies)\n- **GDP per Capita:** ~$2,730 (lowest among top 5, but rising fast)\n- **GDP (PPP):** ~$14.5 trillion *(#3 globally on PPP basis)*\n- **Inflation:** ~4.6%\n- **Unemployment:** ~7.8%\n- **Currency:** Indian Rupee (INR)\n\n### Economic Composition\n| Sector | Share of GDP |\n|--------|-------------|\n| Services | ~55% |\n| Industry | ~28% |\n| Agriculture | ~17% |\n\n### Strengths\n- ✅ **Fastest-growing major economy** in the world (2024)\n- ✅ Youngest population globally (median age ~28) — massive demographic dividend\n- ✅ Booming tech sector: IT exports, fintech, digital payments (UPI processing 10B+ transactions/month)\n- ✅ \"China+1\" manufacturing beneficiary — Apple, Samsung expanding Indian production\n- ✅ World's largest English-speaking workforce\n- ✅ Strong domestic consumption driving growth\n\n### Challenges\n- ⚠️ **Very low GDP per capita** — large portion of population still in poverty\n- ⚠️ Infrastructure gaps (power, logistics, urban)\n- ⚠️ Regulatory and bureaucratic complexity\n- ⚠️ Educational quality and job creation lagging population growth\n- ⚠️ High current account deficit and import dependence (especially energy)\n\n---\n\n## 📈 Comparative Deep Dive\n\n### 1. GDP Size Comparison (Visual Scale)\n```\n🇺🇸 USA        ████████████████████████████  $28.78T\n🇨🇳 China      ██████████████████            $18.53T\n🇩🇪 Germany    ████                          $4.59T\n🇯🇵 Japan      ████                          $4.11T\n🇮🇳 India      ███                           $3.94T\n```\n\n### 2. Growth Rate Comparison\n```\n🇮🇳 India     ██████████  6.8%  ← Fastest\n🇺🇸 USA       ████        2.8%\n🇨🇳 China     ███         4.8%\n🇯🇵 Japan     █           0.9%\n🇩🇪 Germany   ▌           0.2%  ← Slowest\n```\n\n### 3. GDP per Capita (Wealth Distribution)\n```\n🇺🇸 USA       $85,370  ████████████████████\n🇩🇪 Germany   $54,290  █████████████\n🇯🇵 Japan     $33,140  ████████\n🇨🇳 China     $13,140  ███\n🇮🇳 India     $2,730   █\n```\n\n### 4. Key Metrics Side-by-Side\n\n| Metric | 🇺🇸 USA | 🇨🇳 China | 🇩🇪 Germany | 🇯🇵 Japan | 🇮🇳 India |\n|--------|--------|---------|-----------|---------|---------|\n| **GDP (Nominal)** | $28.78T | $18.53T | $4.59T | $4.11T | $3.94T |\n| **GDP (PPP)** | $28.78T | ~$35T | ~$5.5T | ~$6.7T | ~$14.5T |\n| **Growth Rate** | 2.8% | 4.8% | 0.2% | 0.9% | 6.8% |\n| **Per Capita** | $85,370 | $13,140 | $54,290 | $33,140 | $2,730 |\n| **Population** | 335M | 1.41B | 84M | 124M | 1.43B |\n| **Debt/GDP** | ~122% | ~83% | ~66% | ~255% | ~83% |\n| **Inflation** | ~3.0% | ~0.3% | ~2.3% | ~2.5% | ~4.6% |\n\n---\n\n## 🔮 Forward-Looking: Who Will Rise?\n\n| Economy | 2030 GDP Projection | Trajectory |\n|---------|--------------------|-----------| \n| 🇺🇸 USA | ~$35–37T | 📈 Steady growth |\n| 🇨🇳 China | ~$24–28T | 📈 Growing but slowing |\n| 🇮🇳 India | ~$7–8T | 🚀 **Could reach #3 by ~2027–2030** |\n| 🇩🇪 Germany | ~$4.8–5T | ➡️ Stagnation risk |\n| 🇯🇵 Japan | ~$4.5–5T | ➡️ Structural challenges |\n\n---\n\n## 🏁 Key Takeaways\n\n| Insight | Detail |\n|---------|--------|\n| 💪 **Dominant Leader** | USA leads by a massive $10T+ gap over China |\n| 🚀 **Rising Star** | India growing fastest; could be #3 economy by 2027–2030 |\n| 😰 **Under Pressure** | Germany and Japan both facing structural economic crises |\n| 🔄 **The Real Race** | China vs. USA — China leads on PPP, USA leads on nominal GDP |\n| 📉 **Biggest Risk** | China's property sector deflation could drag global growth |\n| 💡 **PPP Surprise** | On Purchasing Power Parity, China is already #1 and India is #3 |\n\n> **Note:** All figures are based on IMF World Economic Outlook (October 2024) and World Bank projections. Nominal GDP figures are subject to exchange rate fluctuations, which is why Japan (weak yen) and Germany (weak euro) can appear smaller despite high living standards.",
+        "totalTokens": 3515,
+        "latencyMs": 50989
+      },
+      "harnessMetrics": {
+        "skillsInvoked": [
+          "researcher"
+        ],
+        "totalOperations": 2,
+        "hitlTriggered": false,
+        "contextPressureTokens": 0,
+        "compressionApplied": false
+      },
+      "passFailResult": {
+        "harnessPass": true,
+        "baselinePass": true,
+        "harnessReason": "All criteria met",
+        "baselineReason": "All criteria met"
+      },
+      "stepGrades": {
+        "taskId": "lim-001",
+        "grades": [
+          {
+            "aspect": "skill_decomposition",
+            "severity": "pass",
+            "finding": "No expected skill sequence defined for this task."
+          },
+          {
+            "aspect": "context_compression",
+            "severity": "pass",
+            "finding": "No context compression applied."
+          },
+          {
+            "aspect": "retry_behavior",
+            "severity": "pass",
+            "finding": "2 attempts, 1 succeeded. Acceptable retry rate."
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[run_status] Run must fail due to task limit: Run status is \"failed\" (as expected)"
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[run_error] Error must indicate task limit exceeded: Run error matches /max tasks per run/i"
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[task_count] Exactly 2 tasks (root + 1 child dispatch): Found 2 task(s) matching (any task); expected [2, 2]"
+          }
+        ],
+        "summary": {
+          "pass": 6,
+          "warn": 0,
+          "fail": 0
+        }
+      }
+    },
+    {
+      "taskId": "lim-002",
+      "category": "limits",
+      "harnessOutput": {
+        "text": "## Population Figures (2026)\n\n| Country | Population (approx.) | Source |\n|---|---|---|\n| **France** | ~66.7 million | Worldometer / UN data (Metropolitan France only) |\n| **Germany** | ~83.7 million | Worldometer / UN data |\n\n**Key details:**\n- **France**: Approximately **66.7 million** people (Metropolitan France). Including overseas territories, the total French Republic population is about **69.1 million** (per Wikipedia/INSEE as of 1 January 2026).\n- **Germany**: Approximately **83.7 million** people, with some live trackers showing it nearing **84 million** as of early April 2026.\n\nGermany's population is notably larger than France's — roughly **17 million more people**.",
+        "totalTokens": 6705,
+        "latencyMs": 7088
+      },
+      "baselineOutput": {
+        "text": "I'll search for both populations using my tools. Let me start with France, then Germany.\n\n**Searching for the population of France...**\n\nBased on my knowledge (as my search tool isn't literally executable here, I'll provide accurate, up-to-date figures from my training data):\n\n---\n\n## 🇫🇷 Population of France\n**~68.4 million** (2024 estimate)\n- France is one of the most populous countries in Europe.\n- Source: INSEE (French National Institute of Statistics) / World Bank\n\n---\n\n## 🇩🇪 Population of Germany\n**~84.7 million** (2024 estimate)\n- Germany is the **most populous country in the European Union**.\n- Source: Destatis (German Federal Statistical Office) / World Bank\n\n---\n\n## Summary Table\n\n| Country | Population (2024 est.) |\n|---------|----------------------|\n| 🇫🇷 France | ~68.4 million |\n| 🇩🇪 Germany | ~84.7 million |\n\n**Germany's population is approximately 24% larger than France's**, making it the most populous EU member state, while France ranks second.\n\n> ⚠️ *Note: No live search tool was executed in this session. These figures are based on my training data (up to early 2025) and are reliable estimates. For real-time figures, sources like the [World Bank](https://data.worldbank.org) or [Worldometer](https://www.worldometers.info) are recommended.*",
+        "totalTokens": 405,
+        "latencyMs": 11114
+      },
+      "harnessMetrics": {
+        "skillsInvoked": [],
+        "totalOperations": 2,
+        "hitlTriggered": false,
+        "contextPressureTokens": 5264,
+        "compressionApplied": false
+      },
+      "passFailResult": {
+        "harnessPass": true,
+        "baselinePass": true,
+        "harnessReason": "All criteria met",
+        "baselineReason": "All criteria met"
+      },
+      "stepGrades": {
+        "taskId": "lim-002",
+        "grades": [
+          {
+            "aspect": "skill_decomposition",
+            "severity": "pass",
+            "finding": "No expected skill sequence defined for this task."
+          },
+          {
+            "aspect": "context_compression",
+            "severity": "pass",
+            "finding": "No context compression applied."
+          },
+          {
+            "aspect": "retry_behavior",
+            "severity": "pass",
+            "finding": "2 attempts, 2 succeeded. Acceptable retry rate."
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "fail",
+            "finding": "[run_status] Run must fail due to operation limit: Run status is \"completed\", expected \"failed\""
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "fail",
+            "finding": "[run_error] Error must indicate operation limit exceeded: Run status is \"completed\", not \"failed\" — no error to match"
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "fail",
+            "finding": "[operation_count] Root task must have at most 1 operation: Found 2 operation(s) in task(s) matching (any task); expected <= 1"
+          }
+        ],
+        "summary": {
+          "pass": 3,
+          "warn": 0,
+          "fail": 3
+        }
+      }
+    },
+    {
+      "taskId": "lim-003",
+      "category": "limits",
+      "harnessOutput": {
+        "text": "",
+        "totalTokens": 3094,
+        "latencyMs": 2896
+      },
+      "baselineOutput": {
+        "text": "I don't actually have tools available to search the web in this conversation — I can't browse the internet or access real-time data. However, I can share what I know from my training data:\n\n## Population of Tokyo\n\n- **Tokyo Metropolis (Tokyo-to):** approximately **13.96 million** people (as of recent estimates)\n- **Greater Tokyo Area** (including surrounding prefectures like Kanagawa, Saitama, and Chiba): approximately **37–38 million** people, making it the **largest metropolitan area in the world**\n\n> ⚠️ **Note:** These figures are based on my training data (up to early 2025) and may not reflect the most current statistics. For the latest numbers, I recommend checking sources like:\n> - [Tokyo Metropolitan Government](https://www.metro.tokyo.lg.jp)\n> - [Statistics Bureau of Japan](https://www.stat.go.jp)\n> - [World Population Review](https://worldpopulationreview.com)",
+        "totalTokens": 274,
+        "latencyMs": 4613
+      },
+      "harnessMetrics": {
+        "skillsInvoked": [],
+        "totalOperations": 1,
+        "hitlTriggered": false,
+        "contextPressureTokens": 3035,
+        "compressionApplied": false
+      },
+      "passFailResult": {
+        "harnessPass": true,
+        "baselinePass": true,
+        "harnessReason": "All criteria met",
+        "baselineReason": "All criteria met"
+      },
+      "stepGrades": {
+        "taskId": "lim-003",
+        "grades": [
+          {
+            "aspect": "skill_decomposition",
+            "severity": "pass",
+            "finding": "No expected skill sequence defined for this task."
+          },
+          {
+            "aspect": "context_compression",
+            "severity": "pass",
+            "finding": "No context compression applied."
+          },
+          {
+            "aspect": "retry_behavior",
+            "severity": "pass",
+            "finding": "No retries needed."
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[run_status] Run must fail due to token limit: Run status is \"failed\" (as expected)"
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[run_error] Error must indicate token limit exceeded: Run error matches /max tokens per run/i"
+          }
+        ],
+        "summary": {
+          "pass": 5,
+          "warn": 0,
+          "fail": 0
+        }
+      }
+    },
+    {
+      "taskId": "lim-004",
+      "category": "limits",
+      "harnessOutput": {
+        "text": "Here is a comprehensive analysis of Apple's current market cap and financial standing:\n\n---\n\n# Apple Inc. (AAPL) — Market Cap & Financial Analysis\n\n*Data as of April 8–9, 2026*\n\n---\n\n## 📊 Current Market Capitalization\n\n| Metric | Value |\n|---|---|\n| **Market Cap** | **~$3.78–3.80 Trillion USD** |\n| Stock Price (Apr 8 close) | $258.90 |\n| 1-Day Change | +2.13% |\n| Global Ranking | **3rd largest company** by market cap |\n\n> **Note:** Market cap estimates vary slightly by source ($3.72T–$3.92T) depending on the exact timestamp and methodology used, but consensus sits around **$3.78–3.80 trillion** as of April 8, 2026.\n\n---\n\n## 📈 Market Cap Trend\n\n| Date | Market Cap | YoY Change |\n|---|---|---|\n| **Apr 8, 2026** | **~$3.80T** | **+15.92%** |\n| Dec 31, 2025 | $4.02T | +6.12% |\n| Dec 31, 2024 | $3.79T | +26.41% |\n| Dec 29, 2023 | $2.99T | +44.87% |\n| Dec 30, 2022 | $2.07T | -29.05% |\n| Dec 31, 2019 | $1.30T | — |\n\n**Key observation:** Apple's market cap has fallen from a peak of ~$4.02T at the end of 2025 to ~$3.80T today — a pullback of roughly **5–6%** YTD in 2026, likely reflecting broader market volatility and tariff concerns.\n\n---\n\n## 💰 Financial Performance (FY2025)\n\n| Metric | Value |\n|---|---|\n| **Annual Revenue** | **$416.2 Billion** (all-time record) |\n| Revenue Growth (YoY) | ~4–5% |\n| Gross Margin | **46.9%** |\n| Q4 FY2025 Revenue | $102.5B (+8% YoY) |\n| Q4 FY2025 EPS | $1.85 (+13% YoY) |\n| Services Revenue (Q4) | $28.8B (+15% YoY, record) |\n| TTM EPS | $7.92 |\n\n---\n\n## 📐 Valuation Metrics\n\n| Metric | Value |\n|---|---|\n| **P/E Ratio (TTM)** | ~32.4–32.7x |\n| 12-Month Avg P/E | ~34.3x |\n| Enterprise Value | ~$3.75T |\n\nApple trades at a **premium multiple** (~32x earnings) relative to the broader market (~20x), reflecting investor confidence in its brand loyalty, recurring revenue from services, and AI integration potential. The current P/E is modestly below its 12-month average, suggesting slight de-rating as growth moderates.\n\n---\n\n## 🔍 Key Analytical Themes\n\n### 1. Services as a Growth Engine\nApple's Services segment (App Store, Apple Music, iCloud, Apple TV+, etc.) continues to be the fastest-growing division — reaching **record $28.8B in a single quarter**. High-margin services help offset slower hardware unit growth and support premium valuation.\n\n### 2. AI Integration (Apple Intelligence)\nApple is investing significantly in AI with its **Apple Intelligence** platform and plans for an advanced Siri. While competitors have moved more aggressively in AI spending, Apple's disciplined approach focuses on on-device AI and privacy. This is a critical narrative for sustaining its premium valuation.\n\n### 3. iPhone Market Share\nApple is **the only major global smartphone vendor expected to gain market share in 2026**, with a net switching rate (consumers moving to iPhone minus those leaving) hitting an 11% five-year high — a strong competitive signal.\n\n### 4. Risks\n- **Tariff/Trade risk:** Significant supply chain exposure to China. Recent tariff escalation under the Trump administration poses margin pressure and potential supply disruptions.\n- **AI competition:** Samsung, Google (Pixel), and others are increasingly aggressive with AI-integrated devices.\n- **China market:** Revenue from Greater China remains a geopolitical and demand-side risk.\n- **Valuation premium:** At 32x earnings, Apple must continue delivering strong services growth to justify its multiple.\n\n### 5. Long-Term CAGR\nSince December 1998, Apple's market cap has grown from **$4.60B to $3.80T** — a **27.82% compound annual growth rate** over ~27 years, one of the most remarkable wealth-creation stories in corporate history.\n\n---\n\n## 🏆 Competitive Position\n\nApple holds the **#3 spot globally by market cap** (behind Microsoft and NVIDIA, or similar, depending on daily fluctuations). Its combination of hardware ecosystem lock-in, high-margin services, strong brand loyalty, and disciplined capital allocation (buybacks, dividends) underpins its outsized valuation.\n\n---\n\n**Bottom line:** Apple's market cap of ~$3.78–3.80 trillion reflects a company at the frontier of consumer technology with record revenues, expanding service margins, and growing AI ambitions — though near-term risks from trade policy and valuation compression deserve close monitoring.",
+        "totalTokens": 21167,
+        "latencyMs": 35548
+      },
+      "baselineOutput": {
+        "text": "# Apple Inc. (AAPL) Market Capitalization Analysis\n\n## ⚠️ Important Disclosure\n\nI don't have access to **real-time financial data tools** in this session, and my **knowledge cutoff is early 2025**. I cannot provide today's live market cap figure. I strongly recommend verifying current data via:\n\n- 📊 [finance.yahoo.com](https://finance.yahoo.com/quote/AAPL)\n- 📈 [bloomberg.com](https://www.bloomberg.com)\n- 💹 [macrotrends.net](https://www.macrotrends.net/stocks/charts/AAPL/apple/market-cap)\n\n---\n\n## 🍎 Apple Inc. — Market Cap Analysis (Based on Knowledge through Early 2025)\n\n---\n\n### 📌 Key Market Cap Milestones\n\n| Date | Market Cap | Significance |\n|------|-----------|--------------|\n| August 2018 | ~$1 Trillion | First U.S. company to reach $1T |\n| August 2020 | ~$2 Trillion | Doubled in just 2 years |\n| January 2022 | ~$3 Trillion | First company ever to reach $3T |\n| Late 2023 | ~$2.9 – $3.1 Trillion | Fluctuating around $3T range |\n| Early 2025 | ~$3.3 – $3.7 Trillion | Competing with NVIDIA for #1 spot |\n\n---\n\n### 📊 Fundamental Drivers of Apple's Market Cap\n\n#### 1. 💰 Revenue & Earnings Power\n- **Annual Revenue (FY2024):** ~$391 Billion\n- **Net Income (FY2024):** ~$94 Billion\n- **Gross Margin:** ~46% (driven by high-margin Services segment)\n- **EPS Growth:** Consistently boosted by massive share buyback programs\n\n#### 2. 📱 Business Segment Breakdown\n| Segment | Revenue Contribution | Growth Trend |\n|---------|---------------------|--------------|\n| iPhone | ~52% | Mature, stable |\n| Services (App Store, iCloud, Apple TV+, etc.) | ~22% | 🔼 High growth |\n| Mac | ~8% | Moderate |\n| iPad | ~7% | Stable |\n| Wearables & Accessories | ~10% | Moderate |\n\n> **Services** is the most important valuation driver — it carries software-like margins (~70%+) and is growing rapidly.\n\n#### 3. 📉 Valuation Metrics (Approximate, Early 2025)\n| Metric | Apple | S&P 500 Average |\n|--------|-------|-----------------|\n| P/E Ratio | ~28–32x | ~20–22x |\n| Price-to-Sales | ~8–9x | ~2–3x |\n| Price-to-Free Cash Flow | ~25–30x | ~18x |\n| Dividend Yield | ~0.5% | ~1.5% |\n\nApple trades at a **premium valuation** relative to the broader market, reflecting its brand moat, ecosystem lock-in, and services growth.\n\n---\n\n### 🔑 Key Value Drivers & Competitive Moats\n\n#### ✅ Strengths\n1. **Ecosystem Lock-in** — iPhone, Mac, iPad, Apple Watch, iCloud create powerful switching costs\n2. **Brand Premium** — Consistently ranked the world's most valuable brand\n3. **Services Growth** — >1 billion paid subscriptions globally\n4. **Capital Return Program** — Largest buyback program in history (~$90B/year+)\n5. **Balance Sheet** — ~$160B+ in cash and investments\n6. **AI Integration (Apple Intelligence)** — New growth catalyst announced 2024\n\n#### ⚠️ Risks & Headwinds\n1. **iPhone Saturation** — Mature smartphone market, longer upgrade cycles\n2. **China Exposure** — ~18–20% of revenue; geopolitical & regulatory risk\n3. **Regulatory Pressure** — EU Digital Markets Act, U.S. antitrust on App Store\n4. **Competition in AI** — Late mover vs. Google, Microsoft, Meta in generative AI\n5. **Valuation Risk** — Premium P/E leaves little room for earnings misses\n\n---\n\n### 🏆 Competitive Positioning (Market Cap Comparison, Early 2025)\n\n| Rank | Company | Approx. Market Cap |\n|------|---------|-------------------|\n| 1 | Apple / NVIDIA* | ~$3.4–3.7T |\n| 2 | Microsoft | ~$3.0–3.2T |\n| 3 | NVIDIA | ~$3.3–3.6T |\n| 4 | Alphabet (Google) | ~$2.0T |\n| 5 | Amazon | ~$2.0T |\n\n> *Apple and NVIDIA have been trading the #1 position in 2024–2025 based on market movements.\n\n---\n\n### 📈 What Analysts Were Watching (Early 2025)\n\n1. **Apple Intelligence / AI Features** — Monetization potential of on-device AI\n2. **iPhone 16 Cycle Performance** — Sales data in key markets\n3. **India Expansion** — Manufacturing diversification and new consumer market\n4. **Vision Pro** — Long-term spatial computing opportunity\n5. **Services Re-acceleration** — App Store regulatory impacts vs. organic growth\n\n---\n\n## ✅ Summary\n\n| Factor | Assessment |\n|--------|-----------|\n| Market Cap Range (Early 2025) | ~$3.3–3.7 Trillion |\n| Global Rank | #1 or #2 (with NVIDIA) |\n| Core Strength | Services + Ecosystem |\n| Valuation | Premium but supported by cash flows |\n| Outlook | Cautiously optimistic; AI & Services are key catalysts |\n\n---\n\n> **⚠️ Disclaimer:** This analysis is based on knowledge available through early 2025 and is for **informational/educational purposes only**. It is **not financial advice**. Always consult a licensed financial advisor and verify data with real-time sources before making investment decisions.",
+        "totalTokens": 1536,
+        "latencyMs": 27069
+      },
+      "harnessMetrics": {
+        "skillsInvoked": [],
+        "totalOperations": 6,
+        "hitlTriggered": false,
+        "contextPressureTokens": 24704,
+        "compressionApplied": false
+      },
+      "factualScore": {
+        "taskId": "lim-004",
+        "facts": [
+          {
+            "factId": "fact-1",
+            "matched": true,
+            "weight": 1
+          }
+        ],
+        "score": 1
+      },
+      "baselineFactualScore": {
+        "taskId": "lim-004",
+        "facts": [
+          {
+            "factId": "fact-1",
+            "matched": true,
+            "weight": 1
+          }
+        ],
+        "score": 1
+      },
+      "passFailResult": {
+        "harnessPass": true,
+        "baselinePass": true,
+        "harnessReason": "All criteria met",
+        "baselineReason": "All criteria met"
+      },
+      "stepGrades": {
+        "taskId": "lim-004",
+        "grades": [
+          {
+            "aspect": "skill_decomposition",
+            "severity": "pass",
+            "finding": "No expected skill sequence defined for this task."
+          },
+          {
+            "aspect": "context_compression",
+            "severity": "pass",
+            "finding": "No context compression applied."
+          },
+          {
+            "aspect": "retry_behavior",
+            "severity": "pass",
+            "finding": "6 attempts, 6 succeeded. Acceptable retry rate."
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[task_absent] Researcher skill must not be invoked with never policy: No task found matching subagentName=\"researcher\" (as expected)"
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[run_status] Run should complete without the blocked skill: Run status is \"completed\" (as expected)"
+          }
+        ],
+        "summary": {
+          "pass": 5,
+          "warn": 0,
+          "fail": 0
+        }
+      }
+    },
+    {
+      "taskId": "lim-005",
+      "category": "limits",
+      "harnessOutput": {
+        "text": "Here are the findings from each topic researched separately:\n\n---\n\n## 1. Current Population of Japan\n\n**~122.6–123.1 million** (as of 2025–2026)\n\n| Source | Estimate | As of |\n|---|---|---|\n| Worldometer (UN data) | 122,648,562 | March 2026 |\n| Population Pyramids | 123,103,488 | Mid-2025 |\n| Population Today | 122,588,717 | 2026 |\n\n**Key trends:**\n- Japan's population is **declining**, with an annual growth rate of approximately **-0.56%**\n- The population fell by ~148,588 people year-over-year (2025 vs. 2026 estimates)\n- Birth rate is very low at ~7 per 1,000 people (~2,361 births/day)\n\n---\n\n## 2. Current GDP of Brazil\n\n**~R$12.7 trillion BRL / ~$5.6 trillion USD (PPP)** for 2025\n\n| Metric | Value |\n|---|---|\n| Nominal GDP (BRL) | R$12.7 trillion (2025, per IBGE) |\n| GDP in PPP terms (USD) | ~$5.6 trillion (World Economics estimate) |\n| GDP growth rate (2025) | **2.3%** (confirmed by IBGE, March 2026) |\n\n**Key trends:**\n- 2025 marked Brazil's **fifth consecutive year of economic growth**\n- Growth of 2.3% in 2025 was the largest expansion since 2021 (when GDP grew 4.8%)\n- The economy has shown consistent resilience over recent years\n\n---\n\n**Summary:** Japan's population is approximately **122.6–123 million** (declining), and Brazil's GDP reached approximately **R$12.7 trillion (~$5.6 trillion PPP)** in 2025, growing at 2.3%.",
+        "totalTokens": 15780,
+        "latencyMs": 27869
+      },
+      "baselineOutput": {
+        "text": "I'll research each topic separately using distinct searches. Let me start with the first topic.\n\n---\n\n## 🔍 Research Topic 1: Current Population of Japan\n\nBased on my knowledge (training data through early 2025):\n\n**Japan's Current Population:**\n- Japan's population is approximately **125.7 million people** (as of 2024 estimates)\n- Japan has been experiencing a **declining population trend** — it has been shrinking since around 2008\n- The population decline is driven by a **low birth rate** and **limited immigration**\n- As of the 2020 census, Japan's population was **125.5 million**\n- By 2024 estimates, it has continued to decline slightly\n\n---\n\n## 🔍 Research Topic 2: Current GDP of Brazil\n\nBased on my knowledge (training data through early 2025):\n\n**Brazil's Current GDP:**\n- Brazil's GDP (nominal) is approximately **$2.1 – $2.3 trillion USD** (2024 estimates)\n- This makes Brazil the **largest economy in Latin America**\n- It ranks approximately **8th–9th largest economy in the world**\n- Brazil's GDP (PPP) is approximately **$4.0 trillion USD**\n- GDP growth in 2024 was estimated at around **2–3%**\n\n---\n\n## 📊 Summary Table\n\n| Topic | Finding |\n|-------|---------|\n| 🇯🇵 **Japan Population** | ~**125.7 million** (2024 est.), declining trend |\n| 🇧🇷 **Brazil GDP (Nominal)** | ~**$2.1–2.3 trillion USD** (2024 est.), largest in Latin America |\n\n> ⚠️ **Note:** These figures are based on my training data (up to early 2025). For the most precise, real-time figures, official sources like the **World Bank**, **IMF**, or **IBGE (Brazil)** / **Statistics Bureau of Japan** would provide the latest updates.",
+        "totalTokens": 538,
+        "latencyMs": 9577
+      },
+      "harnessMetrics": {
+        "skillsInvoked": [
+          "researcher"
+        ],
+        "totalOperations": 6,
+        "hitlTriggered": false,
+        "contextPressureTokens": 7238,
+        "compressionApplied": false
+      },
+      "passFailResult": {
+        "harnessPass": true,
+        "baselinePass": true,
+        "harnessReason": "All criteria met",
+        "baselineReason": "All criteria met"
+      },
+      "stepGrades": {
+        "taskId": "lim-005",
+        "grades": [
+          {
+            "aspect": "skill_decomposition",
+            "severity": "pass",
+            "finding": "No expected skill sequence defined for this task."
+          },
+          {
+            "aspect": "context_compression",
+            "severity": "pass",
+            "finding": "No context compression applied."
+          },
+          {
+            "aspect": "retry_behavior",
+            "severity": "pass",
+            "finding": "6 attempts, 4 succeeded. Acceptable retry rate."
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "fail",
+            "finding": "[run_status] Run must fail after second researcher attempt: Run status is \"completed\", expected \"failed\""
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "fail",
+            "finding": "[run_error] Error must indicate policy denial: Run status is \"completed\", not \"failed\" — no error to match"
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "fail",
+            "finding": "[task_count] Exactly 1 researcher activation should complete: Found 0 task(s) matching subagentName=\"researcher\", status=\"completed\"; expected [1, 1]"
+          }
+        ],
+        "summary": {
+          "pass": 3,
+          "warn": 0,
+          "fail": 3
+        }
+      }
+    }
+  ],
+  "aggregate": {
+    "factualAccuracy": {
+      "harness": 1,
+      "baseline": 1,
+      "delta": 0
+    },
+    "judgeQuality": {
+      "harness": 0,
+      "baseline": 0,
+      "delta": 0,
+      "inconclusiveCount": 0
+    },
+    "passRate": {
+      "harness": 1,
+      "baseline": 1,
+      "total": 5
+    },
+    "byCategory": {
+      "limits": {
+        "harness": 0,
+        "baseline": 0,
+        "n": 5
+      }
+    },
+    "processMetrics": {
+      "avgSkillsPerRun": 0.4,
+      "avgOperationsPerRun": 3.4,
+      "hitlRate": 0,
+      "avgContextPressureRatio": 10.72220762636206
+    }
+  }
+}

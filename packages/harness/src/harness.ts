@@ -5,7 +5,7 @@ import type { Workspace } from "@nicator/workspace";
 
 import type {
   HarnessConfig,
-  InputDocument,
+  InputArtifact,
   Logger,
   RuntimeContext,
   ToolRegistry,
@@ -28,8 +28,8 @@ export type CreateHarnessOptions = Readonly<{
   env?: RuntimeContext;
   /** Optional logger. Defaults to no-op. */
   logger?: Logger;
-  /** Input documents for multi-agent topologies (created as input artifacts). */
-  inputDocuments?: ReadonlyArray<InputDocument>;
+  /** Seed artifacts available to the agent at run start via read_artifact. */
+  inputArtifacts?: ReadonlyArray<InputArtifact>;
   /** Virtual workspace (filesystem + bash) for the run. */
   workspace?: Workspace;
   /** Optional compression callback. */
@@ -56,7 +56,7 @@ export function createHarness(options: CreateHarnessOptions): HarnessConfig {
     hitlHandler: options.hitlHandler,
     env,
     ...pickDefined({
-      inputDocuments: options.inputDocuments,
+      inputArtifacts: options.inputArtifacts,
       workspace: options.workspace,
       logger: options.logger,
       onCompression: options.onCompression,

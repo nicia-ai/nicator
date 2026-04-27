@@ -1,4 +1,4 @@
-# KWB-040 · synthesis
+# SYN-005 · synthesis
 #
 # Multi-hop financial due diligence across three long documents. The headline
 # figures look clean, but footnotes qualify them, an appendix restates a key
@@ -19,8 +19,17 @@
 # Ceiling: Full marks require multi-hop reconciliation across documents and
 # explicit identification of where sources disagree.
 
-id: kwb-040
+id: syn-005
 category: synthesis
+metadata:
+  purpose: stress
+  realism: prod-shaped
+  releaseGate: advisory
+  workloadFamily: diligence-synthesis
+  stressAxes:
+    - context_volume
+    - distractor_density
+    - footnote_reconciliation
 name: Due diligence reconciliation with footnote contradictions
 description: >-
   Three due diligence documents for a mid-market acquisition. Headline figures
@@ -403,4 +412,4 @@ passFail:
     connecting the dots: the NWC issue threatens the bank's closing
     condition, and the EBITDA adjustment makes leverage covenants tighter.
 
-expectedSkills: []
+forbiddenSkills: [researcher]

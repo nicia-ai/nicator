@@ -110,10 +110,9 @@ Task roles (`TaskRoleSchema`):
   capability set
 
 Subagent tasks carry `subagentName` — the human-readable label. Skill-backed
-subagents (spawned via `spawn_subagent_with_skill`) have an `invokes` edge to
-the Skill node. Ad-hoc subagents (spawned via `spawn_subagent`) have no
-`invokes` edge. Tasks are not pre-declared — they emerge from model dispatch
-decisions.
+subagents (created via the `skill` tool) have an `invokes` edge to the Skill
+node. Ad-hoc subagents (created via the `agent` tool) have no `invokes` edge.
+Tasks are not pre-declared — they emerge from model dispatch decisions.
 
 **The design decision:** Tasks are the delegation and scheduling boundary.
 If something has its own prompt, context window, capability set, budget, and
@@ -274,13 +273,13 @@ stateless adapters that skills call within their inner model loop. Tool
 invocations within a skill's inner loop are recorded as Operations on the
 skill's child Task, providing full audit trail visibility.
 
-A skill is not a tool in the OpenAI/Anthropic API sense. The model calls
-`spawn_subagent_with_skill` as an explicit tool use, but the harness mediates
-execution: it resolves the skill name to a specific version, enforces policy,
-loads the prompt from the workspace, and runs the subagent loop. This
-indirection means skill implementations can change without the model needing
-to learn a new calling convention, and the harness can apply policy checks
-before the call executes.
+A skill is not a tool in the OpenAI/Anthropic API sense. The model calls the
+`skill` tool as an explicit tool use, but the harness mediates execution: it
+resolves the skill name to a specific version, enforces policy, loads the
+prompt from the workspace, and runs the subagent loop. This indirection means
+skill implementations can change without the model needing to learn a new
+calling convention, and the harness can apply policy checks before the call
+executes.
 
 **What was left out:** Remote skill resolution. Currently, skills are graph
 nodes loaded from fixtures at definition creation time. A remote registry

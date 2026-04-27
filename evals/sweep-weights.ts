@@ -92,10 +92,11 @@ const SWEEP_CONFIGS: ReadonlyArray<
 ];
 
 import {
-  createDocumentRetrievalTool,
+  buildInputArtifactPreamble,
   createEvalWorkspace,
   EVAL_TOOL_REGISTRY,
   loadSkillFixtures,
+  toSeededInputArtifacts,
 } from "./eval-infra";
 
 // ---------------------------------------------------------------------------
@@ -126,15 +127,11 @@ async function runTaskWithWeights(
 ): Promise<SweepRunResult> {
   const { repo } = await createLocalRepo(":memory:");
 
-  // Build the input: only source metadata (ID + title), not content.
-  // Content is delivered through the retrieve-document tool so that it
-  // flows through context scoring as task artifacts.
-  const sourceIndex = task.sources
-    .map((s) => `- ${s.id}: ${s.title}`)
-    .join("\n");
-  const inputText =
-    `Available documents (use retrieve-document tool to read each one):\n` +
-    `${sourceIndex}\n\n---\n\nQuestion: ${task.question}`;
+  const sweepDocs =
+    task.inputArtifacts && task.inputArtifacts.length > 0
+      ? task.inputArtifacts
+      : task.sources;
+  const inputText = `${buildInputArtifactPreamble(sweepDocs.length)}\n\n---\n\nQuestion: ${task.question}`;
 
   const overrides = task.definitionOverrides;
 
@@ -144,6 +141,8 @@ async function runTaskWithWeights(
     name: `sweep-${task.id}-${configName}`,
     description: task.description,
     systemPrompt: overrides?.systemPrompt ?? DEFAULT_EVAL_SYSTEM_PROMPT,
+    subagentResultMode: overrides?.subagentResultMode ?? "inline",
+    autoFinalizeFromSubagent: overrides?.autoFinalizeFromSubagent,
     skills: overrides?.skills ?? [...DEFAULT_EVAL_SKILLS],
     limits: {
       maxTasksPerRun: overrides?.limits?.maxTasksPerRun ?? 20,
@@ -169,14 +168,10 @@ async function runTaskWithWeights(
   };
   await repo.runs.create(run);
 
-  // Build a per-run tool registry that includes the document retrieval
-  // tool backed by this task's source documents, plus a bash workspace.
-  const docTool = createDocumentRetrievalTool(task.sources);
   const { workspace, bashTool } = await createEvalWorkspace(runId);
   const existingTools = EVAL_TOOL_REGISTRY.list();
   const toolRegistry = toolRegistryFromMap([
     ...existingTools.map((t) => [t.tool.name, t] as const),
-    [docTool.tool.name, docTool],
     ["bash", bashTool],
   ]);
 
@@ -186,6 +181,7 @@ async function runTaskWithWeights(
     toolRegistry,
     workspace,
     hitlHandler: new AutoApproveHitlHandler(),
+    inputArtifacts: toSeededInputArtifacts(sweepDocs),
   });
 
   const startMs = Date.now();
@@ -472,7 +468,7 @@ for (let i = 0; i < args.length; i++) {
 async function main(): Promise<void> {
   const client = new Anthropic();
 
-  const tasks = loadTasks({ category: "context", taskId: taskFilter });
+  const tasks = loadTasks({ categories: ["context"], taskId: taskFilter });
   if (tasks.length === 0) {
     console.error("No context-category tasks found. Create ctx-*.yaml files first.");
     process.exit(1);

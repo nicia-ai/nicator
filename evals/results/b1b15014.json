@@ -1,0 +1,228 @@
+{
+  "runId": "b1b15014-e56c-4478-9400-c156b562c972",
+  "timestamp": "2026-04-13T02:29:42.946Z",
+  "harnessVersion": "0.1.0",
+  "modelVersion": "claude-sonnet-4-6",
+  "tasks": [
+    {
+      "taskId": "crd-001",
+      "category": "coordination",
+      "harnessOutput": {
+        "text": "Here is the completed **Executive Briefing for TechCorp's Board of Directors**, produced through a structured three-agent debate (bull → bear → judge synthesis):\n\n---\n\n# Executive Briefing: LLM-Powered Customer Support — Strategic Assessment for TechCorp Board\n\n**Prepared for:** TechCorp Board of Directors | **Date:** April 2026 | **Classification:** Confidential\n\n---\n\n## Overview\n\nTwo independent analyses were commissioned — one making the strongest case for adoption, one against — then synthesized. The evidence base: RetailCo case study (Q2 2025), consumer survey (n=4,200, June 2025), FinServ Corp incident report (March 2025), and a regulatory/workforce analysis (Q3 2025).\n\n---\n\n## The Case FOR Adoption\n\n**Financial evidence is concrete.** RetailCo achieved a **40% cost reduction ($12M annual savings)** within 6 months. Resolution time fell from 18 → 6 minutes (3×). AI absorbed **73% of Tier-1 ticket volume** with 24/7 coverage at no overnight staffing cost. Hallucination rates stayed **below 0.3% on trained domains**, achieved through a phased 90-day supervised rollout.\n\n**Consumer sentiment supports it.** In a double-blind survey of 4,200 consumers (95% CI ±1.5pp): 78% reported satisfaction, 65% preferred AI for routine queries, 82% valued instant response over human interaction. NPS for AI channels was **+34 vs. +28 for human-only** — customers are actively preferring AI for high-volume routine interactions.\n\n**The bull case:** ROI is documented, customer preference is demonstrated, and delay cedes competitive advantages to early adopters.\n\n---\n\n## The Case AGAINST Adoption\n\n**The FinServ Corp incident is the load-bearing argument.** In March 2025, the AI hallucinated a \"120-day unconditional refund\" policy by interpolating between two real policies (30-day and 90-day). A **4-hour oversight lag** allowed the error to propagate to **4,700 customers**. Results: **$2.3M in forced refunds**, FTC investigation, and a **19-point brand trust collapse**. This was not a malfunction — LLMs generate fluent, contextually plausible text by design. They cannot distinguish accurate from convincing.\n\n**Regulatory costs are structural and growing.** The EU AI Act (August 2025) classifies customer-facing AI as \"high-risk,\" costing **$1.8M/year in compliance** for mid-size firms. California SB-1047 mandates AI disclosure. Pending UK legislation may require human review of all AI-generated commitments — potentially eliminating the efficiency case entirely.\n\n**Workforce disruption is real.** Companies deploying AI support cut frontline staff by **30% within 18 months**. Displaced workers faced **8-month average unemployment** before retraining. Of those who remained, **67% reported increased stress**. Labor unions in 3 EU countries have filed formal objections.\n\n**The bear case:** A single 4-hour hallucination can wipe out years of projected savings. The risk profile is asymmetric — upside is bounded, downside is not.\n\n---\n\n## Where Both Sides Agree\n\n| Fact | Bull's Interpretation | Bear's Interpretation |\n|---|---|---|\n| RetailCo $12M savings | Template for success | Doesn't offset tail risk |\n| 0.3% hallucination rate | Manageable with oversight | Catastrophic at scale |\n| EU AI Act / FTC posture | Cost-manageable | Structurally prohibitive |\n| 30% workforce reduction | Quality improvement for remainder | Displacement harm unaddressed |\n\n**The core dispute is about risk architecture, not facts.** The answer depends on TechCorp's specific context: Are customer interactions more like RetailCo (routine queries with no legal commitment) or FinServ (policy-binding financial representations)?\n\n---\n\n## Recommendation: Conditional, Phased Adoption\n\n**Authorize a bounded pilot — not a full rollout, not a deferral.**\n\nThe efficiency and NPS evidence is too strong to dismiss. But FinServ establishes that unconstrained deployment can produce liabilities exceeding savings in a single incident.\n\n### Pilot Conditions:\n\n1. **Scope to zero-liability query types only** — order status, FAQs, password resets. Explicitly exclude refunds, policy commitments, financial terms, and any contractual representations.\n2. **Deploy real-time monitoring before launch** — the FinServ incident turned on a 4-hour detection lag. Require sub-15-minute escalation triggers for policy-related statements.\n3. **Budget compliance costs as hard costs** — $1.8M/year EU AI Act compliance must appear in revised ROI projections before full rollout approval.\n4. **Design workforce transition before any reduction** — not after. Retraining programs reduce the documented 8-month unemployment gap and preempt labor conflict.\n5. **6-month pilot gate** — full rollout requires separate board sign-off on: (a) actual hallucination rate in TechCorp's domain, (b) NPS movement, (c) compliance cost actuals, (d) workforce impact vs. plan.\n\n---\n\n## Summary Table\n\n| Dimension | For | Against | Net Assessment |\n|---|---|---|---|\n| Financial ROI | $12M savings (RetailCo) | $2.3M incident + $1.8M/yr compliance | **Positive with constrained scope** |\n| Customer Experience | NPS +34, 78% satisfaction | 31% cite inability to handle nuance | **Favorable for routine queries** |\n| Technical Risk | 0.3% hallucination (trained domains) | Systematic propagation, 4-hr lag | **Manageable with monitoring investment** |\n| Regulatory | Budgetable compliance costs | High-risk classification, FTC active | **Significant but not prohibitive** |\n| Workforce | Higher satisfaction for remaining staff | 30% reduction, 67% stress increase | **Requires proactive transition planning** |\n\n---\n\n**Board vote:** Authorize 6-month pilot under the conditions above. Full rollout authorization requires separate board approval at pilot conclusion.",
+        "totalTokens": 168287,
+        "latencyMs": 330837
+      },
+      "baselineOutput": {
+        "text": "# Executive Briefing: LLM-Powered Customer Support Adoption\n**Prepared for: TechCorp Board of Directors**\n*Confidential | Strategic Decision Document*\n\n---\n\n## Executive Summary\n\nThe deployment of LLM-powered customer support represents a significant strategic inflection point. Available evidence demonstrates compelling operational benefits alongside material risks that have already caused measurable harm to early adopters. This briefing presents the strongest case on both sides, then offers a conditional recommendation with specific safeguards.\n\n---\n\n## The Case For Adoption\n\n### 1. Financial and Operational Returns Are Substantial and Documented\n\nThe RetailCo deployment is the clearest available benchmark. The company achieved **$12M in annual savings** — a 40% cost reduction — while simultaneously *improving* service quality: average resolution time fell from 18 minutes to 6 minutes. These are not projections; they are six-month post-deployment outcomes. For TechCorp's board, this establishes that the technology can deliver transformational unit economics, not merely incremental efficiency gains.\n\nThe operational leverage compounds further when considering 24/7 availability. RetailCo eliminated an overnight staffing gap entirely, a structural capability that human staffing models cannot replicate at equivalent cost. At scale, this matters.\n\n### 2. Consumer Acceptance Has Crossed a Critical Threshold\n\nSkeptics often assume customers inherently resist AI interactions. The 2025 consumer survey of 4,200 respondents challenges this assumption directly. **78% reported satisfaction with AI-assisted support**, and crucially, the AI-supported channel's Net Promoter Score of **+34 outperformed human-only channels at +28**. This is a statistically robust finding given the methodology (double-blind randomized assignment, 95% CI ±1.5pp).\n\nSixty-five percent of respondents *actively preferred* AI for routine queries, and 82% prioritized instant response times over human interaction. The consumer base, at least for transactional interactions, has largely arrived at where the technology is.\n\n### 3. Human Workforce Outcomes Can Be Positive When Managed Deliberately\n\nRetailCo's deployment demonstrated that AI adoption does not automatically degrade the employee experience. Human agents who were reassigned from Tier-1 handling to complex cases **reported higher job satisfaction**. This outcome is achievable — but it requires intentional role redesign rather than simple headcount reduction. The phased rollout with 90 days of human oversight was instrumental in this result, suggesting implementation methodology matters as much as the technology itself.\n\n---\n\n## The Case Against Adoption\n\n### 1. Hallucination Risk Creates Liability Exposure That Can Exceed Projected Savings\n\nThe FinServ incident is the most important cautionary data point available to this board. A single hallucination event — where the model interpolated between a 30-day and 90-day refund policy to generate a fictional 120-day policy — produced **$2.3M in direct liability**, triggered an FTC regulatory investigation, and caused a 19-point drop in brand trust index. This occurred despite the fact that hallucination rates in controlled deployments are often below 0.3%.\n\nThe mathematics here deserve explicit attention: a sub-1% failure rate applied across thousands of daily customer interactions is not a negligible residual risk. It is a near-certainty of periodic failures. The FinServ case illustrates that when failures occur in high-stakes domains — financial commitments, policy representations, contractual terms — the consequences are asymmetric. **The 4-hour human oversight review lag that allowed the hallucination to propagate** was not a freak accident; it is characteristic of the operational gap between AI throughput and human review capacity.\n\n### 2. The Regulatory Environment Is Tightening Rapidly and Costs Are Non-Trivial\n\nTechCorp must not evaluate this decision under the regulatory environment of 2023. The EU AI Act, effective August 2025, classifies customer-facing AI as **high-risk**, mandating human oversight, bias auditing, and incident reporting at an estimated compliance cost of **$1.8M annually** for mid-size firms. California SB-1047 requires disclosure of AI interaction, and pending UK legislation may require \"meaningful human review\" of all AI-generated customer commitments.\n\nThis regulatory trajectory has two implications. First, compliance costs materially erode projected savings — $1.8M in EU compliance alone reduces a RetailCo-scale $12M saving by 15%. Second, the direction of travel is toward *more* oversight requirements, not fewer. A deployment architecture built for today's rules may require costly retrofitting within 18–24 months.\n\n### 3. Workforce Disruption Carries Operational, Legal, and Reputational Risk\n\nCompanies deploying AI support have reduced frontline staff by an average of **30% within 18 months**, with displaced workers facing an average **8-month unemployment period** before retraining. The internal human cost is also significant: **67% of remaining support staff report increased stress** from handling exclusively escalated cases, a dynamic that risks burnout, attrition, and degraded performance in the highest-stakes interactions.\n\nLabor unions in three EU countries have filed formal objections, signaling that this is not merely an internal HR matter. For TechCorp, depending on its workforce geography and brand positioning, aggressive staff reductions could generate reputational exposure and regulatory scrutiny that offset operational gains. The consumer survey's finding that **18% of respondents cite lack of empathy for emotional situations** as a primary complaint is a leading indicator: the cases most likely to generate public complaints or social media amplification are precisely those the AI handles worst.\n\n---\n\n## Synthesis and Recommendation\n\n### Core Tension\n\nThe evidence presents a genuine dilemma, not a false one. The operational and financial case for adoption is strong and empirically grounded. The risk case is equally grounded — the FinServ incident is not a hypothetical; it is a documented $2.3M outcome plus regulatory action. Any honest recommendation must hold both realities simultaneously.\n\n### Recommended Path: Conditional, Phased Adoption with Hard Constraints\n\n**TechCorp should proceed with deployment, subject to the following non-negotiable conditions:**\n\n#### Condition 1: Domain-Scope the Initial Deployment Strictly\n\nThe consumer survey identifies where AI performs well: **65% of users prefer AI for routine queries** such as password resets and order tracking. RetailCo's success was built on handling Tier-1 tickets, not complex or contractually sensitive interactions. TechCorp should define an explicit \"AI-permissible domain\" that categorically excludes any interaction involving financial commitments, policy representations, refunds, or complaints. The FinServ failure occurred precisely because the system was allowed to operate in a domain where errors have high financial consequence. Scope restriction is the single highest-leverage risk control available.\n\n#### Condition 2: Reduce Human Review Lag to Under 15 Minutes for Flagged Outputs\n\nThe FinServ incident propagated because of a 4-hour review lag. Real-time or near-real-time confidence-threshold flagging — where responses below a defined confidence level are automatically queued for human review before delivery — should be a deployment prerequisite, not a post-launch enhancement. This is technically achievable and directly addresses the documented failure mode.\n\n#### Condition 3: Build Regulatory Compliance Architecture Before Launch, Not After\n\nGiven the EU AI Act's August 2025 effective date and California SB-1047's disclosure requirements, TechCorp should treat compliance infrastructure as a launch prerequisite. The $1.8M annual compliance cost should be built into the business case from the outset. Boards that approve deployments based on gross savings figures and then discover regulatory costs later have made a governance error, not just a financial one.\n\n#### Condition 4: Adopt a Workforce Transition Plan With Defined Commitments\n\nThe RetailCo model — reassignment to complex cases with maintained employment — is replicable and produced measurably better staff satisfaction outcomes. TechCorp should commit to a specific redeployment framework before announcing any deployment, both to manage the internal risk of stress-driven attrition among remaining staff (the 67% elevated stress finding is a performance risk, not just a welfare one) and to reduce union and regulatory friction, particularly in EU markets.\n\n#### Condition 5: Establish a Mandatory 90-Day Monitored Pilot\n\nRetailCo's phased rollout with human oversight in the first 90 days was a structural contributor to its positive outcomes. TechCorp should replicate this, with explicit success criteria defined in advance: hallucination rate thresholds, escalation rate benchmarks, and customer satisfaction floors. If metrics fall outside acceptable ranges, the board should have a pre-agreed decision framework rather than making a high-pressure judgment in the moment.\n\n---\n\n## Summary Decision Matrix\n\n| Dimension | Upside Evidence | Downside Evidence | Net Assessment |\n|---|---|---|---|\n| **Financial** | $12M savings, 40% cost reduction (RetailCo) | $1.8M compliance cost; $2.3M liability event (FinServ) | Positive if scoped correctly |\n| **Customer Experience** | NPS +34 vs +28; 78% satisfaction | 31% cite nuanced complaint failure; 18% cite empathy gap | Positive for transactional use cases |\n| **Operational** | 3x faster resolution; 24/7 availability | 4-hour oversight lag risk; hallucination propagation | Manageable with architecture controls |\n| **Workforce** | Higher satisfaction for reassigned staff (RetailCo) | 67% stress increase; 8-month retraining gap; union objections | Requires active management |\n| **Regulatory** | Currently deployable with disclosure | EU high-risk classification; FTC precedent; evolving UK rules | Increasing compliance burden; act now to stay ahead |\n\n---\n\n## Bottom Line\n\nThe question before this board is not *whether* LLM-powered support will be part of TechCorp's future — the competitive economics make that outcome near-certain across the industry. The question is **whether TechCorp deploys on its own terms, with adequate safeguards, or reacts to competitive pressure later under worse conditions**.\n\nThe evidence supports moving forward. It does not support moving fast. The single most important lesson from the available cases is that the difference between RetailCo's success and FinServ's crisis was not the technology — it was the **oversight architecture, deployment scope, and phased methodology**. TechCorp has the advantage of deploying with both data sets in hand.\n\n**Recommended board action:** Approve a scoped, phased pilot deployment contingent on satisfaction of the five conditions above, with a full-scale deployment decision gate at the 90-day milestone.\n\n---\n\n*This briefing is based on publicly available case data from Q2–Q3 2025. Board members should request internal analysis of TechCorp-specific domain risk profiles before final vote.*",
+        "totalTokens": 3320,
+        "latencyMs": 51353
+      },
+      "harnessMetrics": {
+        "skillsInvoked": [],
+        "totalOperations": 21,
+        "hitlTriggered": false,
+        "contextPressureTokens": 93629,
+        "compressionApplied": true
+      },
+      "factualScore": {
+        "taskId": "crd-001",
+        "facts": [
+          {
+            "factId": "fact-bull-cost",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-bull-satisfaction",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-bull-speed",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-bear-incident",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-bear-regulatory",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-bear-workforce",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-synthesis",
+            "matched": true,
+            "weight": 2
+          }
+        ],
+        "score": 1
+      },
+      "baselineFactualScore": {
+        "taskId": "crd-001",
+        "facts": [
+          {
+            "factId": "fact-bull-cost",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-bull-satisfaction",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-bull-speed",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-bear-incident",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-bear-regulatory",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-bear-workforce",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-synthesis",
+            "matched": true,
+            "weight": 2
+          }
+        ],
+        "score": 1
+      },
+      "passFailResult": {
+        "harnessPass": true,
+        "baselinePass": true,
+        "harnessReason": "All criteria met",
+        "baselineReason": "All criteria met"
+      },
+      "stepGrades": {
+        "taskId": "crd-001",
+        "grades": [
+          {
+            "aspect": "skill_decomposition",
+            "severity": "warn",
+            "finding": "Missing expected skills: researcher, summarizer. Invoked: ."
+          },
+          {
+            "aspect": "context_compression",
+            "severity": "warn",
+            "finding": "5 reference fact(s) not found in compressed summary. Compression may have lost critical information."
+          },
+          {
+            "aspect": "retry_behavior",
+            "severity": "pass",
+            "finding": "21 attempts, 19 succeeded. Acceptable retry rate."
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[run_status] Multi-agent debate run must complete successfully: Run status is \"completed\" (as expected)"
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[task_exists] Bull agent task must exist: Found 2 task(s) matching role=\"subagent\", subagentName=\"bull\""
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[task_exists] Bear agent task must exist: Found 2 task(s) matching role=\"subagent\", subagentName=\"bear\""
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[task_exists] Judge agent task must exist: Found 4 task(s) matching role=\"subagent\", subagentName=\"judge\""
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "fail",
+            "finding": "[task_count] Exactly 3 agent-role tasks: Found 8 task(s) matching role=\"subagent\"; expected [3, 3]"
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[task_order] Bull must complete before judge: Task role=\"subagent\", subagentName=\"bull\" (seq 1) preceded role=\"subagent\", subagentName=\"judge\" (seq 4)"
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[task_order] Bear must complete before judge: Task role=\"subagent\", subagentName=\"bear\" (seq 2) preceded role=\"subagent\", subagentName=\"judge\" (seq 4)"
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[consumes] Judge must consume bull agent's findings: Task role=\"subagent\", subagentName=\"judge\" consumes artifact from role=\"subagent\", subagentName=\"bull\""
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[consumes] Judge must consume bear agent's findings: Task role=\"subagent\", subagentName=\"judge\" consumes artifact from role=\"subagent\", subagentName=\"bear\""
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[consumes_absent] Bull must NOT consume bear's artifacts (scoped visibility): No consumes edge from role=\"subagent\", subagentName=\"bull\" to artifacts of role=\"subagent\", subagentName=\"bear\" (as expected)"
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[consumes_absent] Bear must NOT consume bull's artifacts (scoped visibility): No consumes edge from role=\"subagent\", subagentName=\"bear\" to artifacts of role=\"subagent\", subagentName=\"bull\" (as expected)"
+          }
+        ],
+        "summary": {
+          "pass": 11,
+          "warn": 2,
+          "fail": 1
+        }
+      }
+    }
+  ],
+  "aggregate": {
+    "factualAccuracy": {
+      "harness": 1,
+      "baseline": 1,
+      "delta": 0
+    },
+    "judgeQuality": {
+      "harness": 0,
+      "baseline": 0,
+      "delta": 0,
+      "inconclusiveCount": 0
+    },
+    "passRate": {
+      "harness": 1,
+      "baseline": 1,
+      "total": 1
+    },
+    "byCategory": {
+      "coordination": {
+        "harness": 0,
+        "baseline": 0,
+        "n": 1
+      }
+    },
+    "processMetrics": {
+      "avgSkillsPerRun": 0,
+      "avgOperationsPerRun": 21,
+      "hitlRate": 0,
+      "avgContextPressureRatio": 28.201506024096386
+    }
+  }
+}

@@ -48,6 +48,8 @@ describe("resolveAgentCapabilities", () => {
       name: "researcher",
       description: "Research skill",
       version: "1.0",
+      allowDirectTools: true,
+      allowReadArtifact: false,
     };
 
     const skills = new Map([["researcher", { skill, prompt: "Do research." }]]);
@@ -70,6 +72,8 @@ describe("resolveAgentCapabilities", () => {
       name: "blocked-skill",
       description: "Should be skipped",
       version: "1.0",
+      allowDirectTools: true,
+      allowReadArtifact: false,
     };
 
     const skills = new Map([["blocked-skill", { skill, prompt: "Blocked." }]]);
@@ -86,21 +90,27 @@ describe("resolveAgentCapabilities", () => {
     expect(caps.skills).toHaveLength(0);
   });
 
-  it("includes spawn_subagent tool regardless of skills", async () => {
+  it("includes agent tool regardless of skills", async () => {
     const definition = makeDefinition({ skills: [] });
     const config = buildConfig();
     const caps = await resolveAgentCapabilities(config, definition);
 
     const toolNames = caps.sdkTools.map((t) => t.name);
-    expect(toolNames).toContain("spawn_subagent");
+    expect(toolNames).toContain("agent");
+    expect(toolNames).toContain("read_artifact");
+    expect(toolNames).toContain("lookup_artifacts");
+    expect(toolNames).toContain("write_artifact");
+    expect(toolNames).toContain("answer_from_artifact");
   });
 
-  it("includes spawn_subagent_with_skill tool when skills exist", async () => {
+  it("includes skill tool when skills exist", async () => {
     const skill: Skill = {
       id: "skill-id",
       name: "researcher",
       description: "Research skill",
       version: "1.0",
+      allowDirectTools: true,
+      allowReadArtifact: false,
     };
 
     const skills = new Map([["researcher", { skill, prompt: "Do research." }]]);
@@ -114,16 +124,16 @@ describe("resolveAgentCapabilities", () => {
     const caps = await resolveAgentCapabilities(config, definition);
 
     const toolNames = caps.sdkTools.map((t) => t.name);
-    expect(toolNames).toContain("spawn_subagent_with_skill");
+    expect(toolNames).toContain("skill");
   });
 
-  it("omits spawn_subagent_with_skill when no skills available", async () => {
+  it("omits skill tool when no skills available", async () => {
     const definition = makeDefinition({ skills: [] });
     const config = buildConfig();
     const caps = await resolveAgentCapabilities(config, definition);
 
     const toolNames = caps.sdkTools.map((t) => t.name);
-    expect(toolNames).not.toContain("spawn_subagent_with_skill");
+    expect(toolNames).not.toContain("skill");
   });
 
   it("includes registered tools in SDK tool list", async () => {

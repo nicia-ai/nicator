@@ -3,9 +3,9 @@
 // ---------------------------------------------------------------------------
 
 export const HUMAN_APPROVAL_SKILL_NAME = "human-approval" as const;
-export const SPAWN_SUBAGENT_TOOL_NAME = "spawn_subagent" as const;
-export const SPAWN_SUBAGENT_WITH_SKILL_TOOL_NAME =
-  "spawn_subagent_with_skill" as const;
+export const AGENT_TOOL_NAME = "agent" as const;
+export const SKILL_TOOL_NAME = "skill" as const;
+export const ANSWER_FROM_ARTIFACT_TOOL_NAME = "answer_from_artifact" as const;
 export const TOOL_CALL_VERSION = "tool" as const;
 
 // ---------------------------------------------------------------------------

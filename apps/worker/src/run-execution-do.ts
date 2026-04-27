@@ -1,4 +1,4 @@
-import type { InputDocument, Repository } from "@nicator/core";
+import type { InputArtifact, Repository } from "@nicator/core";
 import { now, todayISO } from "@nicator/core";
 import { runAgent, toolRegistryFromMap } from "@nicator/harness";
 import { CloudflareHitlHandler } from "@nicator/hitl";
@@ -19,7 +19,7 @@ import { getRepo } from "./repo.js";
 
 type StartBody = Readonly<{
   runId: string;
-  inputDocuments?: ReadonlyArray<InputDocument>;
+  inputArtifacts?: ReadonlyArray<InputArtifact>;
 }>;
 
 // ---------------------------------------------------------------------------
@@ -102,7 +102,7 @@ export class RunExecutionDurableObject implements DurableObject {
 
   private async handleStart(request: Request): Promise<Response> {
     // Internal-only endpoint — caller (index.ts) validates with Zod.
-    const body = (await request.json()) as StartBody;
+    const body = await request.json<StartBody>();
 
     await this.ctx.storage.put({
       [RUN_ID_KEY]: body.runId,
@@ -179,8 +179,8 @@ export class RunExecutionDurableObject implements DurableObject {
           toolRegistry,
           workspace,
           hitlHandler,
-          ...(body.inputDocuments ?
-            { inputDocuments: body.inputDocuments }
+          ...(body.inputArtifacts ?
+            { inputArtifacts: body.inputArtifacts }
           : {}),
           env: { date: todayISO(), runtime: "worker" },
         });

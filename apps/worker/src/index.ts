@@ -131,7 +131,7 @@ api.post("/api/runs", zValidator("json", CreateRunBodySchema), async (c) => {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
       runId: run.id,
-      ...(body.inputDocuments ? { inputDocuments: body.inputDocuments } : {}),
+      ...(body.inputArtifacts ? { inputArtifacts: body.inputArtifacts } : {}),
     }),
   });
 

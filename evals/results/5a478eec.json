@@ -1,0 +1,195 @@
+{
+  "runId": "5a478eec-724d-47c3-b332-2b094490dd7d",
+  "timestamp": "2026-04-06T07:23:02.181Z",
+  "harnessVersion": "0.1.0",
+  "modelVersion": "claude-sonnet-4-6",
+  "tasks": [
+    {
+      "taskId": "kwb-030",
+      "category": "synthesis",
+      "harnessOutput": {
+        "text": "I now have sufficient information to produce the structured comparison Sarah requested. Here is the analysis:\n\n---\n\n# AI Regulation Comparison: Hiring Screening Tools\n## EU | US | UK — Current State as of Q2 2026\n\n---\n\n## Summary Verdict\n\n| Question | EU | US | UK |\n|---|---|---|---|\n| Primary framework | EU AI Act | State/local patchwork; no federal law | DUAA 2025 + UK GDPR + Equality Act 2010 |\n| High-risk classification? | **Yes — explicitly** | Effectively yes in key states (NYC, CA, CO) | No formal classification; significant obligations still apply |\n| Key deadline | **Aug 2, 2026** (core compliance) | **Now** (NYC, IL in force; CA Oct 2025; CO Feb 2026) | DUAA in force; ICO enforcement ongoing |\n\n---\n\n## 1. European Union\n\n### Primary Framework\n**EU Artificial Intelligence Act (AI Act)**, in force August 2024, phasing in through 2027. Operates alongside **GDPR** (especially Article 22 on automated decisions).\n\n### High-Risk Classification\n**Yes — explicitly.** Annex III of the AI Act lists employment-related AI systems (including tools that screen, rank, shortlist, or evaluate candidates) as high-risk. No analysis required — your product falls squarely in this category.\n\n### Key Obligations\n1. **Risk management & bias testing:** Mandatory documented risk assessment before deployment. Training data must be \"relevant, representative, sufficiently diverse, and as free of errors as possible\" (Article 10). Ongoing bias monitoring required.\n2. **Human oversight:** Meaningful human review of AI outputs is legally required. Rubber-stamping an AI score is insufficient — the ECJ's *SCHUFA* (2023) ruling means an AI score that effectively drives a hiring decision may itself be treated as an automated decision under GDPR Article 22, triggering candidate rights to explanation and contest.\n3. **Transparency & candidate notification:** Candidates must be informed when AI plays a significant role in decisions. Technical documentation of the system must be maintained. Registration in an EU database required before go-live.\n4. **Record-keeping:** Full technical documentation (model logic, training data, testing results) required; logs must be maintained.\n\n**Prohibited outright (since Feb 2, 2025):** Emotion recognition in interviews, facial analysis for inferring personality/mood, social scoring of candidates based on online behavior. Disable any such features immediately.\n\n### Compliance Deadlines\n| Date | Milestone |\n|---|---|\n| **Feb 2, 2025** ✅ | Ban on prohibited AI practices effective (emotion recognition, etc.) |\n| **Aug 2, 2025** ✅ | GPAI/LLM transparency rules effective (affects AI vendors) |\n| **Aug 2, 2026** ⚠️ | **Core high-risk obligations enforceable** — documentation, bias audits, human oversight, registration all required by this date |\n| **Aug 2, 2027** | Active enforcement with fines begins: up to €35M or 6–7% of global turnover |\n\n**Bottom line:** August 2026 is the hard deadline. Begin conformity assessment, technical documentation, and bias testing now — 12 months is not long to certify an AI system.\n\n---\n\n## 2. United States\n\n### Primary Framework\n**No federal AI hiring law exists.** The EEOC and DOL issue guidance but not binding rules. Compliance is driven by **state and local laws**, with three jurisdictions most material to a national product launch:\n\n- **NYC Local Law 144** (effective Jan 1, 2023)\n- **California FEHA automated decision-making rules** (effective Oct 1, 2025)\n- **Colorado AI Act** (effective Feb 1, 2026)\n- **Illinois AI Video Interview Act** (effective 2020); broader anti-discrimination rules also in effect\n- Federal anti-discrimination law (Title VII, ADEA, ADA) applies everywhere and covers algorithmic discrimination\n\n### High-Risk Classification\nNo formal \"high-risk\" label at federal level. However, all major state laws treat automated employment decision tools (AEDTs) as subject to mandatory audits and oversight — functionally equivalent to high-risk treatment.\n\n### Key Obligations (by jurisdiction)\n\n**NYC (Local Law 144) — IN FORCE:**\n1. **Annual independent bias audit** of the AEDT, testing for disparate impact by race/ethnicity and sex; results must be published publicly\n2. **Candidate notification** before use; must disclose what job qualifications are being assessed\n3. **Alternative process** must be offered to candidates who request one\n4. Penalties: $500–$1,500 per violation (per day for continuing violations)\n\n**California (effective Oct 1, 2025) — IN FORCE:**\n1. **Bias testing** and regular risk assessments required\n2. **Four-year record retention** of model documentation, training data, audit results\n3. **Employer liability** for vendor tools used on their behalf\n4. **Opt-out right** for applicants; notice required\n\n**Colorado (effective Feb 1, 2026):**\n1. **Duty of reasonable care** for deployers of high-risk AI systems\n2. Annual impact assessments; public disclosure of AI systems used\n3. Civil liability for violations\n\n**Federal baseline (everywhere):** Title VII, ADEA, and ADA apply to algorithmic decisions. The EEOC has made algorithmic discrimination an enforcement priority (see *EEOC v. iTutorGroup*, $365K settlement, 2023; *Mobley v. Workday* class action certified 2025).\n\n### Compliance Deadlines\n| Jurisdiction | Status |\n|---|---|\n| NYC Local Law 144 | **In force now** — audit and notice required before any NYC-area deployment |\n| Illinois Video Interview Act | **In force now** — notice + consent required if AI analyzes video interviews |\n| California | **In force Oct 1, 2025** — bias testing, records, opt-out required |\n| Colorado | **In force Feb 1, 2026** — risk management and impact assessments required |\n\n**Bottom line:** For a national US launch, assume bias audit, candidate notification, human oversight, and 4-year record retention are baseline requirements. Do not rely solely on vendor compliance certifications — employer liability persists regardless.\n\n---\n\n## 3. United Kingdom\n\n### Primary Framework\nThe UK has not adopted the EU AI Act. Instead, AI in hiring is governed by three overlapping frameworks:\n1. **Data (Use and Access) Act 2025 (DUAA)** — amends UK GDPR/DPA 2018; being brought into force in stages\n2. **UK GDPR** (including Article 22 equivalent on automated decisions, now reformed by DUAA)\n3. **Equality Act 2010** — prohibits direct and indirect discrimination in hiring, including via AI\n\n**ICO (Information Commissioner's Office)** has issued specific guidance on AI and recruitment, flagging concerns about bias, explainability, and transparency in hiring tools.\n\n### High-Risk Classification\nNo formal \"high-risk\" tier under UK law. However, DUAA introduces specific obligations around **\"significant decisions\" made solely by automated means** — which hiring screening decisions clearly are.\n\n### Key Obligations\n1. **Automated decision-making safeguards (DUAA):** The most stringent restrictions apply to significant automated decisions, particularly where special category data (race, disability, etc.) is involved. Candidates must have the right to human review, an explanation of the decision logic, and a mechanism to contest outcomes.\n2. **Bias testing & human oversight:** The ICO has explicitly called for bias testing, meaningful human involvement (not rubber-stamping), and explainability in AI hiring tools. Designing workflows where humans genuinely review and can override AI outputs is critical to demonstrating compliance.\n3. **Candidate transparency:** Clear notices explaining AI use, what data is collected, how decisions are made, and how to raise concerns must be provided. Candidates must have access to complaint channels.\n4. **Data protection impact assessment (DPIA):** High-risk processing of personal data — which AI-driven screening qualifies as — requires a DPIA under UK GDPR.\n\n**Note:** DUAA simplifies some UK GDPR record-keeping and legitimate interest requirements compared to EU GDPR, creating minor divergence between EU and UK compliance requirements. However, the practical obligations for a hiring tool are materially similar.\n\n### Compliance Deadlines\n- **DUAA is in force** and being implemented in stages through 2025–2026; specific commencement dates for automated decision-making provisions should be tracked via ICO guidance\n- **ICO enforcement** of AI recruitment guidance is active — no safe harbor period\n- **Equality Act 2010** enforcement is ongoing with no new deadlines\n\n**Bottom line:** The UK requires a DPIA, human review mechanisms, candidate transparency, and bias testing. It is less prescriptive than the EU on documentation but expects demonstrable compliance. Track DUAA commencement orders and updated ICO guidance closely through 2026.\n\n---\n\n## Cross-Jurisdiction Compliance Priorities (Top Actions)\n\n| Priority | Action | Deadline |\n|---|---|---|\n| 1 | **Disable** any emotion recognition, facial mood analysis features | **Immediate** (EU ban already in force) |\n| 2 | **Conduct bias audit** before NYC and California deployment | **Before launch** |\n| 3 | **Draft candidate notices** for all three markets (AI use, data collected, opt-out/review rights) | Before launch |\n| 4 | **Implement human review checkpoints** — no fully automated rejections in any market | Before launch |\n| 5 | **Begin EU conformity documentation** (technical docs, risk management, system registration) | **By Aug 2, 2026** |\n| 6 | **DPIA** for UK processing | Before UK launch |\n| 7 | **4-year record retention** program (models, training data, audit results) | Before California launch |\n| 8 | **Vendor contracts** — require audit documentation, transparency, and right to terminate if non-compliant | Before launch |\n\n---\n\n## Key Uncertainties to Flag for the Board\n\n- **US federal law:** The Trump administration issued an executive order in early 2025 signaling resistance to state AI laws; federal preemption of state laws (including NYC LL144) remains a live legal question. Do not reduce compliance posture — state laws remain in effect and enforcement continues.\n- **DUAA commencement:** Not all DUAA provisions are yet in force. Monitor ICO publications for commencement orders affecting automated decision-making provisions.\n- **\"Meaningful\" human oversight:** Neither the EU nor UK has defined the precise threshold for what makes human review \"meaningful\" vs. rubber-stamping. Legal exposure exists at the margins; build in genuine review workflows rather than nominal checkboxes.",
+        "totalTokens": 58484,
+        "latencyMs": 91784
+      },
+      "baselineOutput": {
+        "text": "# AI Regulation Comparative Analysis: Hiring Screening Tools\n**Prepared for: AI Governance Committee | Q2 2025 Compliance Planning**\n\n---\n\n## Important Preliminary Note\n\nThis analysis reflects the regulatory landscape as of mid-2025. AI regulation is moving rapidly, and **specific implementation dates, guidance documents, and enforcement positions are actively evolving**. Before Q2 planning is finalized, I strongly recommend verification with qualified legal counsel in each jurisdiction, as deadlines and technical specifications referenced below may have shifted since my knowledge cutoff.\n\n---\n\n## European Union — EU AI Act\n\n### Classification\n**High-risk — confirmed.** Annex III of the EU AI Act explicitly lists \"AI systems used for recruitment or selection of natural persons, notably for advertising vacancies, screening or filtering applications, evaluating candidates\" as high-risk AI systems. There is no ambiguity on this classification for your product.\n\n### Key Obligations\n\n**1. Conformity Assessment & Technical Documentation**\nBefore placing the system on the EU market, you must complete a conformity assessment and compile technical documentation demonstrating compliance. For Annex III systems where no harmonized standard applies, this is largely self-assessment, but the documentation burden is substantial: system architecture, training data description, risk management processes, and performance metrics across demographic groups must all be recorded and maintained for **10 years post-market**.\n\n**2. Human Oversight Requirements**\nArticle 14 requires that high-risk AI systems be designed to allow human oversight effectively. For a hiring screener, this means decisions cannot be fully automated — a qualified human must be capable of understanding, overriding, or halting the system's output. Practically, this likely requires your UI to surface model confidence indicators and flag edge cases, not merely display a pass/fail result.\n\n**3. Bias and Accuracy Testing (Fundamental Rights Impact)**\nArticle 9 requires an ongoing risk management system, including testing for reasonably foreseeable misuse and bias across protected characteristics. High-risk systems in employment must demonstrate that training data is \"relevant, representative, free of errors and complete\" to the extent reasonably possible. You should expect regulators to ask specifically about gender, age, ethnicity, and disability proxies in your feature set.\n\n### Compliance Deadlines\n- **August 2, 2026**: High-risk AI systems under Annex III must be fully compliant. This is your hard launch deadline for EU.\n- **Now**: GPAI (general-purpose AI) provisions and prohibited practices rules are already in force (February 2025). If your system uses an upstream foundation model, supplier due diligence obligations apply immediately.\n- **Gap risk**: The technical standards (harmonized standards via CEN/CENELEC) are still being finalized. Compliance strategies built on those standards carry timing risk — build to the Act's text directly, not just anticipated standards.\n\n---\n\n## United States — Fragmented Federal/State Landscape\n\n### Classification\nThe US has **no enacted federal AI law** governing hiring tools as of 2025. Compliance risk instead comes from three overlapping sources: existing civil rights law, emerging state/local legislation, and agency guidance.\n\n### Key Obligations\n\n**1. Existing Civil Rights Framework (EEOC / Title VII)**\nThe Equal Employment Opportunity Commission has consistently applied disparate impact doctrine to algorithmic hiring tools. The EEOC's 2023 technical assistance document on AI and employment explicitly stated that an employer's use of a vendor's AI tool does not transfer liability — **the employer (your customer) remains responsible**, but vendors are typically contractually required to indemnify. Your clients will ask for adverse impact analysis data; you need to be able to produce it. Design your testing and reporting to produce adverse impact ratios by race, sex, national origin, age (ADEA), and disability status (ADA).\n\n**2. State and Local Legislation — NYC Local Law 144 as the Current Benchmark**\nNew York City Local Law 144 (in force since July 2023) is the most developed law and is functioning as a de facto standard for how to operationalize AI hiring compliance. Key requirements:\n- Annual **bias audit** by an independent auditor before use and annually thereafter\n- Public posting of audit summary results\n- **Candidate notice** at least 10 business days before the tool is used on them, including the job qualifications and characteristics it evaluates\n- Accommodation process for candidates who prefer a non-automated pathway\n\nSeveral other jurisdictions have similar or more stringent measures: **Illinois** (AI Video Interview Act, AEDT disclosure requirements), **Maryland**, **Colorado** (in employment credit context),",
+        "totalTokens": 1330,
+        "latencyMs": 27748
+      },
+      "harnessMetrics": {
+        "skillsInvoked": [
+          "researcher"
+        ],
+        "totalOperations": 11,
+        "hitlTriggered": false,
+        "contextPressureTokens": 45008,
+        "compressionApplied": true
+      },
+      "factualScore": {
+        "taskId": "kwb-030",
+        "facts": [
+          {
+            "factId": "fact-1",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-2",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-3",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-4",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-5",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-6",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-7",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-8",
+            "matched": true,
+            "weight": 1
+          }
+        ],
+        "score": 1
+      },
+      "baselineFactualScore": {
+        "taskId": "kwb-030",
+        "facts": [
+          {
+            "factId": "fact-1",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-2",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-3",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-4",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-5",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-6",
+            "matched": true,
+            "weight": 2
+          },
+          {
+            "factId": "fact-7",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-8",
+            "matched": true,
+            "weight": 1
+          }
+        ],
+        "score": 0.8181818181818182
+      },
+      "passFailResult": {
+        "harnessPass": true,
+        "baselinePass": true,
+        "harnessReason": "All criteria met",
+        "baselineReason": "All criteria met"
+      },
+      "stepGrades": {
+        "taskId": "kwb-030",
+        "grades": [
+          {
+            "aspect": "skill_decomposition",
+            "severity": "pass",
+            "finding": "All 1 expected skills invoked."
+          },
+          {
+            "aspect": "context_compression",
+            "severity": "warn",
+            "finding": "8 reference fact(s) not found in compressed summary. Compression may have lost critical information."
+          },
+          {
+            "aspect": "retry_behavior",
+            "severity": "pass",
+            "finding": "11 attempts, 9 succeeded. Acceptable retry rate."
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[run_status] Run should complete successfully: Run status is \"completed\" (as expected)"
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[task_exists] Researcher skill should be activated to find regulatory details: Found 2 task(s) matching skillName=\"researcher\""
+          }
+        ],
+        "summary": {
+          "pass": 4,
+          "warn": 1,
+          "fail": 0
+        }
+      }
+    }
+  ],
+  "aggregate": {
+    "factualAccuracy": {
+      "harness": 1,
+      "baseline": 0.8181818181818182,
+      "delta": 0.18181818181818177
+    },
+    "judgeQuality": {
+      "harness": 0,
+      "baseline": 0,
+      "delta": 0,
+      "inconclusiveCount": 0
+    },
+    "passRate": {
+      "harness": 1,
+      "baseline": 1,
+      "total": 1
+    },
+    "byCategory": {
+      "synthesis": {
+        "harness": 0,
+        "baseline": 0,
+        "n": 1
+      }
+    },
+    "processMetrics": {
+      "avgSkillsPerRun": 1,
+      "avgOperationsPerRun": 11,
+      "hitlRate": 0,
+      "avgContextPressureRatio": 33.8406015037594
+    }
+  }
+}

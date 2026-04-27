@@ -21,13 +21,13 @@
     "@nicator/tool-web-fetch": "workspace:*",
     "@nicator/tool-web-search": "workspace:*",
     "@nicator/workspace": "workspace:*",
-    "@nicia-ai/typegraph": "^0.19.0",
+    "@nicia-ai/typegraph": "^0.23.0",
     "drizzle-orm": "^0.45.2",
-    "hono": "^4.12.12",
+    "hono": "^4.12.15",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260405.1",
-    "wrangler": "^4.81.0"
+    "@cloudflare/workers-types": "^4.20260426.1",
+    "wrangler": "^4.85.0"
   }
 }

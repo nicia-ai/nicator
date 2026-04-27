@@ -1,0 +1,650 @@
+# DCV-001 · decomposition-value
+#
+# First task designed to isolate the decomposition effect. 10 documents
+# on a fictional SaaS acquisition (Ridgewave Systems → EverPeak Capital)
+# are seeded as input artifacts. Five cross-source discrepancies are
+# planted with varying subtlety, from "different numbers for the same
+# metric" (obvious) to "different computation method using the same
+# underlying data" (subtle, definitional).
+#
+# The claim under test: a decomposition pipeline that extracts
+# structured claims per document, then cross-references the extracted
+# claims, finds more discrepancies than a single-pass answer from the
+# same harness wrapper. The "baseline" column for this category runs
+# the same harness tools/wrapper with `skills: []` and the default
+# system prompt — so the delta is the decomposition effect itself,
+# holding prompt and tools constant.
+#
+# Finding from the initial runs (claude-sonnet-4-6, April 2026):
+# At this scale (10 documents × ~400 tokens each = ~4K tokens of
+# dense diligence content), a single flat pass through the harness
+# reliably finds all 4 required discrepancies. The decomposition
+# pipeline finds the same discrepancies when it completes, but it
+# has more moving parts (10 extract-claims skill calls + 2 ad-hoc
+# agents) and therefore more ways to fail mid-run — so its observed
+# success rate is actually lower than flat, not higher.
+#
+# The claim "decomposition adds value" is NOT supported by this task
+# on Sonnet. To discriminate, the task needs to scale up along at
+# least one axis: document length (2-3K tokens each, so total ~30K),
+# document count (30+), or subtlety (discrepancies requiring
+# arithmetic across 3+ sources rather than pattern-matching).
+#
+# Kept as starter infrastructure for step 8 — the framework plumbing
+# (InputArtifact, decomposition-value category, flat-harness baseline
+# comparison, extract-claims skill) all work correctly end-to-end.
+# A harder variant (dcv-002+) is the next step if and when the
+# "decomposition adds value" hypothesis is re-tested.
+
+id: dcv-001
+category: decomposition-value
+metadata:
+  purpose: mechanism
+  realism: synthetic
+  releaseGate: research
+  comparisonMode: flat-harness
+  workloadFamily: diligence-audit
+  hypothesis: decomposition improves cross-source discrepancy detection on fragmented diligence packets
+  stressAxes:
+    - join_arity
+    - decomposition_fidelity
+name: Ridgewave Systems acquisition — cross-source diligence
+description: >-
+  10 diligence documents on a fictional SaaS acquisition. Identify every
+  material discrepancy across the source documents and indicate the
+  documents involved. Five discrepancies are planted with varying
+  subtlety, from overt (different numbers for the same metric) to
+  definitional (different computation method applied to the same data).
+
+sources: []
+
+inputArtifacts:
+  - id: doc-cim
+    title: "Ridgewave Systems — Confidential Information Memorandum (Seller)"
+    tokenCount: 520
+    content: |
+      # Ridgewave Systems — Confidential Information Memorandum
+
+      **Prepared for: Qualified Acquirers | February 2026**
+      **Advisor: Meridian Capital Partners**
+
+      ## Executive Summary
+
+      Ridgewave Systems is a leading cloud-native observability platform
+      serving mid-market enterprises in North America and EMEA. Founded
+      in 2017, the company has grown to serve over 340 paying customers
+      with industry-leading retention and a best-in-class product
+      velocity profile.
+
+      ## Key Financial Highlights (FY2025)
+
+      - **Annual Recurring Revenue (ARR): $31.2M** at 12/31/2025, up
+        from $24.0M at 12/31/2024
+      - **YoY ARR growth: 30%** — consistent with prior two years
+      - **Net Dollar Retention (NDR): 115%** — best-in-class for our
+        segment
+      - **Gross margin: 78%** — reflecting mature unit economics
+      - **Sales payback period: under 18 months** — top-quartile
+        performance
+      - **Customer count: 340+** — no single customer represents more
+        than 15% of ARR
+
+      ## Growth Trajectory
+
+      Management projects $42M ARR by 12/31/2026, driven by continued
+      land-and-expand motion and expanding EMEA presence. FY2026
+      bookings pipeline stands at $21M weighted, representing 1.4x
+      coverage against the $15M new-logo target implied by the plan.
+
+      ## Strategic Rationale
+
+      Ridgewave is offered to strategic and financial acquirers with
+      the operational muscle to scale its enterprise motion. The
+      business is at an inflection point: the product is mature, the
+      go-to-market motion is proven, and the market opportunity is
+      expanding faster than we can currently address.
+
+  - id: doc-qoe
+    title: "Ridgewave Systems — Quality of Earnings Report (Independent)"
+    tokenCount: 540
+    content: |
+      # Quality of Earnings Report — Ridgewave Systems Inc.
+
+      **Prepared by: Haverford Grant LLP**
+      **Engagement: Buy-side QoE for EverPeak Capital**
+      **Scope: FY2024 and FY2025, limited-scope transaction diligence**
+
+      ## Summary of Findings
+
+      We reviewed Ridgewave's trial balance, revenue contracts, and
+      management reporting for the two-year period ending 12/31/2025.
+      Our findings materially reconcile to management's reported ARR
+      figure with adjustments noted below.
+
+      ## ARR Reconciliation
+
+      Management reports FY2025 ending ARR of $31.2M. After the
+      adjustments listed in Appendix A, we arrive at an adjusted ARR of
+      **$29.4M**. The $1.8M reduction is driven by:
+
+      - Reclassification of three one-time professional services
+        contracts originally booked as recurring ($0.9M)
+      - Removal of two contracts in active dispute for which collection
+        is not reasonably assured ($0.6M)
+      - Haircut on a stub-period multi-year contract where year-one
+        revenue was over-recognized under the company's policy ($0.3M)
+
+      Applying the same adjustments to the FY2024 ending balance yields
+      **$24.1M adjusted** (vs. $24.0M management). Adjusted YoY growth
+      is therefore **22%**, not the 30% figure management uses in its
+      marketing materials. We consider the 22% figure to be the more
+      faithful representation of organic growth.
+
+      ## Customer Concentration (Appendix C, summarized)
+
+      The largest customer by contracting entity represents **18.0%**
+      of adjusted FY2025 ARR. When associated entities are rolled up
+      to beneficial owner (the customer's corporate parent controls
+      three contracting subsidiaries that management reports as distinct
+      logos), the effective concentration rises to **24.1%**.
+
+      We flag this for the acquirer because management's CIM asserts
+      that no customer represents more than 15% of ARR, which is true
+      only under the narrowest contracting-entity view.
+
+  - id: doc-mgmt-deck
+    title: "Ridgewave Systems — Management Presentation (Oct 2025)"
+    tokenCount: 500
+    content: |
+      # Ridgewave Systems — Business Review
+      ## For: Prospective Acquirers
+      ## Date: October 2025
+
+      ---
+
+      ## Slide 1: The Ridgewave Story
+
+      - 340+ enterprise customers
+      - $30M+ ARR run-rate
+      - 115% NDR
+      - Mature product, experienced leadership, mature GTM
+
+      ---
+
+      ## Slide 2: Customer Success Metrics
+
+      **Retention is our North Star.**
+
+      - Net Dollar Retention: **115%**
+      - Gross logo retention: **97.5%** (weighted by ARR)
+      - Logo churn: **2.5%** (measured on ARR-weighted basis)
+      - Top-20 customer renewal: **100%** — every top-20 customer
+        renewed in the prior 12 months
+
+      ---
+
+      ## Slide 3: Why We Win
+
+      Our customer obsession is reflected in the numbers. The top 20
+      accounts — which represent over 50% of ARR — have a 100% renewal
+      rate over the last 12 months. This is the foundation of our
+      115% NDR and the reason we believe Ridgewave's commercial model
+      is durable through an economic cycle.
+
+      ---
+
+      ## Slide 4: FY2026 Plan
+
+      - **ARR target: $42M** (management base case)
+      - **New-logo target: 120 accounts** (implied $15M new ARR)
+      - **Expansion target: $4M from existing base**
+      - **Implied churn: $8.2M** (but see Slide 2: "churn is under
+        control")
+      - **FY2026 pipeline coverage: 1.4x** on new-logo target
+      - **Projected sales payback: 16 months** — improving from
+        FY2025's sub-18-month figure
+
+  - id: doc-audit
+    title: "Ridgewave Systems Inc. — FY2024 Audited Financial Statements"
+    tokenCount: 380
+    content: |
+      # Ridgewave Systems Inc. — Consolidated Financial Statements
+      ## For the year ended December 31, 2024
+      ## Audited by: Thornfield Whitfield LLP (independent)
+
+      ## Statement of Operations (summarized, USD thousands)
+
+      |                                | FY2024   | FY2023   |
+      |--------------------------------|----------|----------|
+      | Subscription revenue           | 22,200   | 17,400   |
+      | Professional services revenue  |  1,300   |  1,200   |
+      | **Total revenue**              | 23,500   | 18,600   |
+      | Cost of revenue                | (5,170)  | (4,092)  |
+      | **Gross profit**               | 18,330   | 14,508   |
+      | Operating expenses             | (21,100) | (16,740) |
+      | **Operating loss**             | (2,770)  | (2,232)  |
+
+      **Ending Annual Recurring Revenue (ARR):** $23.5M at 12/31/2024
+      (calculated as monthly contracted recurring revenue × 12, per
+      the company's stated ARR policy).
+
+      ## Note 11 — Subsequent Events
+
+      No events subsequent to the balance sheet date that would
+      materially alter the financial position of the company have been
+      identified through the report issuance date (March 14, 2025).
+
+  - id: doc-customer-schedule
+    title: "Ridgewave — Top 20 Customer Schedule (Data Room Document 4.3)"
+    tokenCount: 440
+    content: |
+      # Top 20 Customer Schedule — Ridgewave Systems
+      ## As of December 31, 2025
+      ## Data Room Section 4.3 — Customer & Commercial
+
+      | Rank | Customer                       | FY25 ARR ($K) | Initial Contract | Current Status       |
+      |------|--------------------------------|---------------|------------------|----------------------|
+      | 1    | Ashworth Financial Group       |       5,620  | 2019             | Active, expansion    |
+      | 2    | NorthStar Manufacturing        |       2,980  | 2020             | Active, expansion    |
+      | 3    | Blackwell Retail               |       1,840  | 2019             | Active, flat         |
+      | 4    | Erikson Pharmaceuticals        |       1,420  | 2021             | Active, expansion    |
+      | 5    | Hargrove Insurance             |       1,210  | 2020             | Active, flat         |
+      | 6    | Pemberton Media                |         990  | 2021             | Active, expansion    |
+      | 7    | Whitfield Transportation       |         860  | 2019             | Active, contracted   |
+      | 8    | Carmichael Energy              |         820  | 2020             | Active, flat         |
+      | 9    | Stonebridge Bank               |         780  | 2022             | Lapsed Q3 FY25 *     |
+      | 10   | Kelvin-Strauss Aerospace       |         720  | 2021             | Active, expansion    |
+      | 11   | Thornfield Whitfield LLP       |         680  | 2019             | Active, flat         |
+      | 12   | Brine & Sons                   |         640  | 2023             | Active, expansion    |
+      | 13   | Meridian Capital               |         600  | 2022             | Lapsed Q2 FY25 *     |
+      | 14   | Vasquez Medical Center         |         570  | 2021             | Active, flat         |
+      | 15   | Atacama Resources              |         540  | 2020             | Active, flat         |
+      | 16   | Haverford Grant LLP            |         510  | 2022             | Active, expansion    |
+      | 17   | Marsh Dynamics                 |         490  | 2023             | Active, expansion    |
+      | 18   | Diana Marsh Partners           |         450  | 2022             | Active, flat         |
+      | 19   | Acorn Systems                  |         420  | 2021             | Lapsed Q4 FY25 *     |
+      | 20   | Thornton Reed Advisors         |         400  | 2023             | Active, expansion    |
+
+      *Lapsed accounts have been replaced in the top-20 roster by
+      customers 21, 22, and 23 for reporting consistency with prior
+      periods. See Section 4.4 for replacement detail.
+
+  - id: doc-retention-analysis
+    title: "Ridgewave — Retention Analysis (Internal, Q4 2025)"
+    tokenCount: 380
+    content: |
+      # Retention Analysis — Ridgewave Systems
+      ## Q4 2025 Internal Review
+      ## Prepared by: Finance & Ops
+
+      ## Methodology
+
+      This analysis measures customer retention using the **cohort exit
+      method**: for each annual cohort of new customers, we track how
+      many remain as paying customers at each anniversary. This is the
+      methodology we use for internal planning and board reporting.
+
+      ## Results
+
+      | Cohort    | Year 1 Retention | Year 2 Retention | Year 3 Retention |
+      |-----------|------------------|------------------|------------------|
+      | FY2020    |      92%         |      89%         |      86%         |
+      | FY2021    |      94%         |      91%         |      88%         |
+      | FY2022    |      95%         |      93%         |       —          |
+      | FY2023    |      96%         |       —          |       —          |
+      | FY2024    |      96%         |       —          |       —          |
+
+      ## Headline Metric
+
+      **Cohort-exit logo churn: 4.0% annualized** (trailing 4 quarters,
+      blended across all active cohorts).
+
+      This is higher than the ARR-weighted figure we report externally
+      (which is 2.5% because our largest customers don't churn) but it
+      is the more conservative measurement and the one we use for
+      internal planning. We recommend using the cohort figure for
+      acquirer diligence conversations where the methodology question
+      is likely to come up.
+
+  - id: doc-pipeline
+    title: "Ridgewave — FY2026 Sales Pipeline & Forecast (Oct 2025)"
+    tokenCount: 340
+    content: |
+      # FY2026 Sales Pipeline & Forecast
+      ## As of October 31, 2025
+      ## Internal — Sales Operations
+
+      ## Headline Numbers
+
+      - **Total weighted pipeline:** $21.0M
+      - **New-logo ARR target:** $15.0M
+      - **Pipeline coverage:** 1.4x
+
+      ## Conversion Assumptions
+
+      Forecast weighting assumes **35% win rate** on Stage-3+
+      opportunities, consistent with historical average. This is used
+      to derive the weighted pipeline figure above.
+
+      ## Historical Win Rate by Quarter (Stage-3+ at period start)
+
+      | Period | Win Rate |
+      |--------|----------|
+      | Q1 FY2024 |  28%   |
+      | Q2 FY2024 |  31%   |
+      | Q3 FY2024 |  26%   |
+      | Q4 FY2024 |  22%   |
+      | Q1 FY2025 |  25%   |
+      | Q2 FY2025 |  27%   |
+
+      **Trailing-6Q average: 26.5%**
+
+      The 35% figure in the forecast reflects "expected improvement as
+      enterprise rep ramp completes." Sales Ops has flagged that the
+      25-27% range is the more defensible assumption absent a concrete
+      driver of improvement.
+
+  - id: doc-board-minutes
+    title: "Ridgewave — Board Meeting Minutes Q4 2025 (excerpted)"
+    tokenCount: 300
+    content: |
+      # Ridgewave Systems Inc. — Board of Directors Meeting
+      ## October 28, 2025
+      ## Excerpted minutes — Commercial review only
+
+      **Attending:** Diana Marsh (CEO), Marcus Thornton (CFO),
+      Elena Vasquez (Board Chair), Four other directors (names redacted)
+
+      ### Commercial Review
+
+      CFO Thornton reviewed FY2025 projected close: ARR of $31.2M on
+      a management basis, 30% YoY. He noted that QoE is currently in
+      progress and that the QoE-adjusted figure is expected to be
+      $2-3M lower due to ongoing discussions about the treatment of
+      three multi-year contracts.
+
+      Director Vasquez asked about the FY2026 forecast win-rate
+      assumption. CFO Thornton noted that the 35% figure assumes
+      enterprise rep ramp completes on schedule; **the historical
+      conversion rate has been 22-27% depending on the quarter**, and
+      a more conservative projection would use 25%. The board
+      acknowledged this and requested that sales operations produce
+      a downside scenario at 25% for the February board meeting.
+
+  - id: doc-comp-schedule
+    title: "Ridgewave — Executive Compensation Schedule (Transaction Terms)"
+    tokenCount: 310
+    content: |
+      # Executive Compensation & Earn-Out Schedule
+      ## Ridgewave Systems Inc. — Transaction Terms
+      ## Reference document for EverPeak Capital negotiation team
+
+      ## Founders' Earn-Out
+
+      CEO Diana Marsh and CFO Marcus Thornton are entitled to a
+      combined earn-out equity allocation triggered by FY2026 ARR
+      performance. The earn-out structure:
+
+      | Tier | ARR Achievement | Earn-out Shares |
+      |------|-----------------|------------------|
+      | 1    | Base            | 200,000          |
+      | 2    | **$30M or 130% of 2024 ARR** (whichever is higher) | +100,000 |
+      | 3    | $35M or 150% of 2024 ARR (whichever is higher)    | +150,000 |
+
+      ## Notes
+
+      - "2024 ARR" refers to audited ending ARR as reported in the
+        FY2024 audited financials (Thornfield Whitfield LLP, issued
+        March 2025).
+      - Tier 2 threshold is stated in the CIM as "$30M" for
+        simplicity; the binding figure is the higher of the two
+        formulas.
+
+  - id: doc-risk-factors
+    title: "Ridgewave — Transaction Risk Factors & Disclosures"
+    tokenCount: 320
+    content: |
+      # Risk Factors & Disclosures
+      ## Ridgewave Systems Inc. — Transaction Documentation
+
+      ## Customer Concentration
+
+      Ridgewave's revenue profile includes a degree of customer
+      concentration that the acquirer should evaluate. As disclosed in
+      the customer schedule (Data Room 4.3), our largest customer
+      represents approximately 18% of FY2025 ARR on a contracting-
+      entity basis.
+
+      For completeness, the largest customer's corporate parent also
+      owns minority stakes in two additional logos that appear as
+      separate contracts in our customer schedule. The acquirer's
+      counsel should review beneficial ownership for independent
+      risk assessment.
+
+      ## Contingent Liabilities
+
+      Two customer contracts included in the management ARR reporting
+      are subject to ongoing commercial disputes. The QoE report
+      (Section A-3) excludes these contracts from adjusted ARR. Total
+      exposure: approximately $0.6M.
+
+      ## Governance
+
+      Founders retain operational control through a voting trust
+      during the earn-out period. The earn-out thresholds (see
+      Executive Compensation & Earn-Out Schedule) were negotiated on
+      the basis of 2024 audited ARR.
+
+question: |
+  You are performing pre-signing diligence on EverPeak Capital's proposed
+  acquisition of Ridgewave Systems. 10 documents have been seeded as
+  artifacts in your context. Identify every material cross-source
+  discrepancy — places where two or more documents disagree in a way
+  that would affect valuation, earn-out calculation, covenant drafting,
+  or representation & warranty scope.
+
+  For each discrepancy:
+  - Name the metric or claim
+  - Cite the conflicting documents
+  - State the discrepancy specifically (what each source says)
+  - Flag its materiality
+
+  Produce a ranked list of discrepancies, most material first. Do not
+  include items that are consistent across sources.
+
+referenceFacts:
+  - id: fact-revenue-growth-30-vs-22
+    description: >-
+      CIM claims 30% YoY ARR growth; QoE adjusts to 22% after
+      reclassification. Both figures or both underlying ARR figures
+      ($31.2M vs $29.4M) must appear.
+    canonical: "22%"
+    pattern: "22%|29\\.4[Mm]|adjusted.*ARR|reclassif"
+    weight: 2
+
+  - id: fact-top20-renewal-100-vs-lapsed
+    description: >-
+      Management deck claims 100% top-20 renewal; customer schedule
+      shows 3 lapsed top-20 accounts (Stonebridge, Meridian, Acorn).
+    canonical: "100%"
+    pattern: "100%.*renew|top.20.*renew|Stonebridge|Meridian|Acorn|lapsed.*top|three.*lapsed|3.*lapsed"
+    weight: 2
+
+  - id: fact-earn-out-30M-vs-30-55M
+    description: >-
+      Earn-out tier 2 stated as "$30M" in CIM but defined as "higher
+      of $30M or 130% of 2024 ARR"; 2024 ARR is $23.5M so 130% =
+      $30.55M, making the binding threshold higher than the advertised
+      round number.
+    canonical: "$30.55"
+    pattern: "30\\.55|130%.*23\\.5|23\\.5.*130%|earn.out.*higher"
+    weight: 2
+
+  - id: fact-concentration-15-vs-18-vs-24
+    description: >-
+      CIM says no customer >15% of ARR; QoE and risk factors show 18%
+      on contracting-entity basis and 24% on beneficial-owner basis.
+    canonical: "18%"
+    pattern: "18%.*concentration|18\\.0%|24%|beneficial|concentrat.*15"
+    weight: 2
+
+  - id: fact-churn-4-vs-2-5
+    description: >-
+      Retention analysis reports 4% cohort-exit churn; management
+      deck reports 2.5% ARR-weighted churn. Methodology discrepancy.
+    canonical: "4%"
+    pattern: "4%.*cohort|cohort.*4%|4\\.0%.*churn|2\\.5%.*ARR|methodology|weighted"
+    weight: 1
+
+  - id: fact-pipeline-win-rate-35-vs-26
+    description: >-
+      Pipeline doc uses 35% win rate; historical 6Q average is 26.5%
+      and board minutes note 22-27% range. Bonus finding for models
+      that catch the forecast optimism.
+    canonical: "35%"
+    pattern: "35%.*win|win.*35%|26\\.5%|22.27%|ramp.*assumption"
+    weight: 1
+
+rubricWeights:
+  faithfulness: 0.30
+  completeness: 0.40
+  coherence: 0.15
+  actionability: 0.15
+
+passFail:
+  minFactualScore: 0.80
+  requireZeroFailingStepGrades: true
+  requiredFactIds:
+    - fact-revenue-growth-30-vs-22
+    - fact-top20-renewal-100-vs-lapsed
+    - fact-earn-out-30M-vs-30-55M
+    - fact-concentration-15-vs-18-vs-24
+  description: >-
+    Must identify all four of the core discrepancies: the revenue
+    growth adjustment, the top-20 retention contradiction, the
+    earn-out threshold precision, and the customer concentration
+    definition gap. Missing any of these is a material diligence
+    failure. The churn methodology and pipeline win-rate discrepancies
+    are bonus points.
+
+requiredSkills:
+  - extract-claims
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a transaction diligence coordinator. Your job is to find
+    every material cross-source discrepancy in a set of 10 diligence
+    documents seeded as artifacts in your context.
+
+    **Decomposition pipeline — follow this exactly.**
+
+    **Turn 1 — Read all 10 source artifacts.**
+    Call `read_artifact` in parallel once per seeded input artifact
+    (10 read_artifact calls in a single turn). After this turn you
+    will have the full content of each document in your tool results.
+
+    **Turn 2 — Extract claims per document (parallel skill calls).**
+    Invoke the `extract-claims` skill 10 times in parallel — once per
+    document. You may split these calls across at most two turns, but
+    do not emit more than five `skill` calls in a single assistant turn.
+    For each call, paste the full document text from Turn 1's tool
+    results directly into the skill's `task_input` (do NOT pass
+    artifact_ids — extract-claims is a pure-analysis skill with no
+    tool access). The task_input should contain the document content
+    plus a short directive to extract quantitative facts, definitions,
+    and conditional statements. Each extract-claims call produces its
+    own claim artifact.
+
+    **Turn 3 — Cross-reference (single ad-hoc agent).**
+    Dispatch a single `agent` tool call with `name: "cross-referencer"`.
+    Pass all 10 extracted-claim artifact_ids via `artifact_ids` (copy
+    them exactly from your Completed Tasks context). The
+    cross-referencer's prompt should instruct it to read each claim
+    artifact via read_artifact, group claims by metric, and flag every
+    case where two or more documents disagree — including definitional
+    or methodology disagreements, not just different numbers. Its
+    task_input should be a short directive; the real content comes
+    from the claim artifacts.
+
+    **Turn 4 — Synthesize final report (single ad-hoc agent).**
+    Dispatch a single `agent` tool call with `name: "synthesizer"`,
+    passing the cross-referencer's artifact_id via `artifact_ids`.
+    The synthesizer's prompt should produce a ranked discrepancy
+    report preserving every discrepancy the cross-referencer found,
+    with a materiality flag for each.
+
+    **Turn 5 — Final answer.**
+    After the synthesizer returns, produce your final text response
+    quoting the synthesized discrepancy report. No more tool calls
+    after this point.
+
+    Do not skip any stage. Do not merge stages. Do not have the
+    coordinator analyze the documents itself — the decomposition
+    pipeline is the thing under test.
+  subagentResultMode: artifact_only
+  skills:
+    - name: extract-claims
+      version: "1.0.0"
+      policy:
+        type: always
+  limits:
+    maxTasksPerRun: 40
+    maxOperationsPerTask: 15
+    maxTokensPerRun: 400000
+
+graphAssertions:
+  - type: run_status
+    status: completed
+    description: "Decomposition run must complete"
+
+  - type: task_count
+    match:
+      subagentName: extract-claims
+    min: 10
+    description: "extract-claims must be invoked once per seeded document"
+
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: cross-referencer
+    description: "cross-referencer agent must exist"
+
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: synthesizer
+    description: "synthesizer agent must exist"
+
+  - type: task_order
+    first:
+      subagentName: extract-claims
+    then:
+      role: subagent
+      subagentName: cross-referencer
+    description: "extract-claims must precede cross-referencer"
+
+  - type: task_order
+    first:
+      role: subagent
+      subagentName: cross-referencer
+    then:
+      role: subagent
+      subagentName: synthesizer
+    description: "cross-referencer must precede synthesizer"
+
+  - type: consumes
+    consumer:
+      role: subagent
+      subagentName: cross-referencer
+    producer:
+      subagentName: extract-claims
+    description: "cross-referencer must consume extract-claims artifacts"
+
+  - type: consumes
+    consumer:
+      role: subagent
+      subagentName: synthesizer
+    producer:
+      role: subagent
+      subagentName: cross-referencer
+    description: "synthesizer must consume cross-referencer artifact"

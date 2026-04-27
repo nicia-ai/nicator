@@ -1,0 +1,1761 @@
+# DCV-002 · decomposition-value
+#
+# Second decomposition-value task. Follows the dcv-001 finding that
+# 10 × ~400-token documents fit comfortably inside Sonnet's flat-pass
+# attention budget. This task scales two axes simultaneously:
+#
+#   - Document length: ~640-980 tokens each (vs 400 in dcv-001)
+#   - Document count: 20 (vs 10)
+#
+# Total seeded context: ~16K tokens across 20 compliance documents
+# based on the declared tokenCount estimates below. This is still below
+# the ~25K dcv-002+ stress target described in docs/layered-evals.md,
+# so the task is intended to discriminate primarily through buried facts,
+# cross-source joins, and deterministic multi-document citation
+# requirements rather than raw context saturation alone.
+#
+# The scenario is a regulatory compliance audit for a fictional
+# healthcare data processor (MeridianHealth Data Systems). Five
+# compliance gaps are planted, each requiring 2-3-way cross-document
+# lookup across heterogeneous source types (internal policy vs
+# regulation vs auditor finding vs vendor attestation vs incident log).
+# Several gaps are buried inside narrative paragraphs surrounded by
+# consistent, confirming ballast content — the single-pass model tends
+# to average over consistency and miss outliers, while a claim-by-claim
+# extractor treats every claim equally.
+#
+# Planted gaps (all five are required for pass):
+#
+#   1. Breach notification timing: internal policy says 72h, state
+#      regulation says 60h. Federal HIPAA Breach Notification Rule
+#      (60 days) appears as a distractor — policy is consistent with
+#      federal but violates the stricter state requirement.
+#
+#   2. Encryption strength (three-way): encryption policy specifies
+#      AES-128 minimum, HHS enforcement guidance references AES-256
+#      as the safe-harbor standard, pentest findings observed AES-128
+#      in production endpoints handling PHI.
+#
+#   3. Vendor data retention: MedScribe BAA limits retention to 30
+#      days, but incident log HX-2025-07 shows data retained 90 days
+#      during a forensic investigation — no amendment on file.
+#
+#   4. Incident response SLA: incident response policy specifies 4-hour
+#      response SLA for Sev-1 incidents; Q4 metrics report shows
+#      actual average of 7.5 hours.
+#
+#   5. MFA carveout: access control policy requires MFA for all PHI
+#      access with no exceptions stated; CareConnect vendor SOC 2
+#      excerpt discloses a break-glass procedure that bypasses
+#      secondary auth; access control audit logged 14 break-glass
+#      invocations in a 6-month window.
+
+id: dcv-002
+category: decomposition-value
+metadata:
+  purpose: mechanism
+  realism: synthetic
+  releaseGate: research
+  comparisonMode: flat-harness
+  workloadFamily: compliance-audit
+  hypothesis: decomposition improves coverage on buried multi-source compliance gaps before raw context saturation dominates
+  stressAxes:
+    - context_volume
+    - join_arity
+    - distractor_density
+name: MeridianHealth compliance audit — cross-source gap identification
+description: >-
+  20 compliance documents covering policies, regulations, audit
+  findings, incident logs, and vendor attestations for a healthcare
+  data processor. Identify every material compliance gap — places
+  where an internal control, operational reality, or vendor practice
+  diverges from an applicable regulatory requirement. Five gaps are
+  planted; each requires cross-referencing 2-3 source documents.
+
+sources: []
+
+inputArtifacts:
+  - id: pol-hipaa-framework
+    title: "MDS-POL-001 — HIPAA Compliance Framework"
+    tokenCount: 820
+    content: |
+      # MDS-POL-001 — HIPAA Compliance Framework
+      **Owner:** Privacy Office | **Version:** 4.2 | **Effective:** 2025-03-01
+      **Approvers:** Chief Privacy Officer, Chief Information Security Officer
+      **Review cadence:** Annual, or upon material regulatory change
+
+      ## 1. Purpose and Scope
+
+      This document establishes MeridianHealth Data Systems' (MDS)
+      overarching framework for compliance with the Health Insurance
+      Portability and Accountability Act (HIPAA) of 1996, including
+      the Privacy Rule (45 CFR Part 164, Subpart E), the Security
+      Rule (45 CFR Part 164, Subpart C), and the Breach Notification
+      Rule (45 CFR Part 164, Subpart D). MDS acts as a Business
+      Associate to covered entities (hospital networks, physician
+      groups, clinical laboratories) and processes Protected Health
+      Information ("PHI") on their behalf under executed Business
+      Associate Agreements.
+
+      ## 2. Roles and Responsibilities
+
+      - **Chief Privacy Officer (CPO).** Owns HIPAA Privacy Rule
+        compliance, responds to individual rights requests, maintains
+        the Notice of Privacy Practices template for downstream use.
+      - **Chief Information Security Officer (CISO).** Owns HIPAA
+        Security Rule compliance, maintains the risk assessment,
+        approves all control exceptions.
+      - **Compliance Committee.** Meets quarterly; reviews control
+        exceptions, incident trends, and vendor risk posture.
+      - **Incident Response Team.** See MDS-POL-004 for the full
+        incident response procedure and escalation matrix.
+
+      ## 3. Control Families
+
+      MDS implements controls across five families:
+
+      1. **Administrative safeguards** (workforce training, sanctions
+         policy, access authorization procedures) — owned by People
+         Operations and the Privacy Office.
+      2. **Physical safeguards** (facility access, workstation use,
+         device and media controls) — owned by Facilities.
+      3. **Technical safeguards** (access control, audit controls,
+         integrity controls, transmission security) — owned by
+         Security Engineering. See MDS-POL-002 and MDS-POL-003.
+      4. **Organizational requirements** (Business Associate
+         Agreements, subcontractor flow-down) — owned by Legal.
+      5. **Policies and procedures** (documentation, retention,
+         updates) — owned by the Privacy Office.
+
+      ## 4. Policy Hierarchy
+
+      This framework sits above the following implementing policies:
+
+      - MDS-POL-002: Encryption & Transport Security Policy
+      - MDS-POL-003: Access Control & Authentication Policy
+      - MDS-POL-004: Incident Response Policy
+      - MDS-POL-005: Workforce Training Policy (not in scope for
+        this audit cycle)
+      - MDS-POL-006: Data Retention and Disposal Policy
+
+      Where an implementing policy conflicts with this framework,
+      the framework governs and the implementing policy must be
+      updated within 30 days of identification.
+
+      ## 5. Compliance Attestation
+
+      MDS's CISO attests annually to the Compliance Committee that
+      the control environment is designed and operating effectively
+      to meet HIPAA Security Rule requirements. The FY2025
+      attestation was signed 2026-01-15 with the caveat that three
+      control exceptions remain open pending remediation; those
+      exceptions are tracked in the Compliance Committee minutes.
+
+  - id: pol-encryption
+    title: "MDS-POL-002 — Encryption & Transport Security Policy"
+    tokenCount: 900
+    content: |
+      # MDS-POL-002 — Encryption & Transport Security Policy
+      **Owner:** Security Engineering | **Version:** 3.1
+      **Effective:** 2025-06-15 | **Approver:** CISO
+
+      ## 1. Purpose
+
+      This policy defines the cryptographic standards applied to
+      Protected Health Information ("PHI") at rest and in transit
+      across MeridianHealth Data Systems environments. It implements
+      the transmission security and encryption addressable
+      implementation specifications of the HIPAA Security Rule
+      (45 CFR 164.312(a)(2)(iv) and 164.312(e)(2)(ii)).
+
+      ## 2. Data-at-Rest Encryption
+
+      All PHI stored in MDS systems, including primary databases,
+      object storage, backups, and ephemeral caches with a lifetime
+      greater than 60 seconds, must be encrypted using AES-256 in
+      GCM mode with keys managed by the MDS Key Management Service
+      (KMS). Key rotation occurs on a 365-day schedule; emergency
+      rotation may be initiated by the CISO.
+
+      Database-level encryption (e.g., TDE) is used for the primary
+      clinical data warehouse. Object storage uses server-side
+      encryption with customer-managed keys. Backups are encrypted
+      with the same AES-256 standard prior to being written to
+      offline cold storage.
+
+      ## 3. Data-in-Transit Encryption
+
+      All network communications carrying PHI must use Transport
+      Layer Security (TLS). The minimum acceptable configuration is:
+
+      - **TLS version:** 1.2 or higher (1.3 preferred for new systems)
+      - **Cipher suites:** AES-128 minimum symmetric strength
+      - **Certificate authority:** Only CAs on the MDS approved list
+      - **Certificate validity:** Maximum 397 days
+
+      TLS 1.2 with AES-128-GCM or AES-256-GCM cipher suites is the
+      baseline accepted configuration for all externally-facing PHI
+      endpoints. TLS 1.0, TLS 1.1, SSL 3.0, and any cipher suite
+      offering less than 128-bit symmetric strength are prohibited.
+
+      ## 4. Certificate Management
+
+      Certificates are managed through the MDS Certificate Authority
+      with automated renewal via ACME. Short-lived certificates
+      (30-day validity) are used for internal service-to-service
+      communication within the production VPC.
+
+      ## 5. Exceptions
+
+      Exceptions to this policy require written approval from the
+      CISO and must be documented in the exception register. No
+      standing exceptions exist as of the last review cycle.
+
+      ## 6. Compliance Mapping
+
+      | Regulatory Reference              | Control                    |
+      |-----------------------------------|----------------------------|
+      | HIPAA 164.312(a)(2)(iv)           | Section 2 (at-rest AES-256)|
+      | HIPAA 164.312(e)(2)(ii)           | Section 3 (in-transit TLS) |
+      | NIST SP 800-52r2                  | Section 3 (TLS baseline)   |
+      | HHS Encryption Safe Harbor (2009) | Sections 2 and 3           |
+
+      The HHS Encryption Safe Harbor reference above provides that
+      data encrypted in accordance with National Institute of
+      Standards and Technology (NIST) guidance is "secured" and
+      therefore not subject to the breach notification requirements
+      of the HITECH Act. See MDS-REG-004 for the operative HHS
+      guidance and the specific NIST publications it references.
+
+  - id: pol-access-control
+    title: "MDS-POL-003 — Access Control & Authentication Policy"
+    tokenCount: 880
+    content: |
+      # MDS-POL-003 — Access Control & Authentication Policy
+      **Owner:** Security Engineering | **Version:** 2.7
+      **Effective:** 2025-04-01 | **Approver:** CISO
+
+      ## 1. Purpose
+
+      This policy establishes the access control and authentication
+      requirements for any system, application, or data store
+      containing Protected Health Information ("PHI"). It implements
+      the access control standard of the HIPAA Security Rule
+      (45 CFR 164.312(a)).
+
+      ## 2. Authentication Requirements for PHI Access
+
+      **All PHI access requires multi-factor authentication (MFA).**
+      No user account — workforce member, contractor, service account
+      operating on behalf of a human, or emergency response role —
+      may access a system containing PHI without successfully
+      completing a second authentication factor in addition to a
+      password or equivalent primary credential.
+
+      Acceptable second factors:
+
+      - Hardware security key (FIDO2/WebAuthn) — preferred
+      - Time-based one-time password (TOTP) from an approved
+        authenticator app
+      - Push notification to an enrolled mobile device with device
+        binding
+
+      SMS-based one-time codes are NOT an acceptable second factor
+      for PHI access as of 2024-01-01, in alignment with NIST SP
+      800-63B AAL2 guidance.
+
+      ## 3. Role-Based Access Control
+
+      All PHI access is mediated through a role-based access control
+      (RBAC) model. Roles are defined by the system owner, reviewed
+      quarterly by the Compliance Committee, and attested annually
+      by the workforce member's manager. Privileged roles (admin,
+      audit, break-glass) are additionally reviewed monthly.
+
+      ## 4. Session Management
+
+      - Maximum interactive session length: 12 hours
+      - Maximum idle timeout before re-authentication: 15 minutes
+      - Concurrent session limit: 3 (CISO may adjust for specific
+        clinical workflows)
+
+      ## 5. Account Lifecycle
+
+      Workforce member accounts are provisioned within one business
+      day of a hiring manager's approved access request, and are
+      deprovisioned within 4 hours of termination notification from
+      People Operations. Access reviews are conducted quarterly for
+      standard roles and monthly for privileged roles.
+
+      ## 6. Logging
+
+      All authentication events (successful and failed) and all PHI
+      access events are logged to the central SIEM with 7-year
+      retention in accordance with MDS-POL-006. Logs are immutable,
+      timestamped, and include the user identifier, source IP,
+      session identifier, and accessed resource identifier. MFA
+      factor used is recorded in the authentication event.
+
+      ## 7. Compliance Mapping
+
+      This policy does not provide for any exception to the MFA
+      requirement in Section 2. Any request for an exception must
+      be submitted to the CISO in writing and will be evaluated
+      against the HIPAA Security Rule's access control standard.
+      No standing exceptions exist as of the 2025-Q4 compliance
+      committee review.
+
+  - id: pol-incident-response
+    title: "MDS-POL-004 — Incident Response Policy"
+    tokenCount: 980
+    content: |
+      # MDS-POL-004 — Incident Response Policy
+      **Owner:** Security Engineering | **Version:** 5.0
+      **Effective:** 2025-09-01 | **Approver:** CISO
+
+      ## 1. Purpose
+
+      This policy defines MeridianHealth Data Systems' procedure
+      for detecting, classifying, containing, eradicating, and
+      recovering from security incidents, and for notifying
+      affected parties when a reportable breach of PHI is
+      confirmed. It implements the HIPAA Security Incident
+      Procedures standard (45 CFR 164.308(a)(6)).
+
+      ## 2. Incident Classification
+
+      Incidents are classified on a four-tier severity scale:
+
+      - **Sev-1 (Critical).** Confirmed unauthorized access to PHI,
+        material service disruption affecting clinical workflows,
+        or active ransomware.
+      - **Sev-2 (High).** Credible indicator of compromise with
+        PHI exposure potential but no confirmed unauthorized access.
+      - **Sev-3 (Medium).** Policy violation or control failure
+        without confirmed PHI impact.
+      - **Sev-4 (Low).** Informational finding from automated
+        monitoring requiring triage but no active response.
+
+      ## 3. Response Service Levels
+
+      The following service-level commitments apply from the time an
+      incident is opened in the tracking system:
+
+      | Severity | Initial response time | Containment target |
+      |----------|-----------------------|--------------------|
+      | Sev-1    | **4 hours**           | 24 hours           |
+      | Sev-2    | 8 hours               | 72 hours           |
+      | Sev-3    | 1 business day        | 10 business days   |
+      | Sev-4    | 5 business days       | Best effort        |
+
+      "Initial response" is defined as assignment of an incident
+      commander, confirmation of the severity classification, and
+      first containment action (or documented determination that
+      no immediate containment is required). These SLAs are
+      measured by the IR team and reported quarterly to the
+      Compliance Committee.
+
+      ## 4. Breach Notification
+
+      When an incident is classified as a confirmed breach of
+      unsecured PHI, notification is performed according to the
+      following sequence:
+
+      1. Covered entity notification: MDS notifies the affected
+         covered entity(ies) as their Business Associate within
+         the timeframe specified in the applicable BAA (typically
+         10 calendar days).
+      2. Regulator notification: MDS supports the covered entity's
+         obligation to notify HHS and, where applicable, state
+         regulators. All such breach notifications will be
+         completed within **72 hours** of confirmation.
+      3. Individual notification: Performed by the covered entity
+         under its own Notice of Privacy Practices; MDS supports
+         with individual identifiers and incident metadata.
+
+      The 72-hour figure in item 2 reflects MDS's internal
+      commitment and is intended to meet or exceed federal HIPAA
+      Breach Notification Rule requirements. State law variations
+      are tracked by the Legal team and communicated to the IR
+      team as applicable; see MDS-REG-003 for state-specific
+      requirements.
+
+      ## 5. Post-Incident Review
+
+      Every Sev-1 and Sev-2 incident is subject to a post-incident
+      review within 30 days of closure. Findings are tracked in
+      the incident retrospectives register and reviewed quarterly
+      by the Compliance Committee.
+
+  - id: reg-hipaa-security
+    title: "MDS-REG-001 — HIPAA Security Rule Summary (45 CFR 164.312)"
+    tokenCount: 780
+    content: |
+      # MDS-REG-001 — HIPAA Security Rule Summary
+      **Scope:** 45 CFR Part 164, Subpart C — Technical Safeguards
+      **Maintained by:** Legal & Compliance
+      **Last reviewed:** 2025-11-20
+
+      This document is a working summary maintained by MDS Legal &
+      Compliance of the technical safeguards required under the
+      HIPAA Security Rule. It is not a substitute for the operative
+      regulation; it is a reference for control owners and auditors.
+
+      ## 164.312(a) — Access Control
+
+      A covered entity or business associate must implement
+      technical policies and procedures for electronic information
+      systems that maintain electronic protected health information
+      to allow access only to those persons or software programs
+      that have been granted access rights.
+
+      Required implementation specifications:
+      - Unique User Identification — assign a unique name or number
+        for identifying and tracking user identity.
+      - Emergency Access Procedure — establish procedures for
+        obtaining necessary PHI during an emergency.
+
+      Addressable implementation specifications:
+      - Automatic Logoff — implement electronic procedures that
+        terminate an electronic session after a predetermined time
+        of inactivity.
+      - Encryption and Decryption — implement a mechanism to
+        encrypt and decrypt electronic PHI.
+
+      ## 164.312(b) — Audit Controls
+
+      Implement hardware, software, and/or procedural mechanisms
+      that record and examine activity in information systems
+      that contain or use electronic PHI.
+
+      ## 164.312(c) — Integrity
+
+      Implement policies and procedures to protect electronic PHI
+      from improper alteration or destruction.
+
+      ## 164.312(d) — Person or Entity Authentication
+
+      Implement procedures to verify that a person or entity
+      seeking access to electronic PHI is the one claimed.
+
+      ## 164.312(e) — Transmission Security
+
+      Implement technical security measures to guard against
+      unauthorized access to electronic PHI that is being
+      transmitted over an electronic communications network.
+
+      Addressable implementation specifications:
+      - Integrity Controls — implement security measures to ensure
+        that electronically transmitted PHI is not improperly
+        modified without detection until disposed of.
+      - Encryption — implement a mechanism to encrypt electronic
+        PHI whenever deemed appropriate.
+
+      ## Interpretive Note (MDS Legal)
+
+      The Security Rule encryption specifications are "addressable"
+      rather than "required," which means a covered entity must
+      assess whether encryption is a reasonable and appropriate
+      safeguard in its environment. In practice, modern HHS
+      enforcement posture treats encryption as a presumptive
+      expectation for PHI in transit and at rest; the specific
+      algorithmic standards considered sufficient for the
+      Encryption Safe Harbor are addressed in MDS-REG-004.
+
+  - id: reg-hipaa-breach-notification
+    title: "MDS-REG-002 — HIPAA Breach Notification Rule (Federal)"
+    tokenCount: 780
+    content: |
+      # MDS-REG-002 — HIPAA Breach Notification Rule (Federal Summary)
+      **Scope:** 45 CFR Part 164, Subpart D
+      **Maintained by:** Legal & Compliance
+      **Last reviewed:** 2025-11-20
+
+      This document summarizes the federal HIPAA Breach Notification
+      Rule as it applies to MDS in its capacity as a Business
+      Associate. State-specific variations that impose stricter
+      timelines or additional notification obligations are tracked
+      separately in MDS-REG-003.
+
+      ## Triggering Event
+
+      A "breach" under 45 CFR 164.402 means the acquisition, access,
+      use, or disclosure of PHI in a manner not permitted under the
+      Privacy Rule which compromises the security or privacy of
+      the PHI. A breach is presumed unless the covered entity or
+      business associate demonstrates that there is a low probability
+      that the PHI has been compromised based on a risk assessment
+      considering:
+
+      - The nature and extent of the PHI involved
+      - The unauthorized person who used the PHI or to whom the
+        disclosure was made
+      - Whether the PHI was actually acquired or viewed
+      - The extent to which the risk to the PHI has been mitigated
+
+      ## Business Associate Notification (164.410)
+
+      Following the discovery of a breach of unsecured PHI, a
+      business associate shall, without unreasonable delay and
+      in no case later than 60 calendar days after discovery of
+      the breach, notify the covered entity of the breach. The
+      notification shall identify each individual whose PHI has
+      been, or is reasonably believed to have been, accessed,
+      acquired, used, or disclosed during the breach.
+
+      ## Covered Entity Notification Obligations (164.404 / 164.408)
+
+      - **Individuals.** Without unreasonable delay and in no case
+        later than 60 calendar days from discovery.
+      - **HHS Secretary.** Breaches affecting 500 or more
+        individuals: contemporaneously with individual notification.
+        Breaches affecting fewer than 500: annual log filing.
+      - **Media.** Breaches affecting 500 or more individuals in
+        a single state or jurisdiction: prominent media outlets
+        serving the affected area, without unreasonable delay and
+        in no case later than 60 calendar days after discovery.
+
+      ## Encryption Safe Harbor
+
+      Under the HITECH Act, PHI that has been encrypted in
+      accordance with HHS guidance is "secured" and therefore
+      not subject to these notification requirements even if
+      acquired by an unauthorized party. See MDS-REG-004 for the
+      operative guidance.
+
+      ## MDS Compliance Note
+
+      MDS's internal 72-hour regulator notification commitment
+      (per MDS-POL-004 Section 4) is more aggressive than the
+      federal 60-calendar-day ceiling and is intended to provide
+      schedule margin against the federal requirement. **Legal &
+      Compliance must separately track any applicable state-law
+      breach notification requirements that impose shorter
+      timelines than the federal rule.**
+
+  - id: reg-state-breach
+    title: "MDS-REG-003 — State Breach Notification Requirements (Applicable Jurisdictions)"
+    tokenCount: 820
+    content: |
+      # MDS-REG-003 — State Breach Notification Requirements
+      **Scope:** Jurisdictions where MDS processes PHI on behalf of
+      covered entities
+      **Maintained by:** Legal & Compliance
+      **Last reviewed:** 2026-01-05
+
+      This document tracks state-law breach notification
+      requirements that may apply in addition to the federal HIPAA
+      Breach Notification Rule (MDS-REG-002). Where a state
+      requirement is stricter than the federal rule, MDS must
+      comply with the stricter requirement.
+
+      ## Covered Jurisdictions
+
+      MDS currently processes PHI for covered entities operating
+      in the following jurisdictions. The list is updated as the
+      customer portfolio changes.
+
+      | State | Statute Reference              | Notification Ceiling |
+      |-------|--------------------------------|----------------------|
+      | CA    | Cal. Civ. Code 1798.82         | Expedient and without unreasonable delay |
+      | NY    | NY Gen. Bus. Law 899-aa        | Expedient and without unreasonable delay |
+      | TX    | Tex. Bus. & Com. Code 521.053  | Not later than 60 days after discovery |
+      | IL    | 815 ILCS 530/10                | Not later than 45 days after discovery |
+      | MA    | M.G.L. c. 93H § 3              | As soon as practicable and without unreasonable delay |
+      | **NJ**| **N.J.S.A. 56:8-163.11 (2025 amendment)** | **Not later than 60 hours after confirmation of unauthorized access to protected health information** |
+      | FL    | Fla. Stat. 501.171             | Not later than 30 days after discovery |
+      | WA    | RCW 19.255.010                 | Not later than 30 days after discovery |
+
+      ## Note on the New Jersey Requirement
+
+      The New Jersey Protected Health Information Breach Response
+      Amendment, effective 2025-07-01, imposes a 60-hour notification
+      deadline running from the point at which the responsible
+      business associate confirms unauthorized access to PHI. This
+      is materially shorter than both the federal 60-calendar-day
+      ceiling and any other state ceiling on the above list. Legal &
+      Compliance has flagged that MDS currently holds BAAs with three
+      New Jersey-based covered entities (Trenton Memorial Health
+      Network, Camden Pediatric Partners, and Hudson Valley Clinical
+      Labs) and therefore the 60-hour deadline is operative for any
+      incident touching data processed on their behalf.
+
+      Legal & Compliance opened ticket COMP-2025-441 on 2025-08-12
+      to review whether the incident-response procedures, customer
+      notification playbooks, and control-library references used by
+      MDS fully reflect the new New Jersey timeline; ticket status as
+      of this document's review is "open, awaiting policy revision."
+
+      ## General Drafting Guidance
+
+      Where a BAA with a covered entity imposes a notification
+      timeline stricter than any applicable state or federal law,
+      the BAA timeline governs as a contractual matter even though
+      it does not change the statutory ceiling.
+
+  - id: reg-hhs-encryption
+    title: "MDS-REG-004 — HHS Encryption Safe Harbor Guidance"
+    tokenCount: 720
+    content: |
+      # MDS-REG-004 — HHS Guidance on Encryption Safe Harbor
+      **Scope:** HHS Guidance under 42 U.S.C. 17932(h)(2)
+      **Maintained by:** Legal & Compliance
+      **Last reviewed:** 2025-11-20
+
+      This document summarizes the operative HHS guidance specifying
+      the encryption standards under which PHI is deemed "secured"
+      and therefore exempt from breach notification obligations
+      under the HITECH Act.
+
+      ## Background
+
+      Section 13402(h)(2) of the HITECH Act directs the Secretary of
+      HHS to issue annual guidance specifying the technologies and
+      methodologies that render PHI unusable, unreadable, or
+      indecipherable to unauthorized individuals. The original
+      guidance was issued in 2009 and has been updated periodically;
+      the operative version as of this document's review date
+      incorporates the 2023 update reflecting current NIST
+      recommendations.
+
+      ## Encryption Standards Specified
+
+      The HHS guidance deems PHI "secured" when it has been encrypted
+      as specified in the applicable NIST publication, as follows:
+
+      - **Data at rest.** Encryption consistent with NIST SP 800-111,
+        "Guide to Storage Encryption Technologies for End User
+        Devices." The 2023 update clarifies that, as of the current
+        NIST recommendation, this means the use of FIPS-validated
+        Advanced Encryption Standard (AES) with a minimum key length
+        of **256 bits** for PHI at rest.
+      - **Data in motion.** Encryption consistent with, as
+        appropriate, NIST SP 800-52, NIST SP 800-77, NIST SP 800-113,
+        or others which are FIPS 140-2 validated. The 2023 update
+        clarifies that acceptable cipher suites must provide a
+        minimum symmetric strength of **AES-256** for PHI in transit
+        where the transmitting system is under the control of the
+        covered entity or business associate.
+
+      ## Enforcement Posture
+
+      The HHS Office for Civil Rights (OCR) has taken the position
+      in recent enforcement actions that reliance on sub-256-bit
+      AES cipher suites for PHI in transit, absent a documented
+      compensating control, does not satisfy the Safe Harbor even
+      where the cipher suite is technically permitted by the
+      underlying NIST publication. MDS Legal has advised that any
+      production system handling PHI in transit with an AES-128
+      or weaker cipher suite should be treated as outside the
+      Safe Harbor for purposes of breach-notification analysis.
+
+      ## Compliance Mapping for MDS
+
+      Control owners should align MDS transport-security standards to
+      the 256-bit minimum reflected above. Legal has opened ticket
+      COMP-2025-362 to track a broader review of internal encryption
+      references that still cite pre-2023 guidance.
+
+  - id: audit-soc2
+    title: "MDS-AUD-001 — SOC 2 Type II External Audit — Summary Report"
+    tokenCount: 820
+    content: |
+      # MDS-AUD-001 — SOC 2 Type II External Audit Summary
+      **Auditor:** Aldridge & Whitman CPA LLP
+      **Period covered:** 2024-11-01 through 2025-10-31
+      **Report issued:** 2025-12-18
+      **Trust Services Criteria:** Security, Availability, Confidentiality
+
+      ## Opinion
+
+      In our opinion, in all material respects, the description
+      presents the service organization's system that was designed
+      and implemented throughout the specified period, and the
+      controls related to the applicable trust services criteria
+      were suitably designed and operating effectively to provide
+      reasonable assurance that the service commitments and system
+      requirements would be achieved, based on the applicable
+      trust services criteria, subject to the matters described
+      in the "Exceptions Noted" section below.
+
+      ## Scope of Testing
+
+      We performed testing on 42 controls across the three trust
+      services categories in scope. Test procedures included
+      inquiry, observation, inspection of evidence, and
+      re-performance where applicable. The test of details
+      covered a stratified sample of transactions, access events,
+      and administrative actions from the period.
+
+      ## Exceptions Noted
+
+      Three exceptions were noted during the period:
+
+      1. **Access review timeliness.** Three of 24 tested quarterly
+         access reviews were completed more than 10 business days
+         after the scheduled due date. Management attributed this
+         to staffing gaps during the July-August 2025 vacation
+         period and has implemented an automated reminder cadence.
+         Impact: Low. Management remediation accepted.
+
+      2. **Change management — emergency change documentation.**
+         Two of 18 tested emergency changes were not accompanied
+         by post-change documentation within the 48-hour window
+         required by MDS-POL-007. In both cases the change itself
+         was appropriate and was subsequently documented. Impact:
+         Low. Management remediation accepted.
+
+      3. **Vendor onboarding evidence.** For one of 12 vendor
+         onboardings tested, the signed Business Associate
+         Agreement and the completed security questionnaire were
+         filed in the vendor risk management system 17 days after
+         the first data exchange. Impact: Medium. Management
+         remediation accepted.
+
+      ## Areas Not in Scope
+
+      This report does not address the adequacy of MDS's controls
+      with respect to the substantive requirements of the HIPAA
+      Security Rule beyond the Trust Services Criteria mapping.
+      HIPAA-specific matters identified during the engagement that
+      were not within the SOC 2 scope have been communicated to
+      management under separate cover (the "Management Letter")
+      and are tracked in the MDS compliance register.
+
+      ## Management's Response
+
+      Management has accepted the exceptions noted above and
+      committed to remediation plans targeting Q1 2026 completion.
+
+  - id: audit-pentest
+    title: "MDS-AUD-002 — External Penetration Test Report (Q4 2025)"
+    tokenCount: 890
+    content: |
+      # MDS-AUD-002 — External Penetration Test Report
+      **Tester:** Cobalt Ridge Offensive Security
+      **Engagement period:** 2025-10-06 through 2025-10-31
+      **Scope:** External network, public APIs, customer-facing web
+      app, authentication infrastructure
+      **Methodology:** OWASP ASVS L2 + PTES
+
+      ## Executive Summary
+
+      Cobalt Ridge conducted a four-week external penetration test
+      against the MDS production environment. No critical- or
+      high-severity findings were identified that would allow an
+      unauthenticated attacker to access PHI. Three medium-severity
+      findings and seven low-severity findings were identified and
+      are detailed below. All findings have been reported to MDS
+      Security Engineering for remediation tracking.
+
+      ## Medium-Severity Findings
+
+      ### M-01 — Customer API TLS Configuration
+
+      The public customer-facing API endpoint (api.mds.health)
+      advertises a cipher suite selection in which AES-128-GCM is
+      the negotiated default for clients that do not explicitly
+      prefer AES-256. Observed during the engagement with a
+      representative sampling of client user agents; the negotiated
+      cipher was AES_128_GCM_SHA256 in 94% of handshakes. This
+      endpoint handles PHI in transit as part of the customer
+      ingestion flow. While AES-128-GCM is not a cryptographic
+      weakness per se, it is below the stricter 256-bit
+      configuration MDS Security Engineering has been moving
+      toward for PHI-bearing endpoints. Recommendation:
+      reconfigure the load balancer cipher preference to enforce
+      AES-256-GCM as the default and remove AES-128-GCM from the
+      accepted list for PHI-bearing endpoints. Internal standards
+      and external guidance should be reviewed before rollout.
+
+      ### M-02 — Session Cookie Scope
+
+      The customer portal session cookie does not set the
+      `__Host-` prefix and is scoped to a parent domain. A
+      subdomain takeover in an unrelated marketing property
+      could allow session cookie theft. Recommendation: migrate
+      session cookies to `__Host-` scope.
+
+      ### M-03 — Error Message Disclosure
+
+      Several API error responses include stack traces with
+      internal module paths when the `Accept: application/json`
+      header is absent. Recommendation: sanitize error responses
+      at the gateway.
+
+      ## Low-Severity Findings (summary)
+
+      L-01 through L-07: various informational items including
+      missing security headers on a marketing page, overly
+      permissive CORS on a metrics endpoint, and verbose HTTP
+      banner strings. Full detail in Appendix A.
+
+      ## Items Outside Scope
+
+      The internal production network, the break-glass clinical
+      access workflow, and the backup-restoration procedures
+      were not within this engagement's scope and are covered
+      by other audit activities.
+
+  - id: audit-access-control
+    title: "MDS-AUD-003 — Access Control Audit (Internal, Q4 2025)"
+    tokenCount: 860
+    content: |
+      # MDS-AUD-003 — Access Control Audit
+      **Auditor:** MDS Internal Audit (Stephanie Marquez, CIA)
+      **Period covered:** 2025-05-01 through 2025-10-31 (6 months)
+      **Report issued:** 2025-12-02
+
+      ## Objective
+
+      Evaluate the design and operating effectiveness of access
+      controls for systems containing PHI against the requirements
+      of MDS-POL-003 (Access Control & Authentication Policy) and
+      the HIPAA Security Rule access control standard.
+
+      ## Scope
+
+      The audit covered nine in-scope systems: the clinical data
+      warehouse, the ingestion API cluster, the customer portal,
+      the internal administrative console, the SIEM, the
+      identity provider, the break-glass gateway, the backup
+      orchestrator, and the data export service.
+
+      ## Procedures Performed
+
+      - Reviewed RBAC role definitions for all nine systems
+      - Re-performed quarterly access reviews for a sample of 30
+        workforce members (of 284)
+      - Inspected authentication event logs for a stratified
+        sample of 1,200 PHI access events
+      - Inspected break-glass access logs for the full period
+      - Interviewed system owners and the identity team
+
+      ## Findings
+
+      ### AF-01 — Break-Glass Access Invocations
+
+      The break-glass clinical access workflow allows authorized
+      emergency responders to access clinical data through a
+      dedicated emergency path that does not traverse the same
+      secondary-authentication challenge used in the standard
+      workflow. Break-glass invocations are logged to the SIEM
+      and reviewed after the fact as part of the emergency-access
+      process.
+
+      During the audit period we observed **14 break-glass
+      invocations** originating from five distinct user accounts.
+      Each invocation carried an approved operational ticket;
+      each was for a Sev-1 clinical incident in which immediate
+      data access was operationally necessary. No break-glass
+      invocation resulted in PHI exfiltration or unauthorized
+      disclosure — the workflow appears to be used as intended.
+
+      Internal Audit was not provided a formal exception memo or
+      control standard describing how the emergency path should be
+      documented relative to the standard authentication flow.
+      Either the exception should be formally documented in MDS
+      control artifacts, or the workflow should be reengineered to
+      include a compliant second factor (for example, pre-
+      provisioned hardware tokens held by emergency responders).
+
+      **Recommendation.** Open a policy exception request with
+      the CISO and the Compliance Committee. Amend MDS-POL-003
+      Section 2 to reflect the break-glass workflow or implement
+      a compliant second factor by 2026-Q2.
+
+      ### AF-02 — Quarterly Access Review Timeliness
+
+      Consistent with the SOC 2 audit (MDS-AUD-001), three of
+      the nine systems were subject to one late quarterly access
+      review during the period. No material access inappropriate
+      to role was identified on re-performance.
+
+      ### AF-03 — Orphaned Service Accounts
+
+      Four service accounts with PHI read permission were
+      identified as having no owner of record following
+      organizational changes in Q3 2025. All four were
+      deprovisioned during the audit.
+
+  - id: audit-incident-response
+    title: "MDS-AUD-004 — Incident Response Process Audit (Q4 2025)"
+    tokenCount: 820
+    content: |
+      # MDS-AUD-004 — Incident Response Process Audit
+      **Auditor:** MDS Internal Audit (Jaime Okafor, CISA)
+      **Period covered:** 2025-Q4 (2025-10-01 through 2025-12-31)
+      **Report issued:** 2026-01-22
+
+      ## Objective
+
+      Evaluate the operating effectiveness of the MDS Incident
+      Response process as documented in MDS-POL-004 against the
+      response and containment service-level commitments stated
+      in Section 3 of that policy.
+
+      ## Scope
+
+      All Sev-1 and Sev-2 incidents opened during the audit
+      period were included. Sev-3 and Sev-4 incidents were
+      reviewed on a sampling basis.
+
+      ## Procedures Performed
+
+      - Extracted the full incident roster from the IR tracking
+        system (31 incidents in period: 6 Sev-1, 11 Sev-2,
+        9 Sev-3, 5 Sev-4)
+      - Matched each incident to its response-time metrics
+      - Interviewed the on-call incident commanders
+      - Reviewed post-incident retrospectives for all Sev-1 and
+        Sev-2 incidents
+
+      ## Findings
+
+      ### IRF-01 — Sev-1 Initial Response Time
+
+      Our test of details on the six Sev-1 incidents in the
+      period found the following measured response times from
+      incident-opened timestamp to incident-commander-assigned
+      timestamp:
+
+      | Incident   | Opened           | IC Assigned      | Elapsed |
+      |------------|------------------|------------------|---------|
+      | IR-2025-187 | 2025-10-03 02:14 | 2025-10-03 09:41 | 7h 27m  |
+      | IR-2025-201 | 2025-10-19 11:22 | 2025-10-19 14:10 | 2h 48m  |
+      | IR-2025-214 | 2025-11-08 04:06 | 2025-11-08 14:22 | 10h 16m |
+      | IR-2025-229 | 2025-11-27 18:44 | 2025-11-28 04:10 | 9h 26m  |
+      | IR-2025-238 | 2025-12-10 21:03 | 2025-12-11 02:17 | 5h 14m  |
+      | IR-2025-245 | 2025-12-22 15:01 | 2025-12-22 20:40 | 5h 39m  |
+
+      **Measured average initial response: 6h 49m.** The arithmetic
+      mean across the six incidents comes to 6 hours 49 minutes
+      (409 minutes). Including the three Sev-1 incidents from
+      Q3 2025 (retrieved for trend analysis), the trailing
+      nine-incident average is **7.5 hours**.
+
+      Only one of the six Sev-1 incidents in the audit period
+      (IR-2025-201) met the internal target documented for the
+      program. The primary driver of the variance is overnight
+      on-call handoff latency for incidents opened between
+      22:00 and 06:00 local time.
+
+      **Recommendation.** Either (a) revise the documented Sev-1
+      target to reflect achievable performance given current
+      staffing, or (b) invest in 24/7 on-call staffing to meet
+      that target. The current divergence between documented and
+      actual performance is a material control finding.
+
+      ### IRF-02 — Containment Target Achievement
+
+      Sev-1 containment targets (24 hours per policy) were met
+      in all six cases. Sev-2 containment targets (72 hours)
+      were met in 10 of 11 cases.
+
+      ### IRF-03 — Post-Incident Review Completion
+
+      All six Sev-1 retrospectives were completed within the
+      30-day window required by MDS-POL-004 Section 5. One
+      Sev-2 retrospective was completed 8 days late.
+
+  - id: incident-hx-2025-07
+    title: "MDS-INC-001 — Incident HX-2025-07 — MedScribe Forensic Hold"
+    tokenCount: 820
+    content: |
+      # MDS-INC-001 — Incident Record HX-2025-07
+      **Severity:** Sev-2 (High)
+      **Status:** Closed
+      **Opened:** 2025-08-14 10:32 UTC
+      **Closed:** 2025-11-12 16:18 UTC (90-day duration)
+      **Incident Commander:** Priya Chandrasekaran
+
+      ## Summary
+
+      On 2025-08-14, the MDS detection platform flagged anomalous
+      query patterns originating from a MedScribe Inc. service
+      account against the clinical data warehouse. MedScribe is
+      an MDS vendor providing medical transcription services;
+      the service account is used by MedScribe's production
+      pipeline to ingest transcription outputs into the
+      warehouse under the terms of the MedScribe BAA (see
+      MDS-VEN-001).
+
+      Initial triage determined that the anomalous queries were
+      not associated with unauthorized PHI acquisition — the
+      queries were legitimate operations issued by a new
+      MedScribe microservice during a deployment. No PHI was
+      acquired outside the scope of the BAA. However, the
+      anomaly triggered a forensic hold on the MedScribe data
+      ingestion pipeline pending full investigation and
+      confirmation that no PHI was accessed outside the
+      contracted scope.
+
+      ## Forensic Hold Scope
+
+      In coordination with MedScribe's incident response team
+      and MDS Legal, a forensic data hold was placed on all
+      MedScribe-processed PHI held in MDS systems during the
+      investigation period. The hold preserved:
+
+      - The full MedScribe ingestion pipeline logs
+      - Query audit logs from the clinical data warehouse for
+        all MedScribe service account activity
+      - The raw transcription outputs ingested during the
+        seven-day period preceding the anomaly
+      - Derived clinical records that referenced any transcription
+        processed by MedScribe during the preservation window
+
+      ## Retention Deviation
+
+      The forensic hold was in effect for the full incident
+      duration. Data that would otherwise have been deleted
+      under the standard MedScribe retention workflow was
+      instead held for **90 days**, from incident open on
+      2025-08-14 through incident closure on 2025-11-12. At
+      closure, the held data was purged in accordance with the
+      standard retention schedule.
+
+      MDS Legal's position is that the forensic hold was
+      necessary and appropriate given the nature of the
+      anomaly, but the BAA amendment process was not initiated
+      and the MedScribe vendor relationship manager was
+      notified of the hold by email on 2025-08-15 without a
+      formal BAA amendment. The incident retrospective (not
+      in this document) flagged the absence of a formal BAA
+      amendment as a process gap.
+
+      ## Root Cause and Remediation
+
+      Root cause: MedScribe deployed a new batching microservice
+      on 2025-08-13 that issued queries outside the pattern
+      expected by the MDS detection rules. The microservice was
+      within the scope of the BAA but was not communicated to
+      MDS in advance. Remediation: MedScribe committed to
+      notifying MDS of future microservice deployments in
+      writing at least 48 hours in advance.
+
+  - id: incident-q3-summary
+    title: "MDS-INC-002 — Q3 2025 Security Incident Summary"
+    tokenCount: 680
+    content: |
+      # MDS-INC-002 — Q3 2025 Security Incident Summary
+      **Reporting period:** 2025-07-01 through 2025-09-30
+      **Prepared by:** MDS Incident Response Team
+      **Distribution:** Compliance Committee, CISO
+
+      ## Incident Counts
+
+      | Severity | Opened | Closed | Median Duration |
+      |----------|--------|--------|-----------------|
+      | Sev-1    | 3      | 3      | 2.4 days        |
+      | Sev-2    | 8      | 7      | 11.2 days       |
+      | Sev-3    | 14     | 14     | 3.1 days        |
+      | Sev-4    | 22     | 22     | 0.6 days        |
+
+      ## Sev-1 Incidents (Individual Summaries)
+
+      **IR-2025-112.** Ransomware precursor detected on a
+      staging environment. Contained within 18 hours. No PHI
+      impact. Initial response time: 5h 42m.
+
+      **IR-2025-131.** Credential exposure on a public code
+      repository — a contractor committed an API key for a
+      non-production test account. Credential rotated within
+      1h of detection; no PHI accessed. Initial response time:
+      0h 52m (automated detection, on-call paged immediately).
+
+      **IR-2025-158.** Clinical data warehouse query latency
+      degradation classified as Sev-1 due to clinical workflow
+      impact at two customer sites. Root cause identified as
+      a misconfigured index rebuild. Full recovery in 3h 14m.
+      Initial response time: 11h 08m (overnight handoff gap).
+
+      ## Sev-1 Initial Response Times
+
+      Average initial response time for Sev-1 incidents in
+      Q3 2025: **5 hours 54 minutes**. Two of three incidents
+      exceeded the documented program target; the primary
+      driver was overnight incident detection coupled with the
+      single-on-call rotation.
+
+      ## Items Carried Forward to Q4
+
+      - IR-2025-201 (opened 2025-10-19) is tracked in the Q4
+        summary
+      - Incident HX-2025-07 (opened 2025-08-14, closed
+        2025-11-12) spans Q3 and Q4 — see MDS-INC-001 for
+        the full record
+      - The open process improvement items from the Q3
+        retrospective (closure of the on-call handoff gap,
+        improved detection false-positive rate) are tracked
+        in the IR process improvement register
+
+  - id: incident-annual-metrics
+    title: "MDS-INC-003 — 2025 Annual Incident Response Metrics"
+    tokenCount: 760
+    content: |
+      # MDS-INC-003 — 2025 Annual Incident Response Metrics
+      **Reporting period:** 2025-01-01 through 2025-12-31
+      **Prepared by:** MDS Incident Response Team
+      **Distribution:** Compliance Committee
+
+      ## Executive Summary
+
+      2025 saw 108 security incidents across all severity
+      tiers, a 22% increase from the 2024 total of 89. The
+      increase is consistent with the expansion of detection
+      coverage following the SIEM upgrade completed in
+      2025-Q1 and does not reflect a degradation of the
+      control environment. No reportable breach of unsecured
+      PHI occurred during the period.
+
+      ## Volume by Severity
+
+      | Severity | 2024 Total | 2025 Total | Delta |
+      |----------|------------|------------|-------|
+      | Sev-1    | 7          | 9          | +2    |
+      | Sev-2    | 29         | 34         | +5    |
+      | Sev-3    | 31         | 41         | +10   |
+      | Sev-4    | 22         | 24         | +2    |
+
+      ## Sev-1 Response Time Performance
+
+      Measured Sev-1 initial response performance for the full
+      calendar year:
+
+      - **Sev-1 incidents closed:** 9
+      - **Incidents meeting 4-hour SLA:** 2 (22%)
+      - **Average initial response time:** 7 hours 12 minutes
+      - **Median initial response time:** 6 hours 48 minutes
+      - **P90 initial response time:** 10 hours 16 minutes
+
+      The trailing Q4-specific figure reported in MDS-AUD-004
+      is the 7.5-hour trailing-nine average; the full-year
+      average is 7 hours 12 minutes.
+
+      ## Sev-2 Response Time Performance
+
+      Sev-2 committed response time is 8 hours. Full-year
+      average: 5 hours 48 minutes. 29 of 34 Sev-2 incidents
+      (85%) met the 8-hour SLA.
+
+      ## Containment Target Performance
+
+      | Severity | Target         | 2025 Met | 2025 Missed |
+      |----------|----------------|----------|-------------|
+      | Sev-1    | 24 hours       | 8        | 1           |
+      | Sev-2    | 72 hours       | 31       | 3           |
+      | Sev-3    | 10 business d. | 39       | 2           |
+
+      ## Open Items
+
+      The sustained Sev-1 response-time variance is tracked as a
+      material control finding (MDS-AUD-004 finding IRF-01). The
+      IR team has submitted a proposal to the CISO for either a
+      policy revision or a second on-call rotation; decision
+      pending.
+
+  - id: incident-postmortem-template
+    title: "MDS-INC-004 — Post-Incident Review Template and Register"
+    tokenCount: 640
+    content: |
+      # MDS-INC-004 — Post-Incident Review Template and Register
+      **Owner:** Incident Response Team
+      **Version:** 3.0
+
+      ## Purpose
+
+      This document defines the standard post-incident review
+      ("PIR") structure used for all Sev-1 and Sev-2 incidents
+      at MeridianHealth Data Systems, and serves as the
+      register pointing to completed PIRs for the current
+      calendar year.
+
+      ## PIR Structure
+
+      Each PIR follows a six-section format:
+
+      1. **Incident summary.** One-paragraph description of
+         what happened, when it was detected, and when it
+         was contained.
+      2. **Impact.** PHI implications, customer impact,
+         clinical workflow impact, financial impact.
+      3. **Timeline.** Ordered log of detection, escalation,
+         containment, eradication, recovery.
+      4. **Root cause.** Technical and organizational factors.
+      5. **Remediation actions.** What has been done and what
+         is still pending, with owners and due dates.
+      6. **Process improvements.** Findings that generalize
+         beyond the specific incident, tracked in the IR
+         process improvement register.
+
+      ## 2025 Completed PIRs
+
+      | Incident     | Severity | PIR Completed |
+      |--------------|----------|----------------|
+      | IR-2025-018  | Sev-1    | 2025-02-14     |
+      | IR-2025-047  | Sev-2    | 2025-04-01     |
+      | IR-2025-112  | Sev-1    | 2025-08-08     |
+      | IR-2025-131  | Sev-1    | 2025-09-02     |
+      | IR-2025-158  | Sev-1    | 2025-10-07     |
+      | IR-2025-187  | Sev-1    | 2025-11-02     |
+      | HX-2025-07   | Sev-2    | 2025-12-10     |
+      | IR-2025-201  | Sev-1    | 2025-11-18     |
+      | IR-2025-214  | Sev-1    | 2025-12-07     |
+      | IR-2025-229  | Sev-1    | 2025-12-28     |
+      | IR-2025-238  | Sev-1    | 2026-01-09     |
+      | IR-2025-245  | Sev-1    | 2026-01-21     |
+
+      All 2025 Sev-1 PIRs have been completed within the
+      30-day SLA defined in MDS-POL-004 Section 5.
+
+  - id: vendor-medscribe
+    title: "MDS-VEN-001 — MedScribe Inc. Business Associate Agreement (Excerpt)"
+    tokenCount: 840
+    content: |
+      # MDS-VEN-001 — MedScribe Inc. Business Associate Agreement
+      **Contracting parties:** MeridianHealth Data Systems, Inc.
+      (MDS) and MedScribe Inc.
+      **Effective date:** 2024-06-01
+      **Term:** 3 years, auto-renewing 1-year terms
+      **BAA type:** Downstream — MedScribe acts as a
+      subcontractor Business Associate to MDS
+
+      This excerpt presents selected sections relevant to the
+      audit scope; the full agreement is maintained by MDS
+      Legal in the contracts repository.
+
+      ## Section 4 — Permitted Uses and Disclosures
+
+      MedScribe shall use and disclose PHI only as necessary
+      to perform the transcription services described in
+      Exhibit A, and only as permitted by the HIPAA Privacy
+      Rule applicable to MedScribe's status as a Business
+      Associate of MDS. MedScribe shall not sell PHI and
+      shall not use PHI for marketing purposes.
+
+      ## Section 5 — Safeguards
+
+      MedScribe shall implement administrative, physical, and
+      technical safeguards that reasonably and appropriately
+      protect the confidentiality, integrity, and availability
+      of PHI, consistent with the HIPAA Security Rule.
+      MedScribe shall encrypt PHI in transit and at rest using
+      industry-standard encryption meeting or exceeding the
+      standards specified in MDS-POL-002.
+
+      ## Section 6 — Data Retention
+
+      **MedScribe shall retain PHI only for the minimum period
+      necessary to perform the services, and in no event
+      longer than 30 days from the date of ingestion of the
+      transcription output into MDS systems.** After the
+      30-day retention period, MedScribe shall purge the PHI
+      from all MedScribe-controlled systems, including
+      primary storage, caches, logs, and backups, and shall
+      provide MDS with a written certification of purge on
+      request.
+
+      The 30-day retention limit is absolute. No operational
+      circumstance within MedScribe's control justifies
+      retention beyond 30 days without a written amendment
+      to this Agreement executed by both parties.
+
+      ## Section 7 — Breach Notification
+
+      MedScribe shall notify MDS of any breach of unsecured
+      PHI within 24 hours of discovery, in writing, at the
+      MDS Privacy Office email address listed in Exhibit B.
+      The notification shall include the information required
+      by 45 CFR 164.410(c) to the extent known at the time
+      of notification.
+
+      ## Section 8 — Amendments
+
+      This Agreement may be amended only by a writing signed
+      by authorized representatives of both parties. No oral
+      amendment is effective. No course of dealing between
+      the parties shall be construed as modifying the terms
+      of this Agreement.
+
+      ## Section 9 — Termination for Cause
+
+      MDS may terminate this Agreement for cause upon written
+      notice if MedScribe (a) materially breaches a provision
+      of this Agreement and fails to cure within 30 days of
+      notice, (b) becomes unable to perform the services, or
+      (c) experiences a reportable breach of PHI with a
+      material impact on MDS's covered-entity customers.
+
+  - id: vendor-careconnect
+    title: "MDS-VEN-002 — CareConnect Systems SOC 2 Type II Summary (Vendor-Provided)"
+    tokenCount: 840
+    content: |
+      # MDS-VEN-002 — CareConnect Systems SOC 2 Type II Summary
+      **Vendor:** CareConnect Systems, Inc.
+      **SOC 2 auditor:** Nevins & Holtzmann LLP
+      **Period covered:** 2024-10-01 through 2025-09-30
+      **Report distributed to:** MDS Vendor Risk Management
+      **Note:** This summary is prepared by MDS Vendor Risk
+      from the full CareConnect SOC 2 Type II report, which
+      is available on request under NDA.
+
+      ## Service Provided to MDS
+
+      CareConnect provides the emergency clinical access
+      workflow ("break-glass gateway") integrated into MDS's
+      clinical data warehouse. The gateway allows authorized
+      emergency responders at MDS's covered-entity customers
+      to retrieve clinical data in time-critical situations
+      when the standard access workflow (MDS-POL-003) would
+      introduce unacceptable latency.
+
+      ## Relevant Control Summary
+
+      ### CC6.1 — Logical Access Controls
+
+      CareConnect's logical access controls for standard
+      workflows require multi-factor authentication using a
+      FIDO2 security key or TOTP second factor. The controls
+      are designed and operating effectively for standard
+      access paths across the audit period.
+
+      ### CC6.1-E — Emergency Access Exception
+
+      CareConnect operates a break-glass procedure for
+      emergency clinical access that bypasses the secondary
+      authentication factor required for standard workflows.
+      The break-glass procedure is invoked from a dedicated
+      endpoint with the following compensating controls:
+
+      - Primary-factor authentication (password) is required
+      - The invoking user's identity is established via an
+        approved operational ticket
+      - The invocation is logged in real time to both the
+        CareConnect audit log and the MDS SIEM
+      - A post-hoc review is performed by a CareConnect
+        compliance analyst within 24 hours
+      - Invocation requires an explicit human-readable
+        justification string that is retained with the log
+        record
+
+      The auditor observed that the break-glass procedure is
+      designed as described and is operating effectively.
+      Break-glass invocations during the audit period were
+      sampled and the compensating controls were present in
+      all sampled cases.
+
+      **MDS Vendor Risk note:** The break-glass bypass is a
+      deliberate product behavior and is disclosed to customers.
+      MDS Vendor Risk has requested clarification on how the
+      workflow should be documented in MDS control artifacts.
+      Resolution is pending a customer-facing documentation
+      update or a compliant second-factor implementation.
+
+      ### CC7.1 — System Monitoring
+
+      CareConnect performs 24x7 monitoring of the break-glass
+      gateway. No unauthorized invocations were detected
+      during the audit period.
+
+  - id: vendor-truenorth
+    title: "MDS-VEN-003 — TrueNorth Laboratories BAA (Excerpt)"
+    tokenCount: 700
+    content: |
+      # MDS-VEN-003 — TrueNorth Laboratories BAA (Excerpt)
+      **Contracting parties:** MeridianHealth Data Systems, Inc.
+      and TrueNorth Laboratories, Inc.
+      **Effective date:** 2023-11-15
+      **Term:** 5 years, auto-renewing 1-year terms
+
+      TrueNorth is a reference laboratory providing clinical
+      test results that are ingested into the MDS clinical
+      data warehouse on behalf of several covered-entity
+      customers. The full BAA is maintained by MDS Legal.
+
+      ## Section 4 — Permitted Uses and Disclosures
+
+      TrueNorth shall use and disclose PHI only as necessary
+      to transmit test results and as otherwise permitted by
+      the HIPAA Privacy Rule applicable to TrueNorth's status
+      as a Business Associate of MDS.
+
+      ## Section 5 — Safeguards
+
+      TrueNorth shall maintain administrative, physical, and
+      technical safeguards consistent with the HIPAA Security
+      Rule. Data in transit between TrueNorth and MDS is
+      protected by mutual TLS using AES-256-GCM. Data at rest
+      on TrueNorth systems is encrypted using AES-256 with
+      customer-managed keys.
+
+      ## Section 6 — Data Retention
+
+      TrueNorth shall retain PHI processed under this
+      Agreement in accordance with TrueNorth's ordinary
+      records retention schedule, which is governed by
+      TrueNorth's role as a CLIA-certified clinical
+      laboratory subject to CLIA recordkeeping requirements
+      (42 CFR 493.1105). MDS acknowledges that the CLIA
+      retention period for clinical test results may exceed
+      the maximum retention MDS would otherwise specify, and
+      that the CLIA requirement governs to the extent of any
+      conflict.
+
+      ## Section 7 — Breach Notification
+
+      TrueNorth shall notify MDS of any breach of unsecured
+      PHI within 24 hours of discovery.
+
+      ## Section 8 — Subcontractors
+
+      TrueNorth shall not engage a subcontractor to perform
+      services involving PHI under this Agreement without
+      the prior written consent of MDS. TrueNorth's current
+      list of approved subcontractors is maintained in
+      Exhibit C and updated quarterly.
+
+      ## MDS Vendor Risk Notes
+
+      No material findings against TrueNorth in the 2025
+      vendor risk review. TrueNorth's SOC 2 Type II report
+      was received, reviewed, and filed without exception.
+
+  - id: vendor-axishealth
+    title: "MDS-VEN-004 — AxisHealth Cloud SOC 2 Summary (Vendor-Provided)"
+    tokenCount: 640
+    content: |
+      # MDS-VEN-004 — AxisHealth Cloud SOC 2 Summary
+      **Vendor:** AxisHealth Cloud, Inc.
+      **SOC 2 auditor:** Garrett & Reyes CPA
+      **Period covered:** 2024-12-01 through 2025-11-30
+      **Service provided to MDS:** Managed cold-storage backup
+      for clinical data warehouse archival snapshots
+
+      ## Service Summary
+
+      AxisHealth provides a HIPAA-aligned managed cold-storage
+      service used by MDS for long-term retention of clinical
+      data warehouse archival snapshots. Snapshots are
+      encrypted by MDS before transmission to AxisHealth;
+      AxisHealth holds only ciphertext and does not have
+      access to the encryption keys.
+
+      ## Relevant Controls
+
+      - **CC6.1.** AxisHealth staff access to the storage
+        substrate requires FIDO2 hardware tokens. No standing
+        exceptions. Observed operating effectively.
+      - **CC6.7.** Data in transit to and from AxisHealth uses
+        TLS 1.3 with AES-256-GCM cipher suites exclusively.
+      - **CC7.2.** Environmental and physical controls at the
+        three AxisHealth data centers were observed operating
+        effectively.
+      - **A1.2.** Availability commitment: 99.99% monthly.
+        Measured performance in the audit period: 99.996%.
+
+      ## MDS Vendor Risk Notes
+
+      Because AxisHealth holds only ciphertext, MDS's exposure
+      under the relationship is limited. The encryption keys
+      are held in the MDS KMS and never leave MDS control.
+      AxisHealth's SOC 2 is reviewed annually and no material
+      findings have been identified in the last three annual
+      reviews.
+
+      This vendor has no role in the authentication, break-glass,
+      or primary-encryption control paths examined elsewhere in
+      this audit and is included here for completeness of the
+      vendor inventory.
+
+question: |
+  You are performing the FY2025 HIPAA compliance audit for
+  MeridianHealth Data Systems (MDS). 20 compliance documents have
+  been seeded as artifacts in your context: internal policies,
+  regulatory references, audit findings, incident logs, and vendor
+  attestations. Identify every material compliance gap — places
+  where an internal control, an operational reality, or a vendor
+  practice is inconsistent with an applicable regulatory requirement
+  or a stated MDS policy commitment.
+
+  For each gap:
+  - Name the control area
+  - Cite the conflicting documents by MDS document ID. Cite every
+    source you rely on; some gaps require three documents.
+  - State the gap specifically (what each source says)
+  - Flag the materiality (High / Medium / Low) with brief reasoning
+
+  Produce a ranked list of compliance gaps, most material first. Do
+  not include items where the documents are in agreement.
+
+referenceFacts:
+  - id: fact-breach-notification-72h-vs-60h
+    description: >-
+      MDS-POL-004 commits to 72-hour breach notification; state
+      regulation (New Jersey 60-hour requirement per MDS-REG-003)
+      is stricter. Gap must cite both document IDs and identify
+      the 72-hour internal commitment, the New Jersey requirement,
+      and the 60-hour state deadline.
+    canonical: "60 hours"
+    requiredPatterns:
+      - 'MDS-POL-004|pol-incident-response'
+      - '72.?hour|72h'
+      - 'MDS-REG-003|reg-state-breach'
+      - '60.?hour|60h'
+      - 'New Jersey|\bNJ\b|N\.J\.S\.A'
+    weight: 2
+
+  - id: fact-encryption-aes128-vs-aes256
+    description: >-
+      MDS-POL-002 specifies AES-128 minimum for data in transit;
+      HHS Encryption Safe Harbor guidance (MDS-REG-004) requires
+      AES-256; pentest (MDS-AUD-002 finding M-01) observed AES-128
+      in production on the customer API endpoint. Gap must cite
+      all three document IDs and identify the AES-128 vs AES-256
+      conflict across policy, regulation, and production findings.
+    canonical: "AES-256"
+    requiredPatterns:
+      - 'MDS-POL-002|pol-encryption'
+      - 'MDS-REG-004|reg-hhs-encryption'
+      - 'MDS-AUD-002|audit-pentest|M-01'
+      - 'AES.?128'
+      - 'AES.?256|256-bit'
+      - 'api\.mds\.health|customer API|PHI-bearing endpoint'
+    weight: 3
+
+  - id: fact-medscribe-retention-30-vs-90
+    description: >-
+      MedScribe BAA (MDS-VEN-001 Section 6) sets an absolute
+      30-day retention limit with no amendment possible except
+      in writing; Incident HX-2025-07 (MDS-INC-001) retained
+      MedScribe PHI for 90 days during the forensic hold with
+      only an informal email notification, no signed BAA
+      amendment. Gap must cite both document IDs and identify
+      the 30-day limit, the 90-day retention, and the lack of
+      a written amendment.
+    canonical: "30 days"
+    requiredPatterns:
+      - 'MDS-VEN-001|vendor-medscribe'
+      - '30.?day'
+      - 'written amendment|signed amendment|no oral amendment'
+      - 'MDS-INC-001|HX-2025-07|incident-hx-2025-07'
+      - '90.?day'
+      - 'email|forensic hold'
+    weight: 2
+
+  - id: fact-sev1-sla-4h-vs-7h
+    description: >-
+      MDS-POL-004 Section 3 commits to a 4-hour initial response
+      SLA for Sev-1 incidents; MDS-AUD-004 finding IRF-01 and
+      MDS-INC-003 show trailing averages of 7.5 hours and 7 hours
+      12 minutes respectively. Gap must cite the policy document
+      plus at least one operational evidence document and identify
+      the 4-hour SLA and materially higher actual performance.
+    canonical: "4 hours"
+    requiredPatterns:
+      - 'MDS-POL-004|pol-incident-response'
+      - '4.?hour|4h'
+      - 'MDS-AUD-004|MDS-INC-003|audit-incident-response|incident-annual-metrics|IRF-01'
+      - '7\.5|7.?hours?.{0,12}12|7h.?12m|6h.?49m'
+      - 'Sev-1|initial response'
+    weight: 2
+
+  - id: fact-mfa-break-glass-carveout
+    description: >-
+      MDS-POL-003 Section 2 requires MFA for all PHI access with
+      no standing exceptions; CareConnect SOC 2 (MDS-VEN-002)
+      discloses a break-glass procedure that bypasses secondary
+      authentication; MDS-AUD-003 finding AF-01 documents 14
+      break-glass invocations in a 6-month window. Gap must cite
+      all three document IDs and identify the policy MFA
+      requirement, the break-glass bypass, and the 14 invocations.
+    canonical: "MFA"
+    requiredPatterns:
+      - 'MDS-POL-003|pol-access-control'
+      - 'MFA|multi.factor|second authentication factor'
+      - 'MDS-VEN-002|vendor-careconnect|CareConnect'
+      - 'break.?glass|bypass(es|ed)? the secondary authentication factor'
+      - 'MDS-AUD-003|audit-access-control|AF-01'
+      - '14.{0,20}invocation'
+    weight: 2
+
+  - id: fact-soc2-access-review-timeliness
+    description: >-
+      Bonus finding: SOC 2 and internal access control audits
+      both found three late quarterly access reviews during the
+      period. Lower materiality because management has already
+      accepted the remediation plan.
+    canonical: "quarterly access review"
+    requiredPatterns:
+      - 'MDS-AUD-001|audit-soc2'
+      - 'MDS-AUD-003|audit-access-control'
+      - '3'
+      - 'quarterly access review|late quarterly access review|late access review'
+    weight: 1
+
+rubricWeights:
+  faithfulness: 0.30
+  completeness: 0.45
+  coherence: 0.10
+  actionability: 0.15
+
+passFail:
+  minFactualScore: 0.80
+  requireZeroFailingStepGrades: true
+  requiredFactIds:
+    - fact-breach-notification-72h-vs-60h
+    - fact-encryption-aes128-vs-aes256
+    - fact-medscribe-retention-30-vs-90
+    - fact-sev1-sla-4h-vs-7h
+    - fact-mfa-break-glass-carveout
+  description: >-
+    Must identify all five planted compliance gaps. Each gap
+    requires cross-referencing and citing the source document
+    IDs, and the AES-128 and break-glass gaps require three-way
+    synthesis across policy / regulation-or-vendor / operational
+    evidence. The access review timeliness item is a bonus
+    lower-materiality finding.
+
+requiredSkills:
+  - extract-claims
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a HIPAA compliance audit coordinator. Your job is to
+    find every material compliance gap in a set of 20 documents
+    (policies, regulations, audit findings, incident logs, vendor
+    attestations) seeded as artifacts in your context.
+
+    **Decomposition pipeline — follow this exactly.**
+
+    **Phase 1 — Read all 20 source artifacts.**
+    Call `read_artifact` in parallel once per seeded input
+    artifact (20 read_artifact calls, which you may split across
+    at most two turns if you prefer — no more than two turns).
+    After this phase you will have the full content of each
+    document in your tool results. Read each seeded source
+    artifact exactly once unless a specific read fails and must
+    be retried.
+
+    **Phase 2 — Extract claims per document (parallel skill calls).**
+    Invoke the `extract-claims` skill 20 times in parallel —
+    once per document. You may split these calls across at most
+    four turns, but do not emit more than five `skill` calls in a
+    single assistant turn. For each call, paste the full document
+    text from Phase 1's tool results directly into the skill's
+    `task_input` (do NOT pass artifact_ids — extract-claims has
+    no tool access). The task_input should contain the document
+    content plus a short directive to extract control requirements,
+    operational observations, and policy commitments as structured
+    claims with the source document identifier. Each
+    extract-claims call produces its own claim artifact. Do not
+    begin Phase 3 until all 20 extract-claims tasks have completed
+    and you have exactly 20 claim artifact_ids.
+
+    **Phase 3 — Cross-reference (single ad-hoc agent).**
+    Dispatch a single `agent` tool call with
+    `name: "cross-referencer"`. Pass all 20 extracted-claim
+    artifact_ids via `artifact_ids` (copy them exactly from your
+    Completed Tasks context). The cross-referencer's prompt should
+    instruct it to read each claim artifact via read_artifact,
+    group claims by control area (encryption, access control,
+    breach notification, incident response, vendor retention),
+    and flag every case where a policy commitment, regulatory
+    requirement, operational observation, or vendor attestation
+    is inconsistent with another source on the same control area.
+    Its task_input should be a short directive; the real content
+    comes from the claim artifacts. The cross-referencer should
+    read each claim artifact exactly once.
+
+    **Phase 4 — Synthesize final report (single ad-hoc agent).**
+    Dispatch a single `agent` tool call with `name: "synthesizer"`,
+    passing the cross-referencer's artifact_id via `artifact_ids`.
+    The synthesizer's prompt should produce a ranked gap list
+    preserving every gap the cross-referencer found, with a
+    materiality flag (High / Medium / Low) and brief reasoning
+    for each. Do not dispatch the synthesizer until the
+    cross-referencer has completed and produced exactly one
+    output artifact.
+
+    **Phase 5 — Final answer.**
+    After the synthesizer returns, produce your final text
+    response quoting the synthesized compliance gap report. No
+    more tool calls after this point.
+
+    Do not skip any phase. Do not merge phases. Do not have the
+    coordinator analyze the documents itself — the decomposition
+    pipeline is the thing under test.
+  subagentResultMode: artifact_only
+  skills:
+    - name: extract-claims
+      version: "1.0.0"
+      policy:
+        type: always
+  limits:
+    maxTasksPerRun: 100
+    maxOperationsPerTask: 25
+    maxTokensPerRun: 800000
+
+graphAssertions:
+  - type: run_status
+    status: completed
+    description: "Decomposition run must complete"
+
+  - type: task_count
+    match:
+      role: tool
+      subagentName: read_artifact
+    min: 20
+    description: "coordinator must read every seeded input artifact"
+
+  - type: task_count
+    match:
+      subagentName: extract-claims
+    min: 20
+    description: "extract-claims must be invoked once per seeded document"
+
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: cross-referencer
+    description: "cross-referencer agent must exist"
+
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: synthesizer
+    description: "synthesizer agent must exist"
+
+  - type: task_order
+    first:
+      subagentName: extract-claims
+    then:
+      role: subagent
+      subagentName: cross-referencer
+    description: "extract-claims must precede cross-referencer"
+
+  - type: task_order
+    first:
+      role: subagent
+      subagentName: cross-referencer
+    then:
+      role: subagent
+      subagentName: synthesizer
+    description: "cross-referencer must precede synthesizer"
+
+  - type: consumes
+    consumer:
+      role: subagent
+      subagentName: cross-referencer
+    producer:
+      subagentName: extract-claims
+    description: "cross-referencer must consume extract-claims artifacts"
+
+  - type: consumes
+    consumer:
+      role: subagent
+      subagentName: synthesizer
+    producer:
+      role: subagent
+      subagentName: cross-referencer
+    description: "synthesizer must consume cross-referencer artifact"

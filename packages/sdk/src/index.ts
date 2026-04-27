@@ -6,9 +6,9 @@ export type {
   SubagentLoopResult,
 } from "./sdk.js";
 export {
+  buildAgentTool,
   buildDirectToolDefinitions,
-  buildSpawnSubagentTool,
-  buildSpawnSubagentWithSkillTool,
+  buildSkillTool,
   complete,
   completeStream,
   countTokens,

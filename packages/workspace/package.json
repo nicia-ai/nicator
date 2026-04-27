@@ -21,12 +21,12 @@
   "dependencies": {
     "@nicator/core": "workspace:*",
     "agentfs-sdk": "^0.6.4",
-    "just-bash": "^2.14.0",
+    "just-bash": "^2.14.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@libsql/client": "^0.17.2",
-    "@nicia-ai/typegraph": "^0.19.0",
+    "@libsql/client": "^0.17.3",
+    "@nicia-ai/typegraph": "^0.23.0",
     "@types/node": "^24.12.2"
   }
 }

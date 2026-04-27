@@ -8,7 +8,13 @@ import { createTaskRepo } from "./tasks.js";
 import type { NicatorStore } from "./types.js";
 
 export type { HitlDecisionMatch } from "./tasks.js";
-export type { ArtifactProvenance, NicatorStore, RunLineage } from "./types.js";
+export type {
+  ArtifactLookupEntry,
+  ArtifactLookupFilters,
+  ArtifactProvenance,
+  NicatorStore,
+  RunLineage,
+} from "./types.js";
 
 export function createRepository(store: NicatorStore) {
   return {

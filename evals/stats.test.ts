@@ -40,6 +40,12 @@ describe("ci95", () => {
     expect(upper).toBe(Infinity);
   });
 
+  it("returns a finite empty interval for no observations", () => {
+    const { lower, upper } = ci95([]);
+    expect(lower).toBe(0);
+    expect(upper).toBe(0);
+  });
+
   it("narrows with more observations", () => {
     const narrow = ci95([5, 5, 5, 5, 5, 5, 5, 5, 5, 5]);
     expect(narrow.lower).toBe(5);
@@ -70,6 +76,8 @@ describe("pairedTTest", () => {
     const result = pairedTTest([5], [3]);
     expect(result.n).toBe(1);
     expect(result.meanDelta).toBe(2);
+    expect(result.ci95Lower).toBeUndefined();
+    expect(result.ci95Upper).toBeUndefined();
     expect(result.significant).toBe(false);
     expect(result.pValue).toBe(1);
   });
@@ -82,6 +90,8 @@ describe("pairedTTest", () => {
 
     expect(result.n).toBe(8);
     expect(result.meanDelta).toBeCloseTo(0.2, 5);
+    expect(result.ci95Lower).toBeLessThan(result.meanDelta);
+    expect(result.ci95Upper).toBeGreaterThan(result.meanDelta);
     expect(result.significant).toBe(true);
     expect(result.pValue).toBeLessThan(0.05);
   });

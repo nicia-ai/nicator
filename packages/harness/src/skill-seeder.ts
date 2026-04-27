@@ -13,6 +13,8 @@ export const SkillFixtureSchema = z.object({
   name: z.string().min(1),
   version: z.string(),
   description: z.string(),
+  allowDirectTools: z.boolean().default(true),
+  allowReadArtifact: z.boolean().default(false),
   maxIterations: z.number().int().positive().optional(),
   prompt: z.string().min(1),
 });
@@ -52,6 +54,8 @@ export async function seedSkillsFromFixtures(
         name: fixture.name,
         version: fixture.version,
         description: fixture.description,
+        allowDirectTools: fixture.allowDirectTools,
+        allowReadArtifact: fixture.allowReadArtifact,
         ...(fixture.maxIterations === undefined ?
           {}
         : { maxIterations: fixture.maxIterations }),

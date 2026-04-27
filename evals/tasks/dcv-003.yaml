@@ -1,0 +1,1427 @@
+# DCV-003 · decomposition-value
+#
+# Third decomposition-value task. This one is designed to test the
+# actual thesis, not just moderate cross-document lookup.
+#
+# Compared with dcv-002, the pressure is increased on three axes:
+#
+#   - Corpus size: 11 seeded artifacts, ~27.8K estimated tokens total
+#   - Arithmetic: two of the five required gaps require explicit
+#     timeline or date-delta computation across 3 source documents
+#   - Fidelity: no single source document summarizes any planted gap;
+#     each source only states its own local facts
+#
+# The scenario is an FY2026 compliance audit of fictional healthcare
+# claims clearinghouse Harbor Claims Exchange (HCX). The task asks for
+# every material control gap where an HCX policy, an operational reality,
+# a vendor practice, or a contract term diverges from an applicable
+# regulatory requirement. Several documents include realistic ballast
+# sections, tables, and appendices that are locally coherent but only
+# become problematic once the model aligns clock start points, retention
+# rules, and certificate ages across documents.
+#
+# Five planted gaps (all five required for pass):
+#
+#   1. Notification clock arithmetic (3-way): incident-intake policy
+#      allows 30h from detection to materiality declaration; customer
+#      notification policy allows 24h after declaration; NJ rule requires
+#      notice within 48h of detection. 30h + 24h = 54h > 48h.
+#
+#   2. TLS certificate rotation arithmetic (2-way with date math):
+#      cryptographic policy requires 90-day rotation for PHI-facing TLS
+#      certs; infrastructure review dated 2026-03-31 shows PHI endpoints
+#      last rotated 2025-11-18 and 2025-11-03.
+#
+#   3. Audit-log fidelity mismatch (3-way): control framework retains
+#      full-fidelity claim-access logs for only 13 months, then keeps
+#      7-year daily rollups without member/claim identifiers; regulatory
+#      guidance requires full actor/member/claim/action/outcome records
+#      for 7 years; infrastructure review confirms the cold archive drops
+#      those identifiers after day 400.
+#
+#   4. MFA break-glass carveout (3-way): access policy requires MFA for
+#      all PHI access with no emergency exception absent written CISO
+#      approval; vendor evidence shows the emergency gateway bypasses the
+#      second factor by design; access audit found 23 invocations and no
+#      exception memo or register entry.
+#
+#   5. TranscriptPro retention overage (3-way): vendor DPA caps PHI
+#      retention at 21 days absent a signed addendum; incident register
+#      shows a 76-day forensic hold; contract-admin audit shows no signed
+#      addendum for TranscriptPro in the review period.
+
+id: dcv-003
+category: decomposition-value
+metadata:
+  purpose: mechanism
+  realism: synthetic
+  releaseGate: research
+  comparisonMode: flat-harness
+  workloadFamily: compliance-audit
+  hypothesis: decomposition outperforms a flat harness on arithmetic-heavy multi-source compliance audits
+  stressAxes:
+    - context_volume
+    - join_arity
+    - arithmetic
+name: Harbor Claims Exchange audit — arithmetic cross-source control gaps
+description: >-
+  Eleven long compliance artifacts covering policies, regulations,
+  infrastructure audits, access reviews, vendor evidence, and incident
+  operations for a healthcare claims clearinghouse. Identify every
+  material control gap where HCX's documented controls or operational
+  reality diverge from an applicable regulatory requirement or vendor
+  contract. Five planted gaps are required; two demand explicit
+  arithmetic across document boundaries.
+
+sources: []
+
+inputArtifacts:
+  - id: pol-control-framework
+    title: "HCX-POL-001 — Enterprise Control Framework & Logging Standard"
+    tokenCount: 2450
+    content: |
+      # HCX-POL-001 — Enterprise Control Framework & Logging Standard
+      **Entity:** Harbor Claims Exchange, Inc. (HCX)
+      **Version:** 6.4
+      **Effective date:** 2026-01-01
+      **Control owners:** Compliance Office, Security Engineering, Platform Operations
+      **Approved by:** Chief Compliance Officer, Chief Information Security Officer
+
+      ## 1. Purpose
+
+      This document establishes the baseline administrative, technical,
+      and organizational safeguards used by Harbor Claims Exchange
+      ("HCX"), a healthcare claims clearinghouse acting as a Business
+      Associate for regional payers, provider networks, and revenue
+      cycle management vendors. HCX processes claim lines, remittance
+      advice, eligibility checks, prior authorization payloads, and
+      related operational metadata on behalf of covered entities and
+      delegated payers operating in multiple U.S. jurisdictions.
+
+      The framework is written to align the HCX control environment with
+      HIPAA, applicable state breach statutes, contractual customer
+      notification obligations, SOC 2 commitments, and payer operating
+      rules. It is designed to be implemented through subordinate
+      policies rather than to function as a step-by-step operating
+      procedure.
+
+      ## 2. Scope
+
+      In scope are:
+
+      - claims adjudication APIs
+      - payer file-transfer gateways
+      - member and provider support consoles
+      - internal care-operations tools that expose protected health
+        information ("PHI")
+      - vendor-operated subsystems integrated into the production
+        clearinghouse
+      - all log pipelines, metrics stores, and archives containing
+        records of PHI access or claims-processing events
+
+      Out of scope are:
+
+      - employee collaboration tools without PHI
+      - finance systems unrelated to claims operations
+      - marketing properties
+
+      ## 3. Policy Hierarchy
+
+      The following subordinate policies implement this framework:
+
+      - HCX-POL-002 — Incident Intake & Materiality Determination
+      - HCX-POL-003 — Customer and Regulator Notification Procedure
+      - HCX-POL-004 — Cryptographic Controls & Certificate Lifecycle
+      - HCX-POL-005 — Access Control & Authentication Standard
+      - HCX-POL-006 — Vendor Security Review Procedure (not included in
+        this audit packet)
+
+      Where a subordinate policy conflicts with this framework, the
+      subordinate policy must be revised within 30 calendar days after
+      the conflict is identified and accepted into the compliance issue
+      register.
+
+      ## 4. Control Governance
+
+      The Compliance Steering Committee meets monthly and reviews:
+
+      - open regulatory change tickets
+      - vendor exceptions
+      - access anomalies
+      - certificate and key inventory reports
+      - incident metrics, including declaration lag and notification lag
+
+      Control exceptions are only valid if documented in the HCX
+      Exception Register, approved by the documented authority for that
+      control family, and assigned an expiry date no longer than 180
+      days without reapproval.
+
+      ## 5. Logging Principles
+
+      HCX distinguishes between three classes of logs:
+
+      1. **Security-event logs** such as auth failures, WAF alerts,
+         endpoint detections, and privileged-action telemetry.
+      2. **Claim-access logs** capturing user or service interaction
+         with member, claim, remittance, eligibility, or prior-auth
+         records.
+      3. **System-performance logs** such as queue latency, cache hit
+         rate, worker health, and throughput.
+
+      Claim-access logs are the most sensitive because they can reveal
+      both PHI and adjudication workflow. For cost and operational
+      reasons, HCX separates full-fidelity recent access logs from the
+      long-term archive used for historical audit lookups.
+
+      ## 6. Operational Retention Standard for Claim-Access Logs
+
+      The standard HCX logging lifecycle for claim-access events is as
+      follows:
+
+      - full-fidelity event records remain queryable in the operational
+        access-log cluster for **13 months**
+      - after the hot-retention window, events are transformed into a
+        regulatory archive containing **daily rollups**
+      - rollups are retained for **7 years**
+      - transformation from event records to rollups is irreversible;
+        the rollup schema preserves actor identifier hash, actor role,
+        application, access category, event count, success/failure
+        count, and day bucket
+
+      The rollup schema intentionally omits:
+
+      - member identifiers
+      - claim identifiers
+      - record keys
+      - raw query predicates
+      - field-level before/after values
+
+      The Compliance Office previously accepted this architecture as the
+      cost-balanced operating standard for large-volume claims-access
+      telemetry because recent investigations almost always concern the
+      trailing twelve months. Historical requests older than thirteen
+      months are ordinarily satisfied through summary reporting rather
+      than raw-event replay.
+
+      ## 7. Archive Retrieval Targets
+
+      The archive retrieval service must provide the following:
+
+      - operational-cluster lookups: sub-minute
+      - cold-archive rollup exports: within 6 hours
+      - standard auditor reports: next business day
+
+      These targets are service targets, not regulatory statements of
+      sufficiency. If a regulator or customer contract requires a richer
+      record than the standard archive contains, the request must be
+      escalated to Compliance and Legal for alternate evidence handling.
+
+      ## 8. Security-Event Retention
+
+      Security-event logs remain searchable at full fidelity for 15
+      months and are retained as normalized events for 3 years. This
+      section is often confused with claim-access retention because both
+      data sets flow through the same message bus, but the schemas and
+      archival rules differ.
+
+      ## 9. Business Continuity Notes
+
+      All claim-access logs replicate to a secondary U.S. region for
+      resilience. The secondary region follows the same hot-retention and
+      rollup logic as the primary region. Replication lag is ordinarily
+      under 4 minutes.
+
+      ## 10. Review Notes for FY2026
+
+      The FY2026 annual review left the logging architecture unchanged.
+      Security Engineering proposed extending the hot-retention window to
+      18 months, but the proposal was deferred because the storage impact
+      would have required a midyear budget request. The Compliance Office
+      requested that the next infrastructure review restate the archive
+      schema fields so auditors can validate whether long-term storage
+      remains appropriate for the regulated claims books.
+
+  - id: pol-incident-intake
+    title: "HCX-POL-002 — Incident Intake & Materiality Determination"
+    tokenCount: 2400
+    content: |
+      # HCX-POL-002 — Incident Intake & Materiality Determination
+      **Version:** 5.1
+      **Effective date:** 2026-01-01
+      **Owner:** Security Operations
+      **Approvers:** CISO, General Counsel, Chief Privacy Officer
+
+      ## 1. Purpose
+
+      This policy defines how HCX opens security incidents, assigns
+      severity, assembles facts, and determines whether an incident
+      should enter the customer-notification workflow as a "material data
+      event." The goal is to separate noisy operational incidents from
+      incidents likely to require legal, privacy, customer, or regulator
+      action.
+
+      ## 2. Trigger Sources
+
+      Incidents may be triggered by any of the following:
+
+      - SIEM alerts
+      - abnormal claims-query detections
+      - customer notifications
+      - vendor notifications
+      - manual workforce reports
+      - security testing findings discovered in production
+
+      "Detection" for timing purposes is the timestamp at which HCX first
+      has enough information to open an internal incident record in the
+      incident system, not the earlier time at which an external sensor
+      may have produced a low-confidence alert that later proved
+      irrelevant.
+
+      ## 3. Intake Stages
+
+      HCX uses four intake stages:
+
+      1. **Signal review.** Validate that the event is not obvious noise.
+      2. **Incident open.** Create the record, assign severity, and route
+         ownership.
+      3. **Fact package assembly.** Gather impacted systems, customer
+         identifiers, available access evidence, and preliminary legal
+         view.
+      4. **Materiality declaration.** Decide whether the incident enters
+         the formal customer/regulatory notice workflow governed by
+         HCX-POL-003.
+
+      ## 4. Severity Classifications
+
+      - **Sev-1** — confirmed or likely unauthorized access to PHI,
+        widespread claims disruption, ransomware, or compromise of
+        customer credentials
+      - **Sev-2** — credible indicator of PHI exposure, major vendor
+        failure affecting production claims flow, or urgent third-party
+        legal request
+      - **Sev-3** — contained control failure without current evidence of
+        PHI impact
+      - **Sev-4** — informational event
+
+      ## 5. Intake Timers
+
+      The intake timers are:
+
+      - signal review started within 2 hours of detection
+      - incident opened within 6 hours of detection
+      - initial fact package assembled within 18 hours of detection
+      - formal **material data event declaration within 30 hours of
+        detection** for any incident that remains a plausible candidate
+        for customer notification
+
+      The 30-hour outer bound reflects the time required for HCX to
+      reconcile:
+
+      - customer ownership of the claims batch or API request
+      - member-identifier scope
+      - vendor involvement
+      - preliminary legal view on whether the event is likely to require
+        external notice
+
+      ## 6. Decision Standard for Material Data Event Declaration
+
+      An incident enters the material data event workflow if any of the
+      following are true:
+
+      - unauthorized acquisition of PHI is confirmed
+      - unauthorized acquisition is strongly suspected and prompt
+        containment or external notice may be required before full root
+        cause is known
+      - a contract or regulator requires precautionary notice
+
+      If materiality cannot be determined from the initial fact package,
+      the incident commander must escalate to Legal and Privacy before the
+      30-hour limit expires. The default is to declare the event material
+      rather than permit the clock to drift.
+
+      ## 7. Hand-off to Notification Workflow
+
+      Once the material data event declaration is made, the incident is
+      handed off to the Notification Desk under HCX-POL-003. The
+      declaration timestamp, not the original detection timestamp, is the
+      anchor used in the downstream HCX notice runbooks and templated
+      customer communications.
+
+      ## 8. Investigation Records
+
+      The incident system must preserve:
+
+      - detection timestamp
+      - incident-open timestamp
+      - declaration timestamp if declared material
+      - affected customer list
+      - impacted vendor list
+      - evidence locations
+
+      ## 9. Review Cadence
+
+      Security Operations reviews declaration lag monthly. The purpose of
+      the review is to identify whether additional overnight legal
+      coverage or better customer-ownership mapping is required. The
+      declaration lag itself is not a customer-notification commitment;
+      it is an internal operating timer intended to stabilize facts
+      before the notice workflow begins.
+
+      ## 10. FY2026 Review Notes
+
+      January 2026 review comments noted that customers often ask for
+      notification "from detection," while the HCX operating workflow is
+      organized around the declaration timestamp. No policy change was
+      made at that review because the existing templates, queue routing,
+      and incident dashboard all use declaration as the downstream anchor.
+
+  - id: pol-breach-notification
+    title: "HCX-POL-003 — Customer & Regulator Notification Procedure"
+    tokenCount: 2300
+    content: |
+      # HCX-POL-003 — Customer & Regulator Notification Procedure
+      **Version:** 4.8
+      **Effective date:** 2026-01-01
+      **Owner:** Compliance Operations
+      **Approvers:** Chief Compliance Officer, General Counsel
+
+      ## 1. Purpose
+
+      This procedure governs how HCX notifies customers, regulators, and
+      other parties after an incident has been declared a material data
+      event under HCX-POL-002. It is designed to ensure that downstream
+      notice execution is orderly, customer-specific, and grounded in a
+      reviewed fact package rather than a preliminary alert.
+
+      ## 2. Scope
+
+      The procedure applies to:
+
+      - payer customers
+      - provider-network customers
+      - delegated covered entities
+      - downstream subcontractors if HCX is the notifying party
+
+      ## 3. Notice Clocks
+
+      All clocks in this procedure begin at the **material data event
+      declaration timestamp** established under HCX-POL-002.
+
+      The required outer bounds are:
+
+      - affected customer notice issued within **24 hours of material
+        data event declaration**
+      - regulator notice pack assembled within 48 hours of declaration
+      - any regulator filing executed within 72 hours of declaration
+        unless a stricter contract or jurisdiction-specific matrix
+        requires faster action
+
+      ## 4. Customer Notice Contents
+
+      The initial customer notice must include:
+
+      - incident reference ID
+      - systems involved
+      - whether unauthorized acquisition is confirmed or only suspected
+      - current containment status
+      - current estimate of affected member count, if known
+      - list of impacted vendors, if any
+
+      ## 5. Jurisdiction Matrices
+
+      Compliance Operations maintains separate state-law and customer-law
+      matrices. Those matrices are consulted during notice assembly but
+      do not change the internal anchor point for this procedure, which
+      remains the declaration timestamp from HCX-POL-002.
+
+      ## 6. Customer Contract Harmonization
+
+      If a customer contract imposes a faster outer bound than the HCX
+      standard, the faster customer contract governs. If a state-law
+      matrix imposes a faster outer bound than the HCX standard, the
+      state-law matrix governs. In either case the Notification Desk
+      should treat the delta as a queue-priority change, not as a change
+      to the declaration-anchored structure of this procedure.
+
+      ## 7. Drafting Sequence
+
+      Customer notice drafting follows this order:
+
+      1. fact package from HCX-POL-002
+      2. customer ownership confirmation
+      3. jurisdiction matrix lookup
+      4. counsel review
+      5. release
+
+      ## 8. Operational Notes
+
+      HCX historically found that anchoring the workflow to declaration
+      rather than to raw detection reduced false-positive notices and
+      avoided unnecessary overnight escalations. The tradeoff is that
+      customer-facing clocks are downstream of the declaration process,
+      not parallel to it.
+
+      ## 9. FY2026 Review Notes
+
+      The January 2026 review left the declaration-anchored approach
+      intact. Compliance Operations stated that queue predictability was
+      more important than marginal speed gains because the largest
+      customer complaints in FY2025 concerned notice inconsistency rather
+      than lateness. The state-law matrix was updated in a separate
+      control artifact after the review.
+
+  - id: pol-crypto-key-mgmt
+    title: "HCX-POL-004 — Cryptographic Controls & Certificate Lifecycle"
+    tokenCount: 2500
+    content: |
+      # HCX-POL-004 — Cryptographic Controls & Certificate Lifecycle
+      **Version:** 5.3
+      **Effective date:** 2026-01-15
+      **Owner:** Platform Security
+      **Approvers:** CISO, VP Infrastructure
+
+      ## 1. Purpose
+
+      This document defines the cryptographic requirements applied to
+      data at rest, data in transit, and certificate lifecycle
+      management for HCX systems processing claims or member data.
+
+      ## 2. Data-in-Transit Standard
+
+      PHI-bearing traffic must use TLS 1.2 or newer. HCX prefers TLS 1.3
+      where supported, but TLS 1.2 remains acceptable for partner
+      interoperability. Cipher configuration for PHI-facing endpoints is
+      managed centrally by Platform Security.
+
+      ## 3. Certificate Classes
+
+      HCX tracks three certificate classes:
+
+      - **Class A** — internet-facing or partner-facing endpoints that
+        directly receive or expose PHI
+      - **Class B** — internal service certificates used only within the
+        production mesh
+      - **Class C** — non-production or non-PHI properties
+
+      ## 4. Rotation Cadence
+
+      The required cadence is:
+
+      - **Class A (PHI-facing TLS certificates): every 90 days**
+      - Class B internal mTLS certificates: every 180 days
+      - Class C certificates: every 365 days
+
+      The 90-day rule for Class A certificates is mandatory even if the
+      issuing CA supports longer validity. Platform Security selected 90
+      days to reduce exposure from key leakage and stale automation.
+
+      ## 5. Inventory Requirements
+
+      Every certificate inventory entry must record:
+
+      - common name
+      - SAN list
+      - certificate class
+      - whether the endpoint is PHI-bearing
+      - issuing CA
+      - last rotation date
+      - next scheduled rotation date
+      - owning team
+
+      ## 6. Exception Handling
+
+      Exceptions to the Class A 90-day cadence require:
+
+      - written approval from the CISO
+      - an exception-register entry
+      - evidence of a temporary technical blocker
+      - a remediation target date
+
+      ## 7. Monitoring
+
+      Platform Security reviews the certificate inventory weekly. The
+      review packet includes all Class A certificates with age greater
+      than 60 days so teams can remediate before the 90-day limit.
+
+      ## 8. Key Management Notes
+
+      TLS private keys for Class A endpoints are generated in the HCX
+      certificate service and distributed through the secure secrets
+      delivery plane. This section is often confused with the KMS-backed
+      data-encryption-key rotation schedule, which is governed elsewhere.
+
+      ## 9. FY2026 Review Notes
+
+      The January 2026 review reaffirmed the 90-day Class A cadence after
+      Platform Security observed several near-miss expirations in late
+      2025. No standing exceptions existed as of the review packet sent
+      to the Compliance Steering Committee.
+
+  - id: pol-access-authn
+    title: "HCX-POL-005 — Access Control & Authentication Standard"
+    tokenCount: 2400
+    content: |
+      # HCX-POL-005 — Access Control & Authentication Standard
+      **Version:** 7.0
+      **Effective date:** 2026-01-01
+      **Owner:** Identity & Access Management
+      **Approvers:** CISO, Chief Privacy Officer
+
+      ## 1. Purpose
+
+      This standard defines authentication and authorization controls for
+      every HCX system that stores, processes, or exposes PHI or claims
+      adjudication data.
+
+      ## 2. MFA Requirement
+
+      **All PHI access requires multi-factor authentication (MFA).**
+      This requirement applies to:
+
+      - workforce users
+      - contractors
+      - privileged administrators
+      - service owners performing emergency support
+      - emergency or break-glass users accessing live member or claim
+        data
+
+      Acceptable second factors are:
+
+      - FIDO2/WebAuthn hardware keys
+      - TOTP from an approved authenticator application
+      - platform-bound push with device attestation
+
+      ## 3. Emergency Access
+
+      Emergency access is permitted only if:
+
+      - the user completes the same MFA requirement as standard PHI
+        access
+      - an approved incident or operational ticket exists
+      - session logging is enabled
+      - post-use review occurs within one business day
+
+      Break-glass does not eliminate the second-factor requirement. It
+      changes the approval flow and prioritization, not the
+      authentication threshold.
+
+      ## 4. Exceptions
+
+      No exception to the MFA requirement is valid unless all of the
+      following exist:
+
+      - written CISO approval
+      - an Exception Register record with start date, expiry date, and
+        compensating controls
+      - quarterly reapproval while the exception remains active
+
+      As of the FY2026 annual review, no standing exception is recorded
+      for emergency access to PHI-bearing production systems.
+
+      ## 5. Service Accounts
+
+      Non-human automation accounts are managed under the service-account
+      standard and are not treated as human emergency users. If a service
+      owner uses a privileged console or retrieves PHI through an
+      interactive support path, MFA is still required.
+
+      ## 6. Logging
+
+      Authentication events must record:
+
+      - user or service identifier
+      - factor type
+      - device identifier if applicable
+      - source IP
+      - target application
+      - success or failure
+
+      ## 7. Review Notes
+
+      During the FY2026 review, HCX considered a request from Care
+      Operations to simplify emergency access during overnight payer
+      escalations. IAM rejected any change that would replace the second
+      factor with ticket-only approval because that approach would not
+      satisfy Section 2 or Section 3 above without a formal exception.
+
+  - id: reg-state-breach
+    title: "HCX-REG-001 — State Customer Notification Matrix"
+    tokenCount: 2200
+    content: |
+      # HCX-REG-001 — State Customer Notification Matrix
+      **Maintained by:** Regulatory Counsel
+      **Last reviewed:** 2026-02-10
+      **Applies to:** HCX as claims clearinghouse / business associate
+
+      ## 1. Purpose
+
+      This matrix tracks state-law customer and covered-entity notice
+      deadlines that may apply to HCX incidents involving member, claim,
+      remittance, or eligibility data. It is maintained separately from
+      the federal HIPAA summary because several customer contracts and
+      state statutes use materially different clock start points.
+
+      ## 2. Matrix
+
+      | Jurisdiction | Clock starts at | Outer bound | Notes |
+      |--------------|-----------------|-------------|-------|
+      | CA           | discovery       | without unreasonable delay | no fixed hour count |
+      | NY           | discovery       | without unreasonable delay | no fixed hour count |
+      | TX           | discovery       | 60 days | aligns with standard matrix |
+      | IL           | discovery       | 45 days | consumer notice orientation |
+      | FL           | discovery       | 30 days | regulator escalation thresholds separate |
+      | **NJ**       | **detection of unauthorized acquisition** | **48 hours** | claims processor / BA notice to affected customer |
+      | WA           | discovery       | 30 days | |
+
+      ## 3. New Jersey Note
+
+      For HCX customers operating payer or delegated-adjudication books in
+      New Jersey, the governing matrix entry uses a **48-hour clock from
+      detection**, not from legal declaration, internal ticket opening, or
+      completion of root cause analysis. HCX currently processes New
+      Jersey-covered claims volumes for Garden State Select, Mercer
+      Health Plan, and PineBarrens Provider Network.
+
+      The matrix is deliberately drafted around the earliest operative
+      trigger used in the controlling authority so that downstream teams
+      do not lose time by mapping to a later internal milestone.
+
+      ## 4. Operational Use
+
+      When the matrix is stricter than the default HCX operating
+      procedure, the stricter matrix entry governs. Compliance Operations
+      is responsible for adjusting queue priority and working backward
+      from the matrix clock when a faster state requirement applies.
+
+      ## 5. Federal Comparison
+
+      Federal HIPAA breach notice ceilings remain much longer than the
+      New Jersey entry above. The matrix is not intended to restate the
+      federal timeline; its purpose is to highlight where HCX state
+      obligations are materially tighter than the federal baseline or the
+      default customer-notice queue.
+
+  - id: reg-audit-log
+    title: "HCX-REG-002 — Claims Audit Log Retention Guidance"
+    tokenCount: 2200
+    content: |
+      # HCX-REG-002 — Claims Audit Log Retention Guidance
+      **Maintained by:** Regulatory Counsel and Audit Liaison
+      **Last reviewed:** 2026-02-10
+
+      ## 1. Purpose
+
+      This guidance summarizes the audit-log recordkeeping expectations
+      that apply to HCX's regulated claims-processing books, especially
+      the books maintained for payer customers who require reconstructable
+      access history for post-payment review, fraud investigation,
+      member-complaint handling, and regulator inquiry response.
+
+      ## 2. Required Event Fields
+
+      For regulated claim-access records, the long-term retained record
+      must preserve, for each event:
+
+      - actor identifier
+      - actor role or service identity
+      - member or patient identifier
+      - claim identifier or remittance identifier
+      - action performed
+      - outcome
+      - timestamp
+      - source IP or system origin
+      - application or subsystem accessed
+
+      A derived summary or daily rollup may be useful for analytics but
+      is not a substitute for the retained record if it omits the member
+      or claim linkage needed to reconstruct a specific adjudication or
+      PHI access event.
+
+      ## 3. Retention Period
+
+      The required retention period for the above event-level records is
+      **7 years** for regulated claims books. The retained record must
+      remain retrievable in a form that allows auditors or regulators to
+      tie a specific actor to a specific member/claim access.
+
+      ## 4. Retrieval Expectations
+
+      HCX should be able to retrieve the retained event-level record
+      within 24 hours of a valid regulator or customer request. The
+      retrieval service may front a colder storage tier, but the storage
+      tier must still preserve the event-level fields listed above.
+
+      ## 5. Clarifying Note
+
+      Teams often conflate:
+
+      - security telemetry retention
+      - claims operational reporting retention
+      - claim-access event retention
+
+      This guidance concerns the third category only. A seven-year
+      retention of aggregated counts, normalized summaries, or hashed
+      actor-only metrics does not satisfy the claims audit requirement if
+      the event can no longer be tied to the original member and claim.
+
+      ## 6. FY2026 Review Notes
+
+      No change was made in the February 2026 review. Audit Liaison asked
+      Infrastructure to restate the current cold-archive schema during the
+      next control review so counsel could confirm whether HCX still
+      retained enough fidelity beyond the hot-retention window.
+
+  - id: audit-infrastructure-review
+    title: "HCX-AUD-001 — Infrastructure Control Review (Q1 FY2026)"
+    tokenCount: 3000
+    content: |
+      # HCX-AUD-001 — Infrastructure Control Review
+      **Audit period:** 2026-01-10 through 2026-03-31
+      **Report date:** 2026-03-31
+      **Prepared by:** Internal Audit — Infrastructure Controls
+
+      ## 1. Scope
+
+      This review covered:
+
+      - external and partner-facing certificate inventory
+      - certificate automation jobs
+      - claims access-log architecture
+      - archive retrieval service
+      - supporting control evidence from Platform Security
+
+      ## 2. Certificate Inventory Snapshot
+
+      The inventory below reflects active certificates as of
+      **2026-03-31**.
+
+      | Common name | Endpoint class | PHI-bearing | Last rotation date | Owning team |
+      |-------------|----------------|-------------|--------------------|-------------|
+      | api.hcxclaims.com | external API | yes | **2025-11-18** | Claims Platform |
+      | payer-sftp.hcxclaims.com | partner file transfer | yes | **2025-11-03** | Data Exchange |
+      | eligibility.hcxclaims.com | external API | yes | 2026-02-06 | Claims Platform |
+      | status.hcxclaims.com | public status | no | 2025-12-01 | SRE |
+      | broker-admin.hcxclaims.internal | internal admin | yes | 2026-01-19 | IAM |
+      | queue-mesh.hcxclaims.internal | internal mesh | no direct PHI | 2026-02-14 | SRE |
+
+      Platform Security supplied evidence that the rotation automation
+      job ran on schedule for most inventory items. However, two Class A
+      endpoints above remained on certificates issued in November 2025 at
+      the time of the review snapshot because the owning teams were in
+      the middle of a load-balancer migration.
+
+      ## 3. Certificate Operations Notes
+
+      Claims Platform stated that `api.hcxclaims.com` was pinned by two
+      large payer clients to a legacy CA bundle, which delayed the
+      migration to the new issuance workflow. Data Exchange stated that
+      `payer-sftp.hcxclaims.com` could not be rotated during the February
+      partner freeze window. Internal Audit did not independently validate
+      whether those operational constraints were recorded in the formal
+      exception register.
+
+      The review packet from Platform Security flagged both endpoints as
+      "aging" but did not include a computed day delta from the last
+      rotation date.
+
+      ## 4. Access-Log Pipeline Overview
+
+      HCX's claim-access logging architecture uses three tiers:
+
+      - **hot cluster (`atlas-access-hot`)** — full event fidelity,
+        optimized for investigations and recent audit lookups
+      - **warm object snapshots** — intermediate export for replay and
+        disaster recovery
+      - **cold archive (`atlas-access-reg-archive`)** — long-term
+        retention optimized for compliance reporting volume
+
+      ## 5. Hot Cluster Retention
+
+      The hot cluster retains event-level records for **400 days**.
+      Fields present in the hot schema include:
+
+      - actor ID
+      - actor role
+      - member ID
+      - claim ID
+      - event type
+      - application
+      - timestamp
+      - outcome
+      - source IP
+      - selected request metadata
+
+      ## 6. Cold Archive Schema
+
+      After day 400, access events are transformed into a normalized daily
+      archive record. Fields present in the cold archive are:
+
+      - archive day bucket
+      - actor ID hash
+      - actor role
+      - application
+      - action family
+      - event count
+      - success count
+      - failure count
+
+      The cold archive **does not preserve member identifiers, claim
+      identifiers, raw request fields, or query predicates**. The design
+      intent is to support long-term trend reporting without the cost of
+      retaining high-cardinality PHI-linked event keys.
+
+      ## 7. Retrieval Testing
+
+      Internal Audit tested five archive retrieval requests. Results:
+
+      - 3 hot-cluster requests returned in under 2 minutes
+      - 2 cold-archive requests returned daily summaries within 4 hours
+
+      None of the cold-archive test requests required a specific member or
+      claim lookup older than 400 days, so the review did not exercise
+      reconstruction of an aged event tied to a named member.
+
+      ## 8. Other Observations
+
+      - security-event retention is longer than claims access-log hot
+        retention and uses a different archive
+      - the DR replay snapshots preserve raw events for a shorter window
+        and are not considered the compliance system of record
+      - the archive service met its operational retrieval SLA during
+        testing
+
+      ## 9. Appendix Notes
+
+      Internal Audit requested that Platform Security compute explicit
+      certificate ages at the next quarterly review because the current
+      report shows rotation dates but not aging deltas. Internal Audit
+      also requested a Legal review of whether the cold archive retained
+      enough field-level fidelity for older claims-book audit requests.
+
+  - id: audit-access-contract-admin
+    title: "HCX-AUD-002 — Access, Exception & Contract Administration Review"
+    tokenCount: 2800
+    content: |
+      # HCX-AUD-002 — Access, Exception & Contract Administration Review
+      **Audit period:** 2025-10-01 through 2026-03-31
+      **Report date:** 2026-04-04
+      **Prepared by:** Internal Audit — Operational Controls
+
+      ## 1. Scope
+
+      This review covered:
+
+      - emergency access events for PHI-bearing systems
+      - exception-register sampling for access-control controls
+      - vendor contract addendum register sampling
+      - quarterly review timeliness for selected control owners
+
+      ## 2. Emergency Access Event Sampling
+
+      Internal Audit tested the full population of emergency-access events
+      routed through the CarePath gateway over the six-month period.
+
+      Population summary:
+
+      - total emergency-access invocations: **23**
+      - distinct user accounts: 7
+      - distinct incidents referenced: 11
+      - systems reached through emergency path: claims viewer,
+        remittance exception console, member eligibility console
+
+      Supporting operational tickets existed for all 23 invocations and
+      post-use review was completed within one business day in 22 of 23
+      cases.
+
+      ## 3. Exception Register Sampling
+
+      Internal Audit searched the Exception Register for:
+
+      - active MFA exceptions for emergency access
+      - active certificate-lifecycle exceptions for Class A endpoints
+      - active vendor-data-retention exceptions
+
+      Search results:
+
+      - emergency-access MFA exceptions: **none found**
+      - Class A certificate exceptions: not sampled in this review
+      - vendor-data-retention exceptions: none found
+
+      Internal Audit also requested any standalone written approval memo
+      from the CISO covering emergency access to PHI-bearing production
+      systems. No such memo was produced during fieldwork.
+
+      ## 4. Contract Addendum Register Sample
+
+      HCX Legal maintains a signed addendum register for executed vendor
+      modifications. Internal Audit sampled the register for vendors with
+      PHI retention or notification clauses that materially differ from
+      the standard template.
+
+      | Vendor | Signed addenda executed 2025-01-01 to 2026-03-31 | Notes |
+      |--------|---------------------------------------------------|-------|
+      | TranscriptPro Services, LLC | **0** | no signed retention or notice amendment on file |
+      | NovaArchive LLC | 1 | backup notice clarification executed 2025-08-14 |
+      | CarePath Systems | 0 | emergency-access language governed by base MSA/SOC evidence |
+
+      ## 5. Low-Severity Administrative Findings
+
+      Internal Audit noted one late quarterly control-owner attestation
+      and two delayed vendor annual review packages. Management accepted
+      the remediation and completed both delayed reviews before report
+      issuance. These items were not treated as material.
+
+      ## 6. Fieldwork Notes
+
+      Audit testing in this report intentionally records local facts
+      rather than re-performing Legal's contract interpretation or IAM's
+      control-standard mapping. Where a missing approval memo or missing
+      addendum could become significant only when paired with another
+      policy or contract source, that paired analysis is expected to be
+      performed in the compliance synthesis step rather than inside this
+      review report.
+
+  - id: vendor-evidence-packet
+    title: "HCX-VEN-001 — Vendor Evidence Packet (CarePath + TranscriptPro)"
+    tokenCount: 3000
+    content: |
+      # HCX-VEN-001 — Vendor Evidence Packet
+      **Prepared by:** Vendor Risk Management
+      **Packet date:** 2026-03-20
+      **Contents:** selected excerpts relevant to FY2026 compliance audit
+
+      ## Appendix A — CarePath Systems SOC 2 Excerpt
+
+      **Vendor:** CarePath Systems, Inc.
+      **Service provided to HCX:** emergency operational access gateway
+      integrated into the production claims environment
+
+      ### A.1 Control Summary
+
+      Standard user access to CarePath-integrated workflows requires
+      primary authentication plus a second factor. Emergency access is
+      handled through a separate break-glass endpoint intended for
+      time-sensitive production troubleshooting.
+
+      ### A.2 Emergency Access Exception
+
+      The break-glass endpoint:
+
+      - requires primary-factor authentication
+      - requires an approved incident or operational ticket
+      - **bypasses the secondary authentication factor used in the
+        standard workflow**
+      - records the incident ticket identifier in the session log
+      - triggers post-use review by CarePath operations within 24 hours
+
+      CarePath documents this design as an emergency latency reduction
+      feature for customers whose support teams must reach PHI-bearing
+      consoles during active claim-flow incidents.
+
+      ### A.3 Additional Notes
+
+      CarePath states that some customers layer their own second factor in
+      front of the gateway, while others accept the ticket-and-review
+      design as a compensating-control model. The SOC 2 excerpt does not
+      opine on customer-specific policy alignment.
+
+      ## Appendix B — TranscriptPro Services DPA Excerpt
+
+      **Vendor:** TranscriptPro Services, LLC
+      **Service provided to HCX:** outsourced transcription and coding
+      support for certain provider-call and appeal workflows
+
+      ### B.1 Data Retention Clause
+
+      TranscriptPro may retain HCX-provided PHI only for the minimum
+      period necessary to perform the contracted service and in no event
+      longer than **21 days** after ingestion into TranscriptPro or HCX
+      systems associated with the workflow.
+
+      ### B.2 Preservation Exception
+
+      Any retention beyond 21 days requires a **signed written addendum**
+      executed by authorized representatives of both HCX and
+      TranscriptPro. Email direction, ticket comments, or oral instruction
+      do not amend the DPA.
+
+      ### B.3 Notification Clause
+
+      TranscriptPro must notify HCX within 12 hours of discovering any
+      unauthorized acquisition of PHI or any event reasonably likely to
+      require customer notice by HCX.
+
+      ## Appendix C — Unrelated Reference Vendor
+
+      NovaArchive LLC, a backup vendor, is included for packet completeness.
+      Its contract permits 30-day preservation windows and one signed
+      addendum executed in August 2025. This appendix is included because
+      audit packets often compare multiple vendor templates and because
+      the TranscriptPro DPA should not be assumed to reflect all HCX
+      vendor terms.
+
+  - id: ops-incident-register
+    title: "HCX-OPS-001 — Incident Operations Metrics & Incident Register"
+    tokenCount: 2600
+    content: |
+      # HCX-OPS-001 — Incident Operations Metrics & Incident Register
+      **Prepared by:** Security Operations and Compliance Operations
+      **Reporting period:** 2026-Q1 plus open carry-forward incidents
+      **Report date:** 2026-04-05
+
+      ## 1. Declaration Lag Metrics
+
+      HCX tracks three internal timing measures for incidents with
+      customer-impact potential:
+
+      - detection to incident open
+      - detection to initial fact package
+      - detection to material data event declaration
+
+      Q1 FY2026 summary:
+
+      | Metric | Median | P90 |
+      |--------|--------|-----|
+      | detection → incident open | 3h 40m | 5h 50m |
+      | detection → fact package | 14h 10m | 20h 50m |
+      | detection → material declaration | 19h 30m | 29h 40m |
+
+      These measures are used for internal capacity planning and are not
+      customer-facing commitments.
+
+      ## 2. Incident Register Excerpt
+
+      | Incident ID | Opened | Closed | Severity | Material declared | Primary vendor | Notes |
+      |-------------|--------|--------|----------|-------------------|----------------|-------|
+      | CP-2026-04 | 2026-01-12 | 2026-01-13 | Sev-3 | no | CarePath | ticket mismatch, no data loss |
+      | TP-2026-02 | 2026-02-04 | 2026-04-20 | Sev-2 | yes | TranscriptPro | forensic preservation hold |
+      | API-2026-07 | 2026-03-11 | 2026-03-13 | Sev-2 | no | none | rate-limiter misfire |
+
+      ## 3. TranscriptPro Incident Detail — TP-2026-02
+
+      On 2026-02-04, HCX detected anomalous batch-query behavior in a
+      workflow that included TranscriptPro-supplied transcription outputs
+      and coding work queues. Initial review suggested that the behavior
+      reflected a new TranscriptPro batch export job rather than an
+      external attacker, but HCX opened a Sev-2 incident while the team
+      verified customer and member scope.
+
+      A forensic preservation hold was placed on the TranscriptPro-related
+      PHI set in HCX systems. Preserved data included:
+
+      - raw transcription output files
+      - coding task queue snapshots
+      - member-appeal note attachments
+      - corresponding claim identifiers and provider references
+
+      The hold remained in place from **2026-02-04 through 2026-04-20**,
+      for a total of **76 days**. During that window the preserved data
+      set was not purged under the ordinary TranscriptPro retention job.
+
+      HCX notified the TranscriptPro relationship manager by email on
+      2026-02-05 that preservation would continue pending closure of the
+      investigation. No separate contract amendment reference is recorded
+      in this operations report.
+
+      ## 4. Closeout Notes
+
+      The incident closed on 2026-04-20 after Security Operations
+      concluded that the anomalous activity reflected an unannounced job
+      change rather than unauthorized acquisition. The preserved data set
+      was then purged in the next scheduled cleanup cycle.
+
+      ## 5. Operational Commentary
+
+      Security Operations considers the preservation period above unusual
+      but not unprecedented. Similar long holds have occurred for payment
+      card disputes and litigation holds, though those workflows follow
+      different contractual templates than TranscriptPro.
+
+question: |
+  You are performing the FY2026 compliance audit for Harbor Claims
+  Exchange (HCX). Eleven long compliance artifacts have been seeded as
+  input artifacts in your context: enterprise policies, regulatory
+  guidance, infrastructure and access audits, vendor evidence, and
+  incident operations records.
+
+  Identify every material control gap — places where an HCX policy,
+  operational reality, vendor practice, or contract term diverges from
+  an applicable regulatory requirement.
+
+  For each gap:
+  - name the control area
+  - cite the conflicting documents by HCX document ID
+  - state precisely what each cited source says
+  - show the arithmetic when the gap depends on adding hours or
+    computing age from dates
+  - rank materiality as High / Medium / Low with one-sentence reasoning
+
+  Produce a ranked list, most material first. Do not include items where
+  the documents are locally consistent or where the evidence is only a
+  remediated low-severity administrative issue.
+
+referenceFacts:
+  - id: fact-notification-clock-54-vs-48
+    description: >-
+      HCX-POL-002 allows 30 hours from detection to material declaration;
+      HCX-POL-003 allows 24 hours from declaration to customer notice;
+      HCX-REG-001 requires New Jersey customer notice within 48 hours of
+      detection. Gap must cite all three document IDs and show that 30 +
+      24 = 54 hours, which exceeds the 48-hour requirement.
+    canonical: "54 hours"
+    requiredPatterns:
+      - 'HCX-POL-002|pol-incident-intake'
+      - '30.?hours?|30h'
+      - 'HCX-POL-003|pol-breach-notification'
+      - '24.?hours?|24h'
+      - 'HCX-REG-001|reg-state-breach'
+      - '48.?hours?|48h'
+      - '54.?hours?|30\s*\+\s*24|6.?hours?.{0,15}over'
+    weight: 3
+
+  - id: fact-cert-rotation-90-vs-aged
+    description: >-
+      HCX-POL-004 requires 90-day rotation for Class A / PHI-facing TLS
+      certs. HCX-AUD-001 is dated 2026-03-31 and shows api.hcxclaims.com
+      last rotated 2025-11-18 and payer-sftp.hcxclaims.com last rotated
+      2025-11-03, both older than 90 days. Gap must cite the policy and
+      audit, and show at least one overdue endpoint via date or day-delta.
+    canonical: "90 days"
+    requiredPatterns:
+      - 'HCX-POL-004|pol-crypto-key-mgmt'
+      - '90.?days?'
+      - 'HCX-AUD-001|audit-infrastructure-review'
+      - '2026-03-31|March 31, 2026'
+      - 'api\.hcxclaims\.com|payer-sftp\.hcxclaims\.com'
+      - '2025-11-18|2025-11-03|133.?days?|148.?days?|older than 90 days'
+    weight: 2
+
+  - id: fact-log-retention-13m-vs-7y
+    description: >-
+      HCX-POL-001 keeps full-fidelity claim-access logs for 13 months,
+      then 7-year rollups without member/claim identifiers. HCX-REG-002
+      requires full event-level actor/member/claim/action/outcome
+      records for 7 years. HCX-AUD-001 confirms the cold archive drops
+      member and claim identifiers after day 400. Gap must cite all three
+      document IDs and identify the 13-month/400-day vs 7-year mismatch.
+    canonical: "7 years"
+    requiredPatterns:
+      - 'HCX-POL-001|pol-control-framework'
+      - '13.?months?|400.?days?|rollups?|roll-ups?'
+      - 'HCX-REG-002|reg-audit-log'
+      - '7.?years?'
+      - 'member|patient'
+      - 'claim'
+      - 'HCX-AUD-001|audit-infrastructure-review'
+    weight: 3
+
+  - id: fact-mfa-breakglass-23
+    description: >-
+      HCX-POL-005 requires MFA for all PHI access including emergency
+      access and requires written CISO approval for exceptions. HCX-VEN-001
+      shows the CarePath break-glass endpoint bypasses the secondary
+      authentication factor. HCX-AUD-002 shows 23 invocations and no
+      exception memo or register entry. Gap must cite all three documents.
+    canonical: "MFA"
+    requiredPatterns:
+      - 'HCX-POL-005|pol-access-authn'
+      - 'MFA|second factor'
+      - 'HCX-VEN-001|vendor-evidence-packet|CarePath'
+      - 'break.?glass|bypass(es|ed)? the secondary authentication factor'
+      - 'HCX-AUD-002|audit-access-contract-admin'
+      - '23.{0,40}(invocation|access|event)'
+      - 'no.{0,20}(exception|memo|register)'
+    weight: 2
+
+  - id: fact-transcriptpro-21-vs-76
+    description: >-
+      HCX-VEN-001 caps TranscriptPro-related PHI retention at 21 days
+      absent a signed addendum. HCX-OPS-001 records a 76-day hold for
+      incident TP-2026-02. HCX-AUD-002 shows 0 signed addenda for
+      TranscriptPro in the review period. Gap must cite all three docs.
+    canonical: "21 days"
+    requiredPatterns:
+      - 'HCX-VEN-001|vendor-evidence-packet|TranscriptPro'
+      - '21.?days?'
+      - 'signed.{0,10}(addendum|amendment)'
+      - 'HCX-OPS-001|ops-incident-register|TP-2026-02'
+      - '76.?days?'
+      - 'HCX-AUD-002|audit-access-contract-admin'
+      - '0|zero'
+      - 'addenda|addendum'
+    weight: 2
+
+  - id: fact-low-severity-admin-review
+    description: >-
+      Bonus non-material item: the access and contract-admin audit notes
+      one late quarterly control-owner attestation and two delayed vendor
+      annual review packages, all completed before report issuance.
+    canonical: "late quarterly"
+    requiredPatterns:
+      - 'late quarterly|delayed vendor annual review'
+      - 'completed before report issuance|not treated as material'
+    weight: 1
+
+rubricWeights:
+  faithfulness: 0.30
+  completeness: 0.45
+  coherence: 0.10
+  actionability: 0.15
+
+passFail:
+  minFactualScore: 0.80
+  requireZeroFailingStepGrades: true
+  requiredFactIds:
+    - fact-notification-clock-54-vs-48
+    - fact-cert-rotation-90-vs-aged
+    - fact-log-retention-13m-vs-7y
+    - fact-mfa-breakglass-23
+    - fact-transcriptpro-21-vs-76
+  description: >-
+    Must identify all five planted gaps. The notification-clock and
+    log-retention gaps require true multi-document synthesis; the
+    notification gap specifically requires arithmetic across two policy
+    clocks and one regulatory clock. The break-glass and TranscriptPro
+    gaps require three-way joins across policy or contract, vendor or
+    ops evidence, and audit/admin evidence.
+
+requiredSkills:
+  - extract-claims
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a compliance audit coordinator. Your job is to find every
+    material control gap in a set of 11 long compliance artifacts seeded
+    as input artifacts in your context.
+
+    **Decomposition pipeline — follow this exactly.**
+
+    **Phase 1 — Read all 11 source artifacts.**
+    Call `read_artifact` in parallel once per seeded input artifact
+    (11 read_artifact calls, which you may split across at most two
+    turns). After this phase you must have the full text of every
+    seeded source in tool results. Read each seeded source artifact
+    exactly once unless a specific read fails and must be retried.
+
+    **Phase 2 — Extract claims per document (parallel skill calls).**
+    Invoke the `extract-claims` skill 11 times in parallel, once per
+    document. You may split these calls across at most three turns, but
+    do not emit more than four `skill` calls in a single assistant turn.
+    For each call, paste the full document text from Phase 1 directly
+    into `task_input` (do NOT pass artifact_ids — extract-claims has no
+    tool access). Do not batch multiple source documents into one
+    extract-claims task; each of the 11 seeded documents must produce
+    its own distinct claim artifact. Your short directive must explicitly
+    tell the extractor to preserve:
+    - document ID
+    - numeric thresholds
+    - dates
+    - durations
+    - clock start points
+    - whether an approval or signed addendum is required or missing
+    - whether a field is preserved or omitted in an archive schema
+    Do not begin Phase 3 until all 11 extract-claims tasks have
+    completed and you have exactly 11 distinct claim artifact_ids. If
+    you have fewer than 11, continue extracting before moving on.
+
+    **Phase 3 — Cross-reference (single ad-hoc agent).**
+    Dispatch exactly one `agent` call with `name: "cross-referencer"`.
+    Pass all 11 extracted-claim artifact_ids via `artifact_ids` and do
+    not paste coordinator summaries as a substitute.
+    The cross-referencer must read each claim artifact exactly once via
+    read_artifact, group claims by control area, and compute any needed:
+    - additive timelines across policy clocks
+    - certificate ages from report date and last-rotation date
+    - retention/fidelity mismatches across policy, regulation, and audit
+    It must output a gap list that preserves the arithmetic and cites the
+    source document IDs for every computed gap.
+
+    **Phase 4 — Synthesize final report (single ad-hoc agent).**
+    Dispatch exactly one `agent` call with `name: "synthesizer"`,
+    passing only the cross-referencer's artifact_id via `artifact_ids`.
+    The synthesizer must preserve every gap from the cross-referencer,
+    rank them by materiality, and keep the document IDs and arithmetic
+    visible in the final ranked list. Do not dispatch the synthesizer
+    until the cross-referencer has completed and produced exactly one
+    output artifact. The synthesizer must rely on that artifact rather
+    than on coordinator memory of the source documents.
+
+    **Phase 5 — Final answer.**
+    After the synthesizer returns, produce your final text answer using
+    only the synthesizer output as your immediate source. Do not perform
+    fresh source analysis in Phase 5. The decomposition pipeline itself
+    is under test.
+  subagentResultMode: artifact_only
+  skills:
+    - name: extract-claims
+      version: "1.0.0"
+      policy:
+        type: always
+  limits:
+    maxTasksPerRun: 90
+    maxOperationsPerTask: 35
+    maxTokensPerRun: 1000000
+
+graphAssertions:
+  - type: run_status
+    status: completed
+    description: "Decomposition run must complete"
+
+  - type: task_count
+    match:
+      role: tool
+      subagentName: read_artifact
+    min: 11
+    description: "coordinator must read every seeded input artifact"
+
+  - type: task_count
+    match:
+      subagentName: extract-claims
+    min: 11
+    description: "extract-claims must be invoked once per seeded document"
+
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: cross-referencer
+    description: "cross-referencer agent must exist"
+
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: synthesizer
+    description: "synthesizer agent must exist"
+
+  - type: task_order
+    first:
+      subagentName: extract-claims
+    then:
+      role: subagent
+      subagentName: cross-referencer
+    description: "extract-claims must precede cross-referencer"
+
+  - type: task_order
+    first:
+      role: subagent
+      subagentName: cross-referencer
+    then:
+      role: subagent
+      subagentName: synthesizer
+    description: "cross-referencer must precede synthesizer"
+
+  - type: consumes
+    consumer:
+      role: subagent
+      subagentName: cross-referencer
+    producer:
+      subagentName: extract-claims
+    description: "cross-referencer must consume extract-claims artifacts"
+
+  - type: consumes
+    consumer:
+      role: subagent
+      subagentName: synthesizer
+    producer:
+      role: subagent
+      subagentName: cross-referencer
+    description: "synthesizer must consume cross-referencer artifact"

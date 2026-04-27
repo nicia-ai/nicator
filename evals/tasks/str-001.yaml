@@ -1,0 +1,70 @@
+# STR-001 · steering
+#
+# Pair A (moderate/body) — positive side.
+# Moderate intensity steering in system-prompt body, research-shaped task.
+# Tests whether a conditional directive ("for research questions, use the
+# researcher skill") propagates into the graph as a researcher invocation.
+#
+# Pair with: str-002 (moderate negative — same steering, task that shouldn't
+# trigger researcher). The pair passes only if both sides pass.
+
+id: str-001
+category: steering
+name: Moderate steering — research directive propagates
+description: >-
+  Moderate system-prompt steering on a research-shaped task. Expected: the
+  researcher skill is invoked at least once. Tests whether a conditional
+  directive in the user's system prompt reaches the model's decision surface.
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 20
+    content: |
+      No source documents are provided. Use your tools and skills to research
+      the answer.
+
+question: |
+  Research the current state of quantum error correction in practical quantum
+  computing hardware. What approaches are being used, and which organizations
+  are making the most progress?
+
+referenceFacts:
+  - id: fact-1
+    description: Mentions quantum error correction
+    canonical: "quantum"
+    weight: 1
+
+passFail:
+  description: >-
+    Researcher skill must be invoked. Factual content is not scored — this
+    is a steering test, not a knowledge test.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a research assistant. You have a `researcher` skill available
+    for research questions. For research-shaped questions, use the
+    researcher skill.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+
+graphAssertions:
+  - type: run_status
+    status: completed
+    description: "Run should complete successfully"
+
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: researcher
+    description: "Researcher skill should be invoked under moderate steering"
+
+  - type: task_count
+    match:
+      role: subagent
+      subagentName: researcher
+    min: 1
+    description: "At least one researcher invocation expected"

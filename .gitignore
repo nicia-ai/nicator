@@ -24,8 +24,24 @@ dist/
 
 # Eval results — raw JSON is large and machine-generated; track the
 # human-readable .report.md summaries produced by `pnpm eval:report --write`.
+# A small allowlist of raw JSONs is checked in for each run cited by
+# evals/results/MANIFEST.md so reviewers can audit judge traces and re-grade
+# pass/fail using current task definitions. When you cite a new run in the
+# manifest, also exempt its <prefix>.json here.
 evals/results/*.json
 !evals/results/.gitkeep
+!evals/results/09c45a9e.json
+!evals/results/1d3c75ba.json
+!evals/results/2e370910.json
+!evals/results/3251f5b8.json
+!evals/results/341e6044.json
+!evals/results/47d48abd.json
+!evals/results/517c16c7.json
+!evals/results/58d7f3b5.json
+!evals/results/5a478eec.json
+!evals/results/5aced9d6.json
+!evals/results/a345f39c.json
+!evals/results/b1b15014.json
 
 # OS
 .DS_Store

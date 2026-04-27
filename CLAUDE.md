@@ -59,24 +59,27 @@ Artifact   — named, typed content node (outputs, inputs, skill prompts)
 ```
 
 Every Run has a root Task (coordinator, no Operations). Every dispatch — tool
-call, subagent spawn, or HITL request — creates a child Task linked via
-`spawns` edges. Task roles: `root`, `tool`, `hitl`, `subagent`. Subagents are
-spawned via `spawn_subagent` (model constructs the prompt) or
-`spawn_subagent_with_skill` (uses a pre-built skill prompt). All dispatches
-are concurrent with a gather timeout; HITL dispatches are sequential.
+call, agent creation, or HITL request — creates a child Task linked via
+`spawns` edges. Task roles: `root`, `tool`, `hitl`, `subagent`. Child agents
+are created via the `agent` tool (custom role defined by the coordinator) or
+the `skill` tool (activates a pre-registered skill). All dispatches are
+concurrent with a gather timeout; HITL dispatches are sequential.
 
-## Subagent Model
+## Agent and Skill Tools
 
-The model is the coordinator. It spawns subagents on the fly using two tools:
+The coordinator model uses two dispatch tools:
 
-- `spawn_subagent(name, prompt, task_input, artifact_ids?)` — the model
-  constructs the subagent's system prompt and dispatches it directly.
-- `spawn_subagent_with_skill(skill_name, task_input, artifact_ids?)` — convenience
-  wrapper that uses a pre-built skill prompt from the workspace.
+- `agent(name, prompt, task_input, artifact_ids?)` — creates an agent with a
+  custom role. The coordinator writes the system prompt.
+- `skill(skill_name, task_input, artifact_ids?)` — activates a pre-registered
+  skill. The skill's prompt is loaded from the workspace at run start.
 
-Subagents inherit the parent's tools (no per-subagent tool filtering). Whether
-a subagent used a skill is determined by the presence of an `invokes` edge to
-a Skill node, not by a field on the Task. Multi-agent coordination patterns
+Child agents inherit the parent's tools (no per-agent tool filtering). Whether
+a child task used a skill is determined by the presence of an `invokes` edge
+to a Skill node, not by a field on the Task. Internally, both dispatch paths
+produce tasks with `role: "subagent"` in the graph — the distinction between
+"agent" (custom role) and "skill" (pre-registered) is at the tool layer, not
+at the graph schema layer. Multi-agent coordination patterns
 (pipeline, fan-in, debate) emerge from model decisions — there is no
 declarative topology. See `packages/harness/src/skill-dispatch.ts` for the
 dispatch implementation.
@@ -265,7 +268,7 @@ pnpm eval:sweep-weights --runs 5     # statistical: 5 runs per config
 - Skill workspace materialization → `packages/harness/src/skill-loader.ts`
 - Skill seeding from fixtures → `packages/harness/src/skill-seeder.ts`
 - Skill inner loop → `packages/sdk/src/sdk.ts` (`runSubagentLoop`)
-- Subagent dispatch → `packages/harness/src/skill-dispatch.ts` (handles both `spawn_subagent` and `spawn_subagent_with_skill`)
+- Agent/skill dispatch → `packages/harness/src/skill-dispatch.ts` (handles both `agent` and `skill` tool calls)
 - Agent workspace → `packages/workspace/src/`
 - Bash tool integration → `packages/workspace/src/bash-tool.ts`
 - Workspace types → `packages/workspace/src/types.ts`

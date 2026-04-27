@@ -5,6 +5,8 @@ export * from "./constants.js";
 export * from "./errors.js";
 export * from "./graph.js";
 export {
+  type ArtifactLookupEntry,
+  type ArtifactLookupFilters,
   type ArtifactProvenance,
   createRepository,
   type HitlDecisionMatch,

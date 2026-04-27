@@ -25,7 +25,9 @@ description: >-
   token budget forces context trimming, making the weight configuration
   consequential for which canary facts survive into the final synthesis.
 
-sources:
+sources: []
+
+inputArtifacts:
   - id: src-1
     title: "Internal Report: Brine Extraction Efficiency Metrics (FY2024)"
     tokenCount: 3000
@@ -596,10 +598,9 @@ sources:
       Reviewed by: CEO, CFO, CTO, Chief Strategy Officer
 
 question: |
-  You have six internal reports from NovaMaterials Inc. Use the
-  retrieve-document tool to fetch each document by source ID (src-1
-  through src-6), then produce a final synthesis using the summarizer
-  skill.
+  You have six internal reports from NovaMaterials Inc. already seeded
+  as artifacts in your context. Use the read_artifact tool to fetch each
+  document's content, then produce a final synthesis.
 
   Your synthesis MUST reference the following specific figures from the
   source documents:
@@ -670,21 +671,13 @@ passFail:
 definitionOverrides:
   systemPrompt: >-
     You are a research analyst at NovaMaterials Inc. You are reviewing
-    internal reports. First, retrieve each source document using the
-    retrieve-document tool (call it once per source ID, in order from
-    src-1 through src-6). After retrieving all six, use the summarizer
-    skill to produce a synthesis that references the specific figures
-    requested. Do not skip any source. Do not invent figures — use
-    only the exact numbers from the documents.
-  skills:
-    - name: researcher
-      version: "1.0.0"
-      policy:
-        type: always
-    - name: summarizer
-      version: "1.0.0"
-      policy:
-        type: always
+    six internal reports seeded as artifacts in your context. First,
+    read each artifact using the read_artifact tool (one call per
+    artifact_id shown in your Completed Tasks). After reading all six,
+    produce a synthesis that references the specific figures requested.
+    Do not skip any artifact. Do not invent figures — use only the
+    exact numbers from the documents.
+  skills: []
   limits:
     maxTasksPerRun: 25
     maxTokensPerRun: 60000
@@ -696,11 +689,7 @@ graphAssertions:
 
   - type: task_count
     match:
-      subagentName: researcher
+      role: tool
+      subagentName: read_artifact
     min: 6
-    description: "At least 6 researcher activations for the 6 source documents"
-
-  - type: task_exists
-    match:
-      subagentName: summarizer
-    description: "Summarizer should be activated to synthesize findings"
+    description: "read_artifact must be called once per seeded input (6 total)"

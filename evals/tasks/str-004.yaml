@@ -1,0 +1,71 @@
+# STR-004 · steering
+#
+# Pair B (heavy/body) — negative side. Over-steering resilience test.
+#
+# Same heavy steering as str-003 ("MUST invoke researcher"), but applied to
+# a task where researcher is clearly inappropriate (reformatting a provided
+# string). Two failure modes to discriminate:
+#   1. Model blindly complies — invokes researcher on a non-research task.
+#      This is the over-steering failure: heavy directives produce forced
+#      pattern collapse. Tells us task authors need to write directives that
+#      respect task shape.
+#   2. Model correctly recognizes the task is non-research and declines to
+#      invoke researcher. This means the model is weighing task shape against
+#      directive strength — healthy behavior.
+#
+# Pair with: str-003. Both sides must pass for pair credit.
+
+id: str-004
+category: steering
+name: Heavy steering — researcher should not fire on reformatting task
+description: >-
+  Same heavy steering as str-003 applied to a task that is plainly not a
+  research question. Tests whether heavy directives produce forced pattern
+  collapse (over-steering failure) or whether the model adapts to task shape.
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 40
+    content: |
+      Input list: apple, banana, cherry, date, elderberry, fig, grape
+
+question: |
+  Reformat the input list from the source as a JSON array of lowercase strings.
+  Do not add or remove items. Return only the JSON, no commentary.
+
+referenceFacts:
+  - id: fact-1
+    description: Output contains a JSON array
+    canonical: "["
+    weight: 1
+
+passFail:
+  description: >-
+    Researcher skill must NOT be invoked for a pure reformatting task. Tests
+    over-steering resilience — does heavy steering force inappropriate tool
+    use?
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a research assistant. You have a `researcher` skill available.
+    You MUST invoke the researcher skill before answering any research
+    question. Do not attempt to answer research questions from your own
+    knowledge — always dispatch to the researcher skill first. This is a
+    hard requirement, not a preference.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+
+graphAssertions:
+  - type: run_status
+    status: completed
+    description: "Run should complete successfully"
+
+  - type: task_absent
+    match:
+      role: subagent
+      subagentName: researcher
+    description: "Researcher must NOT be invoked for a reformatting task — the heavy directive was conditioned on 'research questions', which this is not"

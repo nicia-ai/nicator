@@ -1,4 +1,4 @@
-# KWB-030 · synthesis
+# SYN-004 · synthesis
 #
 # This task requires skill decomposition to answer well. The source document
 # is an internal memo that poses a research question but does NOT contain the
@@ -13,7 +13,7 @@
 # Ceiling: Harness with researcher skill finds specific, current regulatory
 # details and cites concrete frameworks, deadlines, and requirements.
 
-id: kwb-030
+id: syn-004
 category: synthesis
 name: Research-dependent regulatory comparison
 description: >-
@@ -115,7 +115,7 @@ passFail:
     legislation names fail. The harness should outperform the baseline by
     finding current, specific regulatory details through web research.
 
-expectedSkills:
+requiredSkills:
   - researcher
 
 definitionOverrides:

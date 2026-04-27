@@ -1,0 +1,72 @@
+# STR-006 · steering
+#
+# Skill-description-only steering. No directive in the system prompt.
+#
+# The researcher skill's existing fixture description is reasonably directive
+# ("Use when the task requires finding, extracting, and synthesizing information
+# from multiple web sources."). This task puts that claim to the test: with a
+# neutral system prompt, does the skill description alone cause the model to
+# invoke researcher on a research-shaped task?
+#
+# Predicted outcome based on Apr 6 kwb-* data: researcher will NOT be invoked.
+# The kwb-* tasks have the same setup and produced 100% factual scores while
+# invoking zero skills. If the prediction holds, we learn that skill
+# descriptions alone cannot steer — all steering work is being done by the
+# system-prompt body, which means that is where to invest in presentation
+# improvements.
+#
+# If the prediction is wrong and researcher IS invoked, we learn skill
+# descriptions are a viable steering channel, and task authors should be
+# guided to engineer them carefully.
+
+id: str-006
+category: steering
+name: Skill-description-only steering — baseline test
+description: >-
+  Neutral system prompt on a research-shaped task with a well-described
+  researcher skill available. Tests whether skill descriptions alone (without
+  any system-prompt directive) can steer the model toward skill invocation.
+
+sources:
+  - id: src-a
+    title: Task context
+    tokenCount: 20
+    content: |
+      No source documents are provided. The question may require external
+      information gathering.
+
+question: |
+  Research recent advances in perovskite solar cell efficiency. What is the
+  current record, who holds it, and what technical barriers remain?
+
+referenceFacts:
+  - id: fact-1
+    description: Mentions perovskite or solar cell efficiency
+    canonical: "perovskite"
+    weight: 1
+
+passFail:
+  description: >-
+    Expected: researcher skill invoked. Tests whether the skill's own
+    description is sufficient to steer the model without a system-prompt
+    directive.
+
+definitionOverrides:
+  systemPrompt: >-
+    You are a helpful assistant. Answer the user's question accurately.
+  skills:
+    - name: researcher
+      version: "1.0.0"
+      policy:
+        type: always
+
+graphAssertions:
+  - type: run_status
+    status: completed
+    description: "Run should complete successfully"
+
+  - type: task_exists
+    match:
+      role: subagent
+      subagentName: researcher
+    description: "Researcher should be invoked on a research task even without system-prompt directive — testing whether skill description alone steers"
