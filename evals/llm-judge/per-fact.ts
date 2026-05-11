@@ -47,7 +47,7 @@ const VerdictsArraySchema = z.object({
   verdicts: z.array(VerdictSchema),
 });
 
-const SYSTEM_PROMPT = `
+export const PER_FACT_SYSTEM_PROMPT = `
 You are a strict fact verification judge. You will be given a candidate
 response and a list of reference facts. For each reference fact, decide
 whether the response correctly states that fact.
@@ -102,7 +102,10 @@ Return exactly one verdict per provided fact, in the same order. Do not
 omit facts. Do not add facts that were not provided.
 `.trim();
 
-function buildUserPrompt(facts: readonly ReferenceFact[], response: string): string {
+export function buildPerFactUserPrompt(
+  facts: readonly ReferenceFact[],
+  response: string,
+): string {
   const factList = facts
     .map((f, i) => `${i + 1}. factId="${f.id}" — ${f.description}`)
     .join("\n");
@@ -119,10 +122,10 @@ ${response}
 `.trim();
 }
 
-function parseResponse(text: string, expectedFactIds: readonly string[]): {
-  reasoning: string;
-  verdicts: PerFactVerdict[];
-} {
+export function parsePerFactResponse(
+  text: string,
+  expectedFactIds: readonly string[],
+): { reasoning: string; verdicts: PerFactVerdict[] } {
   const reasoningMatch = text.match(/<reasoning>([\s\S]*?)<\/reasoning>/);
   const verdictsMatch = text.match(/<verdicts>([\s\S]*?)<\/verdicts>/);
   if (!reasoningMatch || !verdictsMatch) {
@@ -168,8 +171,10 @@ export async function runPerFactJudge(
     model: JUDGE_MODEL,
     max_tokens: JUDGE_MAX_TOKENS,
     temperature: 0,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: "user", content: buildUserPrompt(facts, response) }],
+    system: PER_FACT_SYSTEM_PROMPT,
+    messages: [
+      { role: "user", content: buildPerFactUserPrompt(facts, response) },
+    ],
   });
   const text = aiResponse.content
     .filter((b) => b.type === "text")
@@ -177,7 +182,7 @@ export async function runPerFactJudge(
     .join("");
 
   const expectedIds = facts.map((f) => f.id);
-  const { reasoning, verdicts } = parseResponse(text, expectedIds);
+  const { reasoning, verdicts } = parsePerFactResponse(text, expectedIds);
 
   const totalWeight = facts.reduce((s, f) => s + f.weight, 0);
   const matchedWeight = verdicts.reduce((s, v, i) => {

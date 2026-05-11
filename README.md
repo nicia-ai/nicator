@@ -130,6 +130,86 @@ regenerations within paired-bootstrap intervals.
   intra-prompt position effects, calibration): in the post and in
   `docs/evals.md`
 
+## Methodology validation
+
+Three scripted checks close the most common critiques of "you're using
+one stochastic LLM judge to indict another stochastic scorer." Each is
+optional but each closes a specific argument before someone else does.
+
+### 1. Human audit — calibrate the judge against your own labels
+
+Generates a stratified sample of fact-verdicts across the four
+agreement quadrants, packages each case with the reference fact, regex
+pattern, and a ~440-character output excerpt around the candidate
+match, and **hides the judge verdict** inside a collapsible block so
+the labeler labels first and reveals second. Then a scoring step
+computes Cohen's κ and per-quadrant agreement.
+
+```bash
+# 1. Generate a packet (no API calls — packages an existing rescore)
+pnpm eval:audit-packet --rescore evals/results/<rescore>.json
+
+# 2. Open the resulting evals/human-audit/<stem>.md and replace each
+#    `[ TODO ]` with PASS / FAIL / AMBIGUOUS / DISPUTE-RUBRIC.
+#    Label every case BEFORE expanding the judge verdict — that's the
+#    whole evidentiary point of the audit. Budget ~30-60 sec/case.
+
+# 3. Score the labeled packet
+pnpm eval:audit-score --packet evals/human-audit/<stem>.md
+```
+
+Default sample design (~82 cases, ~45-90 min of labeling):
+- 40 from regex-fail/judge-pass (harness side — load-bearing quadrant)
+- 20 from regex-fail/judge-pass (baseline side)
+- All regex-pass/judge-fail (typically 1-2)
+- All both-failed (typically 6)
+- 15 random both-passed (sanity check that both scorers agree)
+
+Override via `--rfjp-harness N --rfjp-baseline N --both-passed N`.
+Use `--seed 42` for reproducible packets.
+
+The output report computes Cohen's κ on PASS/FAIL pairs (excluding
+AMBIGUOUS and DISPUTE-RUBRIC, which are tracked separately as
+methodology signal) and produces a one-line headline phrasing for the
+post.
+
+### 2. Cross-vendor judge spot-check
+
+Re-runs the per-fact judge using a different vendor (default OpenAI
+GPT-5 via the Chat Completions HTTP API — no SDK dependency) against
+the same prompt, and compares verdicts to a reference rescore.
+Closes the "Anthropic-judging-Anthropic bias loop" critique.
+
+```bash
+# Set OPENAI_API_KEY in .env (intentionally not in .env.example —
+# this validation is opt-in and incurs cost on a second vendor).
+pnpm eval:rescore-cross-vendor --rescore evals/results/<rescore>.json --single
+
+# Or all 5 runs × both modes
+pnpm eval:rescore-cross-vendor --rescore evals/results/<rescore>.json --all
+```
+
+Cost: `--single` ≈ $0.15, `--all` ≈ $1.50. Override the model with
+`--model gpt-4o` or set `OPENAI_JUDGE_MODEL` in your env.
+
+### 3. Shuffled-fact-order replicates — judge stability check
+
+For each (run, mode), runs the per-fact judge N additional times with
+randomly shuffled fact order, then reports per-fact stability across
+the N+1 verdicts. Closes the "intra-prompt position effects" critique
+that batched fact-list judging is structurally vulnerable to.
+
+```bash
+# 3 extra judge runs per (run, mode) — ~30 extra calls, ~$24
+pnpm eval:rescore --last 5 --shuffle-replicates 3
+```
+
+The output report adds a `## Shuffle-replicate stability` section
+classifying each fact as **stable** (all verdicts agree),
+**borderline** (one disagreement), or **flipped** (two or more
+disagreements). High % stable means position effects are not the
+dominant noise source on this task.
+
 ## Evals
 
 **Caution:** evals use a lot of tokens
