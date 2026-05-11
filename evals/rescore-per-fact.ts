@@ -196,10 +196,43 @@ function formatReport(results: readonly TaskRescore[]): string {
     `| Δ (H−B) | ${(hRegex - bRegex).toFixed(3)} | **${(hJudge - bJudge).toFixed(3)}** | | |`,
   );
 
-  lines.push("\n## Disagreements between regex and judge\n");
+  // Group by task for per-task aggregation
+  const byTask = new Map<string, TaskRescore[]>();
+  for (const r of results) {
+    const arr = byTask.get(r.taskId) ?? [];
+    arr.push(r);
+    byTask.set(r.taskId, arr);
+  }
+
+  lines.push("\n## Disagreement audit (aggregated across runs)\n");
   lines.push(
-    "Facts where regex and judge disagree per run. High counts here " +
-      "mean the regex scorer was not measuring content quality.\n",
+    "Every fact-verdict decomposes into one of four mutually exclusive " +
+      "categories. These are the load-bearing numbers for comparative " +
+      "scorer-artifact analysis: high counts in `Regex failed, judge " +
+      "passed` indicate surface-form false negatives where the regex " +
+      "missed correct content.\n",
+  );
+  for (const [taskId, taskResults] of byTask) {
+    for (const mode of ["harness", "baseline"] as const) {
+      const audit = auditCategories(taskResults, mode);
+      lines.push(`### ${taskId} — ${mode} side\n`);
+      lines.push("| Category | Count |");
+      lines.push("|---|---|");
+      lines.push(`| Regex failed, judge passed | ${audit.regexFailJudgePass} |`);
+      lines.push(`| Regex passed, judge failed | ${audit.regexPassJudgeFail} |`);
+      lines.push(`| Both failed | ${audit.bothFailed} |`);
+      lines.push(`| Both passed | ${audit.bothPassed} |`);
+      if (audit.noJudgeVerdict > 0) {
+        lines.push(`| No judge verdict | ${audit.noJudgeVerdict} |`);
+      }
+      lines.push(`| **Total ${mode} fact-verdicts** | **${audit.total}** |\n`);
+    }
+  }
+
+  lines.push("\n## Per-run disagreements\n");
+  lines.push(
+    "Per-run breakdown of the disagreement counts. Use this to see " +
+      "run-to-run variation in judge stochasticity.\n",
   );
   lines.push(
     "| Run | Task | Mode | Regex matched, judge rejected | Regex missed, judge accepted |",
@@ -224,6 +257,59 @@ function formatReport(results: readonly TaskRescore[]): string {
   }
 
   return lines.join("\n") + "\n";
+}
+
+type AuditCategories = Readonly<{
+  regexFailJudgePass: number;
+  regexPassJudgeFail: number;
+  bothFailed: number;
+  bothPassed: number;
+  noJudgeVerdict: number;
+  total: number;
+}>;
+
+function auditCategories(
+  results: readonly TaskRescore[],
+  mode: "harness" | "baseline",
+): AuditCategories {
+  let regexFailJudgePass = 0;
+  let regexPassJudgeFail = 0;
+  let bothFailed = 0;
+  let bothPassed = 0;
+  let noJudgeVerdict = 0;
+  for (const r of results) {
+    const judgeVerdicts = new Map(
+      r[mode].verdicts.map((v) => [v.factId, v.matched]),
+    );
+    for (const [factId, regexMatched] of Object.entries(r[mode].regexVerdicts)) {
+      const judgeMatched = judgeVerdicts.get(factId);
+      if (judgeMatched === undefined) {
+        noJudgeVerdict++;
+      } else if (!regexMatched && judgeMatched) {
+        regexFailJudgePass++;
+      } else if (regexMatched && !judgeMatched) {
+        regexPassJudgeFail++;
+      } else if (!regexMatched && !judgeMatched) {
+        bothFailed++;
+      } else {
+        bothPassed++;
+      }
+    }
+  }
+  const total =
+    regexFailJudgePass +
+    regexPassJudgeFail +
+    bothFailed +
+    bothPassed +
+    noJudgeVerdict;
+  return {
+    regexFailJudgePass,
+    regexPassJudgeFail,
+    bothFailed,
+    bothPassed,
+    noJudgeVerdict,
+    total,
+  };
 }
 
 // ---------------------------------------------------------------------------

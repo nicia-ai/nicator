@@ -1,0 +1,681 @@
+{
+  "runId": "ed259a03-58fe-403e-afed-85b16fbb5cee",
+  "timestamp": "2026-04-22T17:21:57.200Z",
+  "harnessVersion": "0.1.0",
+  "modelVersion": "claude-sonnet-4-6",
+  "tasks": [
+    {
+      "taskId": "dcv-004",
+      "category": "decomposition-value",
+      "metadata": {
+        "purpose": "mechanism",
+        "realism": "synthetic",
+        "releaseGate": "research",
+        "comparisonMode": "flat-harness",
+        "workloadFamily": "vendor-matrix",
+        "hypothesis": "Decomposing a wide vendor-comparison task into per-vendor extraction plus a structured matrix compiler preserves more per-vendor facts than a single flat pass, because attention to each dossier's distractors is not shared across vendors.",
+        "stressAxes": [
+          "breadth",
+          "distractor_density",
+          "per_item_isolation",
+          "decomposition_fidelity"
+        ],
+        "parked": false,
+        "suites": [
+          "research",
+          "decomposition-research"
+        ]
+      },
+      "harnessOutput": {
+        "text": "```\nVENDOR: Quantix Data Systems\nSOC2: SOC 2 Type II certified 2025-06-15\nENCRYPTION: AES-256\nRESIDENCY: U.S. AWS regions only\nBREACH_SLA: 24 hours\n\nVENDOR: Forest Ledger\nSOC2: SOC 2 Type II not certified (no observation window opened, no report issued; SOC 2 Type I report dated 2024-09-12 is the current authoritative certification)\nENCRYPTION: AES-256\nRESIDENCY: Customer-selected primary region at onboarding; U.S. (us-east-2) or EU (eu-west-1)\nBREACH_SLA: 72 hours\n\nVENDOR: Harborline Cloud\nSOC2: SOC 2 Type II certified 2024-11-03\nENCRYPTION: AES-128 in CBC mode\nRESIDENCY: Global multi-region by default (North America, Europe, Asia-Pacific)\nBREACH_SLA: 48 hours\n\nVENDOR: Prismway Systems\nSOC2: SOC 2 Type II not certified (no SOC 2 Type I or Type II certification held; readiness assessment only, Q3 2024; no examination booked)\nENCRYPTION: AES-256\nRESIDENCY: U.S.-only (us-east-1 and us-west-2)\nBREACH_SLA: 24 hours\n\nVENDOR: Stonebridge APIs\nSOC2: SOC 2 Type II in progress (observation window opened 2025-10-01; no report issued)\nENCRYPTION: AES-256\nRESIDENCY: Customer-designated dual-region: U.S. (us-east-2) or EU (eu-central-1)\nBREACH_SLA: 48 hours\n\nVENDOR: Orinoco Labs\nSOC2: SOC 2 Type II certified 2025-09-22\nENCRYPTION: ChaCha20-Poly1305\nRESIDENCY: U.S.-only\nBREACH_SLA: 72 hours\n\nVENDOR: Kestrel Stream\nSOC2: SOC 2 Type II certified 2025-02-14\nENCRYPTION: AES-256\nRESIDENCY: Customer-selectable multi-region; US-East, EU-Central, and APAC-Singapore all live\nBREACH_SLA: 24 hours\n\nVENDOR: Vantage Trail\nSOC2: SOC 2 Type II expired (last report issued 2024-08-01; no renewal booked)\nENCRYPTION: AES-256\nRESIDENCY: EU-only (eu-west-1 and eu-central-1)\nBREACH_SLA: 72 hours\n\nVENDOR: Meridian Clearinghouse\nSOC2: SOC 2 Type II certified 2025-11-29\nENCRYPTION: AES-256\nRESIDENCY: U.S. regions only\nBREACH_SLA: 4 hours\n\nVENDOR: Polaris Data Services\nSOC2: SOC 2 Type II not certified (no SOC 2 report of any type on file; not in an active examination window)\nENCRYPTION: AES-128\nRESIDENCY: Home-region assignment; two active regions: us-west-2 (United States) and eu-central-1 (European Union)\nBREACH_SLA: 48 hours\n\nVENDOR: Copperline Metrics\nSOC2: SOC 2 Type II certified 2025-07-10\nENCRYPTION: AES-256-GCM\nRESIDENCY: Global replication by default; primary region customer-selectable (us-east-1, eu-west-2, ap-southeast-1)\nBREACH_SLA: 72 hours\n\nVENDOR: Twelvefold Archive\nSOC2: SOC 2 Type II certified 2025-04-22\nENCRYPTION: AES-256-XTS\nRESIDENCY: Single region: us-east-1 (Northern Virginia)\nBREACH_SLA: 48 hours\n```",
+        "totalTokens": 164508,
+        "latencyMs": 226230
+      },
+      "baselineOutput": {
+        "text": "VENDOR: Quantix Data Systems\nSOC2: Certified, report issue date 2025-06-15\nENCRYPTION: AES-256\nRESIDENCY: US-only\nBREACH_SLA: 24 hours\n\nVENDOR: Forest Ledger\nSOC2: SOC 2 Type I only (report dated 2024-09-12); Type II absent\nENCRYPTION: AES-256\nRESIDENCY: Customer-choice: U.S. (us-east-2) or EU (eu-west-1)\nBREACH_SLA: 72 hours\n\nVENDOR: Harborline Cloud\nSOC2: Certified, report issue date 2024-11-03\nENCRYPTION: AES-128\nRESIDENCY: Global (North America, Europe, Asia-Pacific)\nBREACH_SLA: 48 hours\n\nVENDOR: Prismway Systems\nSOC2: Absent (no SOC 2 Type I or Type II; readiness assessment only)\nENCRYPTION: AES-256\nRESIDENCY: US-only\nBREACH_SLA: 24 hours\n\nVENDOR: Stonebridge APIs\nSOC2: Type II in progress (observation window opened 2025-10-01)\nENCRYPTION: AES-256\nRESIDENCY: Customer-choice: U.S. (us-east-2) or EU (eu-central-1)\nBREACH_SLA: 48 hours\n\nVENDOR: Orinoco Labs\nSOC2: Certified, report issue date 2025-09-22\nENCRYPTION: ChaCha20-Poly1305\nRESIDENCY: US-only\nBREACH_SLA: 72 hours\n\nVENDOR: Kestrel Stream\nSOC2: Certified, report issue date 2025-02-14\nENCRYPTION: AES-256\nRESIDENCY: Tri-continent (US-East, EU-Central, APAC-Singapore)\nBREACH_SLA: 24 hours\n\nVENDOR: Vantage Trail\nSOC2: Expired (last report issued 2024-08-01; no renewal booked)\nENCRYPTION: AES-256\nRESIDENCY: EU-only (eu-west-1 and eu-central-1)\nBREACH_SLA: 72 hours\n\nVENDOR: Meridian Clearinghouse\nSOC2: Certified, report issue date 2025-11-29\nENCRYPTION: AES-256\nRESIDENCY: US-only\nBREACH_SLA: 4 hours\n\nVENDOR: Polaris Data Services\nSOC2: Absent (no SOC 2 Type I or Type II issued)\nENCRYPTION: AES-128\nRESIDENCY: Customer-choice: U.S. (us-west-2) or EU (eu-west-3)\nBREACH_SLA: 96 hours\n\nVENDOR: Copperline Metrics\nSOC2: Certified, report issue date 2025-07-18\nENCRYPTION: AES-256\nRESIDENCY: US-only\nBREACH_SLA: 24 hours\n\nVENDOR: Twelvefold Archive\nSOC2: Type II in progress (observation window opened 2025-12-01)\nENCRYPTION: AES-256\nRESIDENCY: Customer-choice: U.S. (us-east-2) or EU (eu-west-2)\nBREACH_SLA: 48 hours",
+        "totalTokens": 18947,
+        "latencyMs": 16463
+      },
+      "harnessMetrics": {
+        "skillsInvoked": [
+          "extract-claims",
+          "matrix-compiler"
+        ],
+        "totalOperations": 26,
+        "hitlTriggered": false,
+        "contextPressureTokens": 115328,
+        "compressionApplied": true
+      },
+      "factualScore": {
+        "taskId": "dcv-004",
+        "facts": [
+          {
+            "factId": "fact-quantix-soc2",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-quantix-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-quantix-residency",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-quantix-breach",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-forest-soc2",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-forest-encryption",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-forest-residency",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-forest-breach",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-harborline-soc2",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-harborline-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-harborline-residency",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-harborline-breach",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-prismway-soc2",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-prismway-encryption",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-prismway-residency",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-prismway-breach",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-stonebridge-soc2",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-stonebridge-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-stonebridge-residency",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-stonebridge-breach",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-orinoco-soc2",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-orinoco-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-orinoco-residency",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-orinoco-breach",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-kestrel-soc2",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-kestrel-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-kestrel-residency",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-kestrel-breach",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-vantage-soc2",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-vantage-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-vantage-residency",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-vantage-breach",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-meridian-soc2",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-meridian-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-meridian-residency",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-meridian-breach",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-polaris-soc2",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-polaris-encryption",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-polaris-residency",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-polaris-breach",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-copperline-soc2",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-copperline-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-copperline-residency",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-copperline-breach",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-twelvefold-soc2",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-twelvefold-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-twelvefold-residency",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-twelvefold-breach",
+            "matched": false,
+            "weight": 1
+          }
+        ],
+        "score": 0.5416666666666666
+      },
+      "baselineFactualScore": {
+        "taskId": "dcv-004",
+        "facts": [
+          {
+            "factId": "fact-quantix-soc2",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-quantix-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-quantix-residency",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-quantix-breach",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-forest-soc2",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-forest-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-forest-residency",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-forest-breach",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-harborline-soc2",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-harborline-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-harborline-residency",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-harborline-breach",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-prismway-soc2",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-prismway-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-prismway-residency",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-prismway-breach",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-stonebridge-soc2",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-stonebridge-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-stonebridge-residency",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-stonebridge-breach",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-orinoco-soc2",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-orinoco-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-orinoco-residency",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-orinoco-breach",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-kestrel-soc2",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-kestrel-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-kestrel-residency",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-kestrel-breach",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-vantage-soc2",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-vantage-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-vantage-residency",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-vantage-breach",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-meridian-soc2",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-meridian-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-meridian-residency",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-meridian-breach",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-polaris-soc2",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-polaris-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-polaris-residency",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-polaris-breach",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-copperline-soc2",
+            "matched": false,
+            "weight": 1
+          },
+          {
+            "factId": "fact-copperline-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-copperline-residency",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-copperline-breach",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-twelvefold-soc2",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-twelvefold-encryption",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-twelvefold-residency",
+            "matched": true,
+            "weight": 1
+          },
+          {
+            "factId": "fact-twelvefold-breach",
+            "matched": false,
+            "weight": 1
+          }
+        ],
+        "score": 0.7291666666666666
+      },
+      "passFailResult": {
+        "harnessPass": false,
+        "baselinePass": false,
+        "harnessReason": "Factual score 0.54 below threshold 0.8",
+        "baselineReason": "Factual score 0.73 below threshold 0.8"
+      },
+      "stepGrades": {
+        "taskId": "dcv-004",
+        "grades": [
+          {
+            "aspect": "skill_decomposition",
+            "severity": "pass",
+            "finding": "all 2 required skill(s) invoked"
+          },
+          {
+            "aspect": "context_compression",
+            "severity": "warn",
+            "finding": "29 reference fact(s) not found in compressed summary. Compression may have lost critical information."
+          },
+          {
+            "aspect": "retry_behavior",
+            "severity": "pass",
+            "finding": "26 attempts, 26 succeeded. Acceptable retry rate."
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[run_status] Decomposition run must complete: Run status is \"completed\" (as expected)"
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[task_count] coordinator must read every seeded vendor dossier: Found 12 task(s) matching role=\"tool\", subagentName=\"read_artifact\"; expected >= 12"
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[task_count] extract-claims must be invoked once per vendor: Found 12 task(s) matching subagentName=\"extract-claims\"; expected >= 12"
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[task_count] exactly one matrix-compiler skill run must exist: Found 1 task(s) matching role=\"subagent\", subagentName=\"matrix-compiler\"; expected [1, 1]"
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[task_order] extract-claims must precede matrix-compiler: Task subagentName=\"extract-claims\" (seq 13) preceded role=\"subagent\", subagentName=\"matrix-compiler\" (seq 25)"
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[consumes] matrix-compiler must consume extract-claims artifacts: Task role=\"subagent\", subagentName=\"matrix-compiler\" consumes artifact from subagentName=\"extract-claims\""
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[consumes_absent] matrix-compiler must not consume raw seeded dossiers: No consumes edge from role=\"subagent\", subagentName=\"matrix-compiler\" to artifacts of role=\"tool\", subagentName=\"input_ingestion\" (as expected)"
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[task_absent] harness-managed finalization should eliminate answer_from_artifact calls: No task found matching role=\"tool\", subagentName=\"answer_from_artifact\" (as expected)"
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[run_output_matches_artifact] final answer must be exactly the matrix-compiler artifact content: Run output matches artifact \"matrix-compiler_output\" from role=\"subagent\", subagentName=\"matrix-compiler\""
+          },
+          {
+            "aspect": "graph_assertion",
+            "severity": "pass",
+            "finding": "[task_absent] no ad-hoc `agent` dispatches \u2014 fixed-skill pipeline only: No task found matching role=\"tool\", subagentName=\"agent\" (as expected)"
+          }
+        ],
+        "summary": {
+          "pass": 12,
+          "warn": 1,
+          "fail": 0
+        }
+      }
+    }
+  ],
+  "aggregate": {
+    "factualAccuracy": {
+      "harness": 0.5416666666666666,
+      "baseline": 0.7291666666666666,
+      "delta": -0.1875
+    },
+    "judgeQuality": {
+      "harness": 0,
+      "baseline": 0,
+      "delta": 0,
+      "inconclusiveCount": 0
+    },
+    "byPurpose": {
+      "mechanism": {
+        "harness": 0,
+        "baseline": 0,
+        "n": 1
+      }
+    },
+    "byReleaseGate": {
+      "research": {
+        "harness": 0,
+        "baseline": 0,
+        "n": 1
+      }
+    },
+    "bySuite": {
+      "research": {
+        "harness": 0,
+        "baseline": 0,
+        "n": 1
+      },
+      "decomposition-research": {
+        "harness": 0,
+        "baseline": 0,
+        "n": 1
+      }
+    },
+    "passRate": {
+      "harness": 0,
+      "baseline": 0,
+      "total": 1
+    },
+    "byCategory": {
+      "decomposition-value": {
+        "harness": 0,
+        "baseline": 0,
+        "n": 1
+      }
+    },
+    "processMetrics": {
+      "avgSkillsPerRun": 2,
+      "avgOperationsPerRun": 26,
+      "hitlRate": 0,
+      "avgContextPressureRatio": 6.086873911437167
+    }
+  }
+}
