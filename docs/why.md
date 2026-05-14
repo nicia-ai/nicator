@@ -151,15 +151,13 @@ complex tasks is a hypothesis, not a demonstrated result. See
 
 This is not a production framework. It is a reference implementation designed to
 make a specific argument legible in code. There is no multi-tenant auth, no billing,
-no SLA.
+no SLA, and no hosted runtime in the active workspace.
 
-The Cloudflare Workers deployment is functional — real Hono API routes with Zod
-validation, a Durable Object HITL implementation with alarm-based timeouts and
-cryptographic token management, D1-backed TypeGraph persistence, and run
-execution in a dedicated Durable Object with heartbeat-based crash detection.
-It runs real agent workloads end-to-end on an edge runtime. What it lacks is
-operational hardening: authentication, rate limiting, and structured
-observability. Functional, not production-hardened.
+The repo is intentionally scoped to the local CLI harness, graph-native
+provenance model, workspace, skill execution, HITL abstraction, and eval
+methodology. An earlier Cloudflare Workers deployment path existed, but it has
+been archived under `archive/cloudflare-worker/` so the mainline remains focused
+on reproducible local execution and research evidence.
 
 The argument is: if you accept the premise that modern models don't need explicit
 routing graphs, what does an agent harness look like? This repo is the answer. Six

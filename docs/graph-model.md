@@ -11,7 +11,7 @@ edge exists, and the traversal queries the system uses in practice.
 ## What is TypeGraph
 
 TypeGraph is a typed knowledge graph library that runs on SQLite (via
-libsql, better-sqlite3, or Cloudflare D1) and Postgres. It provides three things:
+libsql or better-sqlite3) and Postgres. It provides three things:
 
 1. **Declarative schema** — nodes and edges are defined with `defineNode` and
    `defineEdge`, each backed by a Zod schema. The graph schema is a single
@@ -25,11 +25,9 @@ libsql, better-sqlite3, or Cloudflare D1) and Postgres. It provides three things
 
 3. **Adapter interface** — the same graph schema and queries work against
    different SQLite backends. Locally, the adapter uses `libsql` (via
-   `@nicia-ai/typegraph/sqlite/libsql`). In Cloudflare Workers, a D1 adapter
-   bridges TypeGraph's interface to D1's async API (see
-   [TypeGraph and Cloudflare D1](#typegraph-and-cloudflare-d1) below).
-   The libsql backend enables sharing the same database file with agentfs
-   (the virtual filesystem), so TypeGraph tables and agentfs tables coexist.
+   `@nicia-ai/typegraph/sqlite/libsql`). The libsql backend enables sharing the
+   same database file with agentfs (the virtual filesystem), so TypeGraph tables
+   and agentfs tables coexist.
 
 In this project, the graph schema lives in `packages/core/src/graph.ts`
 (`nicatorGraph`, graph ID `nicator`). All storage operations go through the
@@ -537,18 +535,8 @@ lookups for edges without application-specific properties.
 
 ---
 
-## TypeGraph and Cloudflare D1
+## TypeGraph and local SQLite
 
-Locally, TypeGraph uses `@libsql/client` (async, via `createLibsqlBackend`).
-Cloudflare D1 is SQLite-compatible but exposes its own async API. Both are
-bridged via TypeGraph's `createSqliteBackend` with appropriate execution
-profiles. The libsql backend shares the same database file with agentfs,
-enabling graph annotations over workspace files.
-
-If TypeGraph's adapter interface cannot be bridged to D1's async API cleanly,
-the fallback is two generic tables (`tg_nodes`, `tg_edges`) with JSON property
-blobs, with the TypeGraph adapter interface implemented against those tables
-directly. This preserves the graph model at the application layer.
-
-The same graph schema and traversal queries work identically in both cases. The
-adapter is the only thing that changes between Workers and Node environments.
+The active runtime uses `@libsql/client` via `createLibsqlBackend`. The same
+SQLite database file can be shared with agentfs, enabling graph annotations over
+workspace files without a second persistence system.

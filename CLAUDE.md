@@ -1,23 +1,23 @@
 # Nicator — Claude Code Instructions
 
 A framework for running LLM agents with skill dispatch, human-in-the-loop
-(HITL) approval, and evaluation. Runs on Cloudflare Workers (D1 + Durable
-Objects) with a local CLI for development. Stores execution state as a
-graph using [TypeGraph](https://github.com/niciaai/typegraph).
+(HITL) approval, and evaluation. The active runtime is the local CLI and eval
+harness. Stores execution state as a graph using
+[TypeGraph](https://github.com/niciaai/typegraph).
 
 Read this file first, then the docs in `docs/`, then the existing source
 files listed below before writing any code.
 
 ## Tech Stack
 
-- **Runtime**: Node 20+ (packages), Cloudflare Workers (apps/worker)
+- **Runtime**: Node 20+ (packages, CLI, evals)
 - **Package Manager**: pnpm (workspaces)
 - **Monorepo**: Turborepo
 - **Language**: TypeScript 5.x strict mode throughout
 - **LLM SDK**: Anthropic TypeScript SDK
-- **Storage**: [TypeGraph](https://github.com/niciaai/typegraph) (open-source graph-native) on SQLite — D1 in Workers, libsql in CLI
+- **Storage**: [TypeGraph](https://github.com/niciaai/typegraph) (open-source graph-native) on SQLite via libsql
 - **Workspace**: [just-bash](https://github.com/vercel-labs/just-bash) (virtual shell) + [agentfs](https://github.com/tursodatabase/agentfs) (SQLite filesystem) — same database as TypeGraph
-- **HITL**: Cloudflare Durable Objects (production), readline (CLI)
+- **HITL**: readline-backed local approval handler
 
 ## Workspace Packages
 
@@ -27,18 +27,14 @@ files listed below before writing any code.
 | `@nicator/sdk`       | `packages/sdk`       | Anthropic SDK wrapper                           |
 | `@nicator/harness`   | `packages/harness`   | Run loop, task dispatch, subagent execution     |
 | `@nicator/workspace` | `packages/workspace` | Virtual bash shell + agentfs filesystem per run |
-| `@nicator/hitl`      | `packages/hitl`      | HITL Durable Object + CF handler                |
-| `@nicator/worker`    | `apps/worker`        | Cloudflare Workers entry point                  |
 | `@nicator/cli`       | `apps/cli`           | Local dev runner                                |
 
 ## Package Dependency Graph
 
 ```text
-@nicator/worker ────→ core, harness, hitl, sdk
 @nicator/cli ───────→ core, harness, workspace, sdk
 @nicator/harness ───→ core, sdk, workspace
 @nicator/workspace ─→ core, just-bash, agentfs-sdk
-@nicator/hitl ──────→ core
 @nicator/sdk ───────→ core
 @nicator/core ──────→ zod, @nicia-ai/typegraph
 ```
@@ -148,9 +144,8 @@ is an open-source typed knowledge graph library for SQLite and Postgres
 There is no SQL schema file. There are no JOIN queries. All persistence goes
 through the `Repository` interface backed by TypeGraph.
 There is no raw SQL in this codebase — TypeGraph's backend system handles SQLite
-access internally. Store construction is the responsibility of the entry points:
-`packages/harness/src/local-repo.ts` (libsql for CLI/evals) and
-`apps/worker/src/index.ts` (D1 via drizzle for Workers). Core only receives
+access internally. Store construction for the active runtime lives in
+`packages/harness/src/local-repo.ts` (libsql for CLI/evals). Core only receives
 a constructed `Store` — it never imports a SQLite driver.
 
 **Read the TypeGraph README before implementing the graph schema.** The graph
@@ -161,9 +156,9 @@ package. You will learn: how to define nodes and edges with Zod schemas
 traversal builder, and how the adapter interface abstracts over SQLite backends.
 
 **Runtime separation.** `packages/core`, `packages/sdk`, and `packages/harness`
-must have zero Cloudflare-specific imports. They must run in Node (for the CLI
-and evals) and in Workers (via apps/worker). Cloudflare-specific wiring (D1
-backend, Durable Objects) lives in `apps/worker/`.
+must stay adapter-neutral and Node-compatible for the CLI and evals. Hosted
+adapters belong outside the active workspace unless that deployment path is
+revived deliberately.
 
 **Zod is the source of truth.** Never write a TypeScript `type` or `interface`
 that duplicates a Zod schema. Infer types with `z.infer<typeof Schema>`.
@@ -197,7 +192,7 @@ do not produce `consumes` edges — the model never accesses their content.
 
 - **TypeScript strict mode** with `exactOptionalPropertyTypes` and `noUncheckedIndexedAccess`
 - **No `any`** — use `unknown` and narrow explicitly
-- **Functional over class-based** except for stateful objects (Repository, HarnessError, DOs)
+- **Functional over class-based** except for stateful objects (Repository, HarnessError)
 - **All graph access** goes through the `Repository` interface — no raw SQL anywhere
 - **Type-only imports** use `import type`
 - **async/await** only — no `.then()` chains
@@ -215,7 +210,7 @@ do not produce `consumes` edges — the model never accesses their content.
 
 | Variable            | Required | Used in           | Description                   |
 | ------------------- | -------- | ----------------- | ----------------------------- |
-| `ANTHROPIC_API_KEY` | Yes      | worker, cli       | Anthropic API key             |
+| `ANTHROPIC_API_KEY` | Yes      | cli, evals        | Anthropic API key             |
 | `BRAVE_API_KEY`     | No       | skills/web-search | Brave Search (mock if absent) |
 
 ## Running the system locally
@@ -263,7 +258,7 @@ pnpm eval:sweep-weights --runs 5     # statistical: 5 runs per config
 - TypeGraph library API → TypeGraph package README or https://typegraph.dev/llms-small.txt
 - Run loop sequence → `packages/harness/src/`
 - System prompt assembly → `packages/harness/src/system-prompt.ts`
-- HITL flow → `docs/entities.md` § Task + `packages/hitl/src/`
+- HITL flow → `docs/entities.md` § Task + `packages/harness/src/approval.ts`
 - Skill format and execution → `docs/entities.md` § Skill + `packages/harness/src/skill-dispatch.ts`
 - Skill workspace materialization → `packages/harness/src/skill-loader.ts`
 - Skill seeding from fixtures → `packages/harness/src/skill-seeder.ts`

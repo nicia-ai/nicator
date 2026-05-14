@@ -8,10 +8,6 @@ dist/
 # Turbo
 .turbo/
 
-# Cloudflare
-.wrangler/
-.dev.vars
-
 # Environment
 .env
 .env.local
