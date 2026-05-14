@@ -62,10 +62,9 @@ be audited is an agent that cannot be trusted in production.
 
 `Run` status includes `awaiting_hitl` as a first-class state, not an error
 condition. A run waiting for human approval is in a well-defined, recoverable
-state. It can wait indefinitely. When the approval arrives, the run resumes
-exactly where it paused. This is implemented via a Durable Object that holds
-the suspended execution state — the run is not reconstructed from scratch on
-resume, it continues.
+state. In the local CLI runner, the process waits for a bounded human response
+and then resumes the same in-process run loop. Durable remote resumption is not
+part of the active implementation.
 
 **What it is not:** A `Run` is not a conversation. A conversational AI product
 that accumulates turns indefinitely is a different abstraction. A `Run` has a
@@ -336,7 +335,8 @@ decisions are inlined; others are pulled on demand via `read_artifact`),
 but they participate in the same provenance system.
 
 **What was left out:** Artifact storage beyond the run boundary. Currently,
-artifacts are stored in D1 and are accessible for the lifetime of the run.
+artifacts are stored in the run's local SQLite-backed graph and are accessible
+for the lifetime of the run.
 Cross-run artifact reuse — where run B can reference an artifact produced by
 run A — is not implemented. This is the foundation for a long-term memory
 system: artifacts that survive their originating run and can be retrieved by

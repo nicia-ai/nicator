@@ -24,12 +24,10 @@
     "onlyBuiltDependencies": [
       "better-sqlite3",
       "esbuild",
-      "libsql",
-      "workerd"
+      "libsql"
     ]
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260426.1",
     "@eslint/js": "^10.0.1",
     "@vitest/eslint-plugin": "^1.6.16",
     "eslint": "^10.2.1",
@@ -44,7 +42,6 @@
     "turbo": "^2.9.6",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.0",
-    "vitest": "^4.1.5",
-    "wrangler": "^4.85.0"
+    "vitest": "^4.1.5"
   }
 }

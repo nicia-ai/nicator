@@ -63,10 +63,8 @@ pnpm eval:multi-run --last 5  # cross-run variance and significance
 │   ├── core/             # Zod schemas, TypeGraph graph schema, Repository
 │   ├── sdk/              # Anthropic SDK wrapper, subagent loop
 │   ├── harness/          # Run loop, task dispatch, skill execution
-│   ├── workspace/        # Virtual bash shell (just-bash) + agentfs filesystem
-│   └── hitl/             # Human-in-the-loop Durable Object + CF handler
+│   └── workspace/        # Virtual bash shell (just-bash) + agentfs filesystem
 ├── apps/
-│   ├── worker/           # Cloudflare Workers entry point (D1, DOs)
 │   └── cli/              # Local development runner
 ├── tools/
 │   ├── web-search/       # Brave Search tool implementation
@@ -79,6 +77,8 @@ pnpm eval:multi-run --last 5  # cross-run variance and significance
 ├── fixtures/
 │   ├── definitions/      # AgentDefinition fixtures
 │   └── skills/           # Skill fixture data (seeded into graph)
+├── archive/
+│   └── cloudflare-worker/ # Archived Worker/Durable Object adapter
 └── docs/                 # Design documentation
 ```
 
@@ -187,10 +187,11 @@ provenance. See [docs/entities.md](docs/entities.md) § Artifact and
 
 ## What this is not
 
-This is not a production framework (yet). It is a reference implementation bringing together several concepts. The Cloudflare Workers deployment is
-functional end-to-end (Hono API, D1 persistence, Durable Object HITL) but lacks
-operational hardening (auth, observability, crash recovery). See
-[docs/why.md](docs/why.md).
+This is not a production framework. It is a reference implementation for the
+local CLI harness, graph-native provenance model, workspace, skills, HITL
+abstraction, and eval methodology. The previous Cloudflare Workers deployment
+path has been archived under `archive/cloudflare-worker/` so the mainline stays
+focused and reproducible. See [docs/why.md](docs/why.md).
 
 ## Development
 
@@ -202,21 +203,6 @@ pnpm lint              # Lint (eslint)
 pnpm fix               # Auto-fix lint + format issues
 pnpm check             # Lint + typecheck + format check (CI gate)
 pnpm dev               # Watch mode for all packages
-```
-
-## Deploy to Cloudflare Workers
-
-```bash
-# Create D1 database
-wrangler d1 create nicator
-
-# Update wrangler.toml with your database_id
-
-# Set API key
-wrangler secret put ANTHROPIC_API_KEY
-
-# Deploy
-wrangler deploy
 ```
 
 ## License

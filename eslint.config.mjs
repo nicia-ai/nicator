@@ -16,7 +16,6 @@ export default tseslint.config(
       "**/*.cjs",
       "**/*.mjs",
       "**/*.config.ts",
-      "**/.wrangler/**",
     ],
   },
 

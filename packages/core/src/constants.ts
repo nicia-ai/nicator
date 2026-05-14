@@ -72,16 +72,11 @@ export const HARNESS_MODEL = "claude-sonnet-4-6" as const;
 // HITL
 //
 // Without timeouts, a run waiting for human approval hangs forever if the
-// approver never responds. In production (Durable Objects) the 7-day window
-// covers async workflows where an approver may be OOO. In the CLI, 5 minutes
-// prevents a forgotten terminal from holding an API-key-bearing process open.
+// approver never responds. In the CLI, 5 minutes prevents a forgotten terminal
+// from holding an API-key-bearing process open.
 // ---------------------------------------------------------------------------
 
-export const HITL_TIMEOUT_MS = 7 * 24 * 60 * 60 * 1000;
 export const CLI_HITL_TIMEOUT_MS = 5 * 60 * 1000;
-export const HITL_DO_ORIGIN = "https://hitl.internal" as const;
-export const RUN_EXECUTION_DO_ORIGIN =
-  "https://run-execution.internal" as const;
 
 // ---------------------------------------------------------------------------
 // Anthropic API

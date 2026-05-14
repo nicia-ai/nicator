@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-// Minimal declaration — avoids depending on @types/node in core,
-// which must remain runtime-agnostic (Node + Cloudflare Workers).
+// Minimal declaration — avoids depending on @types/node in core.
 declare const process: { env: Record<string, string | undefined> };
 
 const EnvSchema = z.object({
