@@ -1,168 +1,260 @@
 # Why this exists
 
-## The problem with orchestration frameworks
+This is a methodology-first agent eval harness. The contribution is a
+reproducibility playbook for agent evaluation — per-fact LLM-judge
+rescoring, human-audit packets, cross-vendor judge spot-check, shuffled-
+fact-order replicates — and the harness is the vehicle that produced the
+evidence behind it.
 
-LangGraph, CrewAI, AutoGen, and most of their contemporaries were built between
-2022 and 2024, when GPT-3.5 and early GPT-4 were the available frontier models.
-Those models had a specific failure pattern: they could reason about a multi-step
-task but they could not reliably _execute_ it. Ask GPT-3.5 to research a company,
-synthesize findings, draft an email, and send it — and it would hallucinate a tool
-call, forget what it had already done, or simply declare the task complete after
-the first step. The model needed scaffolding to stay on track.
+## The measurement problem
 
-Orchestration frameworks provided that scaffolding. A LangGraph graph specifies
-the exact sequence of steps, the transitions between them, and the conditions under
-which each transition fires. The developer codes the control flow; the model fills
-in the content. This is a reasonable engineering response to a real capability gap.
+Most published agent benchmarks score outputs against reference answers
+using lexical or regex-style proximity matchers. For paraphrase-admitting
+outputs, those matchers undercount semantically correct answers. The QA
+and NLG benchmarking literature has been documenting this for years:
 
-The gap has closed. Current frontier models can maintain coherent intent across
-dozens of tool calls on a complex task without being told in advance which tools
-to call in which order. The need for explicit
-routing graphs has largely evaporated. The frameworks have not.
+- [Bulian et al. (2022) — "Tomayto, Tomahto"](https://arxiv.org/abs/2202.07654)
+  defined an asymmetric notion of answer equivalence, showed that token-level
+  F1 systematically underestimates QA system performance, and trained BEM to
+  approximate human judgments better than F1.
+- [Kamalloo et al. (2023)](https://arxiv.org/abs/2305.06984) re-evaluated
+  open-domain QA on NQ-open and found InstructGPT zero-shot at 12.6% by
+  lexical matching versus 71.4% by human assessment on the same outputs.
+- [FActScore (Min et al., EMNLP 2023)](https://arxiv.org/abs/2305.14251)
+  argued long-form generations need atomic-fact decomposition, not
+  blob-level scoring.
 
-## What frameworks cost
+The agent-eval-specific recurrence of this problem, measured on the
+`dcv-004` vendor-compliance matrix in this repo: a same-task, same-model,
+same-tools comparison between a decomposed harness condition and a flat
+baseline produced a regex-scored gap of −23.3 percentage points and a
+per-fact LLM-judge gap of −3.3 percentage points on identical outputs.
 
-The costs are easy to underestimate because they show up in the wrong place.
+An earlier draft of the writeup (v4) treated that 20-point disagreement as
+direct evidence that surface-form scoring writ large is broken. Before
+publishing, a regex-design ablation on the same outputs showed that almost
+all of the disagreement was attributable to one specific matcher choice —
+the regex's 130-character proximity window. Widening that window to 260
+characters collapses the comparative gap to −5 pp; widening further makes
+the harness *beat* the baseline. The simpler "this regex was tuned wrong
+for this output distribution" story accounts for ~78% of the headline
+number. The full writeup is now
+[`eval-methodology-post-v5.md`](../eval-methodology-post-v5.md), which
+documents the v4 → v5 self-audit and the corrected, smaller claim:
+matcher proximity is a hidden hyperparameter that can flip architectural
+conclusions, and the brittleness is asymmetric across verbosity-differing
+conditions. The canonical artifacts are listed in
+[`evals/results/MANIFEST.md`](../evals/results/MANIFEST.md).
 
-**Complexity is invisible to the model.** A LangGraph graph is a Python object.
-The model never sees its structure; it only sees whatever the current node's prompt
-tells it. This means the developer is doing the planning work that the model could
-do, without the model being able to check or correct that plan. If the graph is
-wrong — if the sequence of steps doesn't actually solve the task — the model has
-no recourse. It executes the graph.
+The failure mode this playbook is designed to prevent: taking a
+lexically-scored comparative result at face value and publishing
+"architecture A is worse than architecture B by N points" when in fact
+a one-line matcher change would have given a different N or a different
+sign. Per-fact LLM-judge rescoring detects that the matcher and the judge
+disagree. The matcher-design ablation localizes *why*. Both checks are
+necessary; neither alone is sufficient.
 
-**Coupling is pervasive.** A multi-agent system built on an orchestration framework
-couples three things that should be separate: the task decomposition logic (which
-steps to take), the routing logic (when to move between steps), and the model
-behavior (what each step does). Change the model and you may need to rebuild the
-graph. Change the task structure and you rebuild the graph. Change the routing
-conditions and you rebuild the graph. Each rebuild is a chance to introduce bugs
-that are invisible until a task fails in production in a way that cannot be
-reproduced in your test suite.
+## What the playbook is
 
-**Auditing is an afterthought.** Most orchestration frameworks were designed to
-run tasks, not to record them. Audit trail support is typically bolted on — a
-callback here, a log line there. This makes it hard to answer the questions that
-matter when an agent does something unexpected: what did it know at each step, what
-did it decide, and why? Without a complete record of operations and their inputs,
-post-hoc debugging is guesswork.
+Two primary measurements — per-fact LLM-judge rescoring and regex-design
+ablation — plus three scripted validations that close specific objections
+to LLM-judge rescoring before someone else raises them. All five operate
+against tracked run files in `evals/results/`; the manifest is the source
+of truth for which runs are auditable.
 
-**The framework becomes the product.** Teams optimizing for LangGraph performance
-are optimizing for a different thing than teams optimizing for task performance.
-Prompt engineering for a specific graph node is not the same as prompt engineering
-for a capable model. You develop intuitions about the framework's behavior rather
-than the model's behavior, and those intuitions don't transfer.
+### Per-fact LLM-judge rescore (primary measurement #1)
 
-## Recording what happened
+For each reference fact in a task, judge whether the agent's output
+correctly states that fact, independent of surface form. One judge call
+per output (batched across all facts). Temperature 0. Reasoning required
+before the verdict block, to mitigate post-hoc rationalization. See
+`evals/llm-judge/per-fact.ts` for the prompt and
+`evals/rescore-per-fact.ts` for the runner.
 
-The audit argument above — "without a complete record of operations and their
-inputs, post-hoc debugging is guesswork" — implies a storage model. What shape
-should that record take?
+```bash
+pnpm eval:rescore --task dcv-004 --runs <prefix-1> <prefix-2> ...
+pnpm eval:rescore --task dcv-004 --last 5
+```
 
-Agent execution state is naturally a directed acyclic graph. A run contains
-tasks. Tasks have operations. Operations produce artifacts. Downstream tasks
-consume artifacts from earlier tasks. That last relationship — consumption —
-is a cross-reference between nodes in the same run, not a parent-child
-hierarchy. Storing it in a relational model means either a JSON array column
-(opaque to queries) or a junction table (another JOIN). Storing it as a graph
-edge makes it a first-class, traversable relationship.
+### Regex-design ablation (primary measurement #2)
 
-This system uses [TypeGraph](https://github.com/niciaai/typegraph) — a typed
-knowledge graph library for SQLite and Postgres — as its sole storage layer.
-Every entity is a graph node. Every relationship is a typed edge. The two
-queries that matter most — full run lineage and artifact provenance — each
-compile to a single SQL statement via TypeGraph's `store.subgraph()`, which
-emits a `WITH RECURSIVE` CTE that traverses, filters, and hydrates in the
-database. No application-layer N+1 loops, no multi-step query chains. The
-graph is also directly renderable in a visualization layer: no translation,
-no result-set assembly.
+The rescore tells you *that* the matcher and the judge disagree. It does
+not tell you *why*. The ablation localizes the disagreement to specific
+matcher-design choices by sweeping matcher specifications over the same
+outputs: proximity-window widths (130, 260, 520, 1040), no-proximity
+(strip the contiguity anchor entirely), substring-canonical, and
+bag-of-tokens. Compares each variant's comparative gap H−B to the LLM
+judge as the reference upper bound.
 
-The choice is not ideological. It is practical: agent execution state has
-graph structure, so storing it in a graph removes the impedance mismatch
-between what the data _is_ and how it is stored. The implementation
-delivers on that: `getRunLineage` issues one recursive CTE that returns
-every task, operation, artifact, skill, and consumption edge for a run;
-`getArtifactProvenance` issues one bidirectional CTE that traces an
-artifact back to its producing operation, task, and run, and forward to
-every task that consumed it. See [docs/graph-model.md](graph-model.md)
-for the full node/edge schema.
+If the comparative gap collapses with a more permissive matcher, the
+original measurement is a regex-design bug, not a property of
+surface-form scoring writ large. If the gap survives across matcher
+generations and only the LLM judge closes it, the strong-form claim
+holds. On `dcv-004`, the gap collapsed under matcher widening — a
+methodology bug the ablation caught before v4 was published. See
+`evals/regex-ablation.ts` and the v5 post for the full table and the
+self-audit narrative.
 
-## What a harness does instead
+```bash
+pnpm eval:regex-ablation --task dcv-004 \
+  --runs <prefix-1> <prefix-2> ... \
+  --judge-rescore evals/results/<rescore>.json
+```
 
-A harness is not an orchestration framework. It does not specify what the model
-will do. It provides the environment in which the model acts, records what happens,
-and ensures the model has the right affordances to act effectively.
+Zero API spend; runs locally in seconds.
 
-The distinction matters. An orchestration framework is prescriptive — it says "call
-this tool, then this tool, then this tool." A harness is descriptive — it says "the
-model called this tool, then this tool, then this tool, and here is the full record."
+### Validation 1 — human-audit packet
 
-This means the control flow lives in the model, not in the code. If the model
-decides the task requires a step the developer didn't anticipate, it can take that
-step. If it decides a step is unnecessary, it can skip it. The harness records both
-decisions. This is not a loss of control — it is a shift in where control is
-exercised. The developer controls what skills are available, what policies govern
-their use, and what the model is told about the task. The model controls the plan.
+The judge is itself stochastic. The human audit calibrates it against
+your own labels: a stratified sample of fact-verdicts across the four
+agreement quadrants is packaged with the reference fact, the regex
+pattern, and an excerpt around the candidate match. The judge verdict is
+hidden in a collapsible block so the labeler labels first and reveals
+second. A scoring step computes Cohen's κ and per-quadrant agreement.
 
-The harness earns its complexity through three things the model cannot do for
-itself: persistent state across a long-running execution, external action with
-retryable semantics, and integration of human judgment at task boundaries.
+```bash
+pnpm eval:audit-packet --rescore evals/results/<rescore>.json
+pnpm eval:audit-score  --packet  evals/human-audit/<stem>.md
+```
 
-## The boundary question
+### Validation 2 — cross-vendor judge spot-check
 
-Harness-based decomposition is not always better than a single call. The benchmark
-in `evals/` is specifically designed to find the boundary.
+Re-runs the per-fact judge against a different model family (default
+OpenAI via the Chat Completions HTTP API — no SDK dependency) on the
+same prompt, and compares verdicts to a reference rescore. Closes the
+"Anthropic-judging-Anthropic bias loop" objection.
 
-The hypothesis: structured decomposition pays off when the task has at least two
-of the following properties:
+```bash
+pnpm eval:rescore-cross-vendor --rescore evals/results/<rescore>.json --all
+```
 
-1. **Evidence is fragmented across sources.** The model benefits from an explicit
-   retrieve → extract → synthesize sequence because working from all sources
-   simultaneously introduces interference between competing claims.
+### Validation 3 — shuffled-fact-order replicates
 
-2. **Faithfulness constraints are strict.** When the cost of fabrication is high
-   (legal documents, financial analysis, safety-critical decisions), a harness that
-   separates extraction from synthesis makes it easier to audit which claims came
-   from which sources.
+Batched per-fact judging is structurally vulnerable to intra-prompt
+position effects. The shuffle-replicate check re-runs the judge with
+randomly permuted fact orderings and classifies each fact as stable,
+borderline, or flipped across the verdicts.
 
-3. **The task is longer than a single context window.** A harness that compresses
-   completed operation history prevents the model from losing track of what it has
-   already done on very long tasks.
+```bash
+pnpm eval:rescore --last 5 --shuffle-replicates 3
+```
 
-4. **Human judgment is required at a decision point.** A task that requires an
-   approval step partway through cannot be completed in a single call.
+## Why graph-native execution state
 
-For tasks without any of these properties — a short document with a clear question
-and no ambiguity — the single-call baseline is the right approach. The harness adds
-overhead without adding value. The benchmark shows where that line is.
+The playbook is the contribution; the harness exists because the playbook
+needs evidence to operate on, and the evidence is most usable when
+execution is recorded as a typed graph from the start.
 
-**Current eval status:** The benchmark tasks primarily test property 2
-(faithfulness on long documents) and property 4 (HITL gating). The harness wins
-on these through system prompt framing and HITL integration, not skill
-decomposition. Property 1 (fragmented evidence requiring multi-skill
-coordination) is the untested case — no eval task currently requires the
-retrieve → extract → cross-reference → synthesize pipeline that would exercise
-the skill system's artifact routing. The skill machinery is currently
-load-bearing for auditability and policy enforcement; its outcome value on
-complex tasks is a hypothesis, not a demonstrated result. See
-[docs/evals.md](evals.md) § What the results show for the full analysis.
+Agent execution state has a natural graph structure. A run contains
+tasks. Tasks have operations. Operations produce artifacts. Tasks consume
+artifacts from earlier tasks. That last relationship — consumption — is a
+directed edge between two nodes inside the same run, and it is the
+relationship a behavioral assertion most often needs to read.
+
+This harness uses
+[TypeGraph](https://github.com/nicia-ai/typegraph) — a typed knowledge
+graph library for SQLite and Postgres — as its sole storage layer. Every
+entity is a graph node. Every relationship is a typed edge. The two
+queries that matter most — full run lineage and artifact provenance —
+each compile to a single SQL statement via TypeGraph's `store.subgraph()`,
+which emits a `WITH RECURSIVE` CTE that traverses, filters, and hydrates
+in the database. No application-layer N+1 loops, no multi-step query
+chains.
+
+### Compared to the alternatives
+
+- **Relational (normalized tables).** Six tables, foreign keys, junction
+  tables for many-to-many relationships like `consumes`. Run lineage
+  requires five tables and four JOINs. Artifact provenance requires
+  reverse-FK lookups plus an array deserialization scan. Every new
+  relationship type means a new table or column plus a migration.
+- **Event store.** Append-only logs are natural for audit but answering
+  "what is the current state of this run?" requires replay or a
+  projection. The graph model gives you both: the structure _is_ the
+  current state, and the creation order of nodes and edges _is_ the
+  event log.
+- **Document database.** Embedding tasks inside a run document avoids
+  JOINs but makes cross-entity references require denormalization.
+  Nested documents do not model the `consumes` edge cleanly.
+- **Graph.** Relationships are first-class. Run lineage is a single
+  traversal. The `consumes` edge — the hardest relationship to model
+  relationally — is just an edge. Behavioral assertions are predicates
+  on the graph, not queries against a log.
+
+See [`docs/graph-model.md`](graph-model.md) for the full node/edge
+schema.
+
+### What the graph gives evals
+
+The same execution graph that drives the agent is what the eval suite
+queries to answer behavioral questions:
+
+- Did the agent call `web-search` directly, or did it unnecessarily
+  activate the `researcher` skill?
+- Did `human-approval` fire before the gated skill executed?
+- Did the downstream task consume the artifact the upstream task
+  produced?
+- Were the bull and bear agents isolated from each other's findings
+  before the judge synthesized?
+
+Each of these is a predicate on `RunLineage` — no LLM judge, no log
+parsing. See [`docs/evals.md` § Graph-based behavioral eval](evals.md#graph-based-behavioral-eval)
+for the assertion catalog. If an assertion cannot be expressed against
+the graph, the graph schema is incomplete; that feedback loop drives
+schema evolution.
+
+## What the harness is, briefly
+
+Six entities — AgentDefinition, Run, Task, Operation, Skill, Artifact —
+defined as Zod schemas in `packages/core/src/schema.ts`, stored as graph
+nodes with typed edges. Three-tier execution model: a Run owns the agent
+loop, Tasks are schedulable delegated work units, Operations are atomic
+recorded actions. Every dispatch — tool call, ad-hoc agent creation, or
+HITL request — creates a child Task linked to its parent via a `spawns`
+edge. Skill activation is recorded as an `invokes` edge to a Skill node.
+Concurrent dispatch is bounded by a gather timeout; HITL dispatches are
+sequential.
+
+The harness is single-vendor (Anthropic SDK) and runs on Node 20+ via
+the local CLI. State is persisted to a single SQLite file shared between
+TypeGraph (execution graph) and agentfs (the virtual workspace
+filesystem), so file provenance is graph-native by construction.
+
+## What the evidence does and does not support
+
+The eval results in [`docs/evals.md`](evals.md) split claims into
+**demonstrated**, **designed**, and **measured** categories. Reading
+those carefully:
+
+- **System-prompt framing is the primary value driver.** On document-
+  based knowledge-work tasks, the harness wins +15–40 pp over a flat
+  baseline through structured framing around source faithfulness, not
+  through skill decomposition.
+- **Tool access adds value when answers require external data.** The
+  research-dependent synthesis task gains +18 pp from web research; that
+  is tool access, not the skill abstraction per se.
+- **Graph infrastructure enables behavioral testing.** Dispatch ordering,
+  cross-agent scoping, and HITL precision are testable as structural
+  predicates without an LLM judge.
+- **Decomposition's content-quality advantage over flat-harness is not
+  demonstrated.** The `dcv-*` mechanism suite has so far returned null
+  on every task, and the matcher-brittleness artifact caught on
+  `dcv-004` — a proximity-window choice that manufactured an apparent
+  23-point decomposition loss — is what motivated the methodology
+  playbook in the first place. The skill abstraction is load-bearing infrastructure for
+  auditability, policy enforcement, and graph-routed artifact flow; its
+  outcome value on harder workloads is an open question.
 
 ## What this is not
 
-This is not a production framework. It is a reference implementation designed to
-make a specific argument legible in code. There is no multi-tenant auth, no billing,
-no SLA, and no hosted runtime in the active workspace.
+This is not a production framework. It is a reference implementation for
+the playbook, the graph-native provenance model, the workspace, the
+skill abstraction, the HITL boundary, and the eval methodology. There is
+no auth, no multi-tenancy, no SLA, and a single LLM vendor wired in. A
+previous Cloudflare Workers + Durable Object deployment path has been
+archived under `archive/cloudflare-worker/` so the mainline stays focused
+on the methodology and the local harness that produced its evidence.
 
-The repo is intentionally scoped to the local CLI harness, graph-native
-provenance model, workspace, skill execution, HITL abstraction, and eval
-methodology. An earlier Cloudflare Workers deployment path existed, but it has
-been archived under `archive/cloudflare-worker/` so the mainline remains focused
-on reproducible local execution and research evidence.
-
-The argument is: if you accept the premise that modern models don't need explicit
-routing graphs, what does an agent harness look like? This repo is the answer. Six
-entities. Skills that are versioned and imported. HITL as a task type, not a special
-case. Evals that measure process and outcome. No orchestration framework dependency.
-
-Whether that answer is right is an empirical question. The benchmark exists to test
-it.
+The intended audience is people running agent evals who want their
+comparative claims to survive scrutiny. The methodology post is the
+front door; the harness is what made the evidence behind it.

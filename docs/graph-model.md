@@ -1,7 +1,7 @@
 # Graph model
 
 This system stores agent execution state as a graph using
-[TypeGraph](https://github.com/niciaai/typegraph) — an open-source TypeScript
+[TypeGraph](https://github.com/nicia-ai/typegraph) — an open-source TypeScript
 knowledge graph library for Postgres and SQLite. There is no relational schema.
 There are no JOIN queries. This document explains the node/edge schema, why each
 edge exists, and the traversal queries the system uses in practice.
