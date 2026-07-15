@@ -14,6 +14,7 @@
     "eval:sweep-weights": "tsx evals/sweep-weights.ts",
     "eval:rescore": "tsx evals/rescore-per-fact.ts",
     "eval:rescore-cross-vendor": "tsx evals/cross-vendor-judge.ts",
+    "eval:regex-ablation": "tsx evals/regex-ablation.ts",
     "eval:audit-packet": "tsx evals/human-audit/generate.ts",
     "eval:audit-score": "tsx evals/human-audit/score.ts",
     "eval:calibrate": "tsx evals/calibration/calibrate.ts",

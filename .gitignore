@@ -38,6 +38,19 @@ evals/results/*.json
 !evals/results/5aced9d6.json
 !evals/results/a345f39c.json
 !evals/results/b1b15014.json
+# dcv-004 vendor-matrix raw runs (backing data for the v5 methodology post)
+!evals/results/7464bfdf.json
+!evals/results/757cf6f9.json
+!evals/results/a702013b.json
+!evals/results/e15c4595.json
+!evals/results/ed259a03.json
+# Per-fact LLM-judge rescores over the 5 runs above (April canonical +
+# two replicate reruns quantifying judge verdict stochasticity)
+!evals/results/rescore-2026-04-22T17-57-49-540Z.json
+!evals/results/rescore-2026-05-10T23-18-36-215Z.json
+!evals/results/rescore-2026-05-11T05-16-45-504Z.json
+# Regex-design ablation — load-bearing finding for the v5 post
+!evals/results/regex-ablation-2026-07-07T02-21-51-142Z.json
 
 # OS
 .DS_Store
