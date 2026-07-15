@@ -18,9 +18,9 @@
     "@nicator/tool-web-search": "workspace:*",
     "@nicator/workspace": "workspace:*",
     "dotenv": "^17.4.2",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/node": "^24.12.2"
+    "@types/node": "^24.12.4"
   }
 }

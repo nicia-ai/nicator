@@ -1,7 +1,12 @@
+import { randomUUID } from "node:crypto";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
 import { createClient } from "@libsql/client";
 import { createStoreWithSchema } from "@nicia-ai/typegraph";
 import { createLibsqlBackend } from "@nicia-ai/typegraph/sqlite/libsql";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
 import { nicatorGraph } from "./graph.js";
 import { createRepository, type Repository } from "./repositories/index.js";
@@ -27,8 +32,20 @@ import { generateId } from "./utility.js";
 // Test helpers
 // ---------------------------------------------------------------------------
 
+// libsql's `file::memory:` gives every new connection its own empty database,
+// and TypeGraph's transactional schema commit runs on a separate connection —
+// so in-memory stores lose their schema. Each test repo gets a throwaway
+// file in a shared temp dir instead, removed after the suite.
+const testDbDir = mkdtempSync(join(tmpdir(), "nicator-core-test-"));
+
+afterAll(() => {
+  rmSync(testDbDir, { recursive: true, force: true });
+});
+
 async function createInMemoryRepo(): Promise<Repository> {
-  const client = createClient({ url: "file::memory:" });
+  const client = createClient({
+    url: `file:${join(testDbDir, `${randomUUID()}.db`)}`,
+  });
   const { backend } = await createLibsqlBackend(client);
   const [store] = await createStoreWithSchema(nicatorGraph, backend);
   return createRepository(store);

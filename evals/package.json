@@ -6,15 +6,15 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.91.1",
+    "@anthropic-ai/sdk": "^0.96.0",
     "@nicator/core": "workspace:*",
     "@nicator/harness": "workspace:*",
     "@nicator/tool-web-fetch": "workspace:*",
     "@nicator/tool-web-search": "workspace:*",
     "@nicator/workspace": "workspace:*",
     "dotenv": "^17.4.2",
-    "yaml": "^2.8.3",
-    "zod": "^4.3.6"
+    "yaml": "^2.9.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "typescript": "^6.0.3"
