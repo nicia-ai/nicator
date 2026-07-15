@@ -1,4 +1,8 @@
-import { assertNever, HarnessError, type Policy } from "@nicator/core";
+import {
+  assertNever,
+  HarnessError,
+  type Policy,
+} from "@nicator/core";
 
 import { requestHumanApproval } from "./approval.js";
 import type { HarnessConfig } from "./types.js";
@@ -7,10 +11,25 @@ import type { HarnessConfig } from "./types.js";
 // Policy enforcement — runs before skill Task creation.
 //
 // Critical ordering: policy checks MUST precede Task/Operation node creation.
-// A denied action should leave no trace in the execution graph. Early
+// A denied action should leave no subagent Task or Operation in the graph. Early
 // implementations created the Task first and rolled back on denial, which left
 // orphan nodes and made the graph assertions unreliable.
+//
+// Return semantics:
+//   - { allowed: true }  → proceed with dispatch
+//   - { allowed: false } → recoverable denial; the caller returns a failed
+//     DispatchResult so the model sees the error and can choose a different
+//     approach. This applies to max_calls_per_run (soft limit) and
+//     require_hitl_approval rejection (human said no).
+//   - throw HarnessError  → fatal, aborts the run. Only for "never" policy
+//     (hard contract violation — the definition author explicitly forbade
+//     this skill).
 // ---------------------------------------------------------------------------
+
+export type PolicyDecision = Readonly<
+  | { allowed: true }
+  | { allowed: false; reason: string }
+>;
 
 export type PolicyContext = Readonly<{
   policy: Policy;
@@ -24,13 +43,13 @@ export type PolicyContext = Readonly<{
 export async function enforcePolicy(
   ctx: PolicyContext,
   config: HarnessConfig,
-): Promise<void> {
+): Promise<PolicyDecision> {
   const { policy, subagentName, toolInput, runId, rootTaskId } = ctx;
   const { repo } = config;
 
   switch (policy.type) {
     case "always": {
-      return;
+      return { allowed: true };
     }
 
     case "never": {
@@ -42,7 +61,20 @@ export async function enforcePolicy(
 
     case "require_hitl_approval": {
       const prompt = interpolatePrompt(policy.approverPrompt, toolInput);
-      // Query actual root-task operation count from the repo
+
+      // Dedup: if the same normalized prompt was already decided in this run,
+      // reuse the prior decision instead of re-asking the human.
+      const prior = await repo.tasks.findHitlDecision(runId, prompt);
+      if (prior) {
+        if (prior.approved) {
+          return { allowed: true };
+        }
+        return {
+          allowed: false,
+          reason: `Skill "${subagentName}" denied by human approver (prior decision): ${prior.artifactContent}`,
+        };
+      }
+
       const rootOps = await repo.operations.getForTask(rootTaskId, runId);
       const policyOpNumber = rootOps.length + 1;
 
@@ -63,12 +95,12 @@ export async function enforcePolicy(
       });
 
       if (!approved) {
-        throw new HarnessError(
-          `Skill "${subagentName}" denied by human approver: ${decision}`,
-          "hitl_rejected",
-        );
+        return {
+          allowed: false,
+          reason: `Skill "${subagentName}" denied by human approver: ${decision}`,
+        };
       }
-      return;
+      return { allowed: true };
     }
 
     case "max_calls_per_run": {
@@ -78,17 +110,17 @@ export async function enforcePolicy(
       );
 
       if (completedCalls >= policy.limit) {
-        throw new HarnessError(
-          `Skill "${subagentName}" exceeded max_calls_per_run limit (${policy.limit})`,
-          "policy_denied",
-        );
+        return {
+          allowed: false,
+          reason: `Skill "${subagentName}" exceeded max_calls_per_run limit (${policy.limit})`,
+        };
       }
-      return;
+      return { allowed: true };
     }
 
     default: {
       const _exhaustive: never = policy;
-      assertNever(_exhaustive);
+      return assertNever(_exhaustive);
     }
   }
 }

@@ -19,6 +19,6 @@
   "dependencies": {
     "@nicator/core": "workspace:*",
     "@nicator/harness": "workspace:*",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   }
 }

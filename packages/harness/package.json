@@ -20,8 +20,7 @@
     "@nicator/core": "workspace:*",
     "@nicator/sdk": "workspace:*",
     "@nicator/workspace": "workspace:*",
-    "@nicia-ai/typegraph": "^0.23.0",
-    "yaml": "^2.8.3",
-    "zod": "^4.3.6"
+    "@nicia-ai/typegraph": "^0.25.1",
+    "zod": "^4.4.3"
   }
 }

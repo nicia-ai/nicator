@@ -5,3 +5,6 @@ node_modules
 pnpm-lock.yaml
 *.db
 evals/results
+eval-methodology-post-v3.md
+eval-methodology-post-v4.md
+claude-code-delegation.md

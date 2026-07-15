@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { normalizeHitlPrompt } from "./utility.js";
+import { normalizeHitlPrompt, policyRequiresHitl } from "./utility.js";
 
 describe("normalizeHitlPrompt", () => {
   it("lowercases the prompt", () => {
@@ -53,5 +53,30 @@ describe("normalizeHitlPrompt", () => {
     expect(normalizeHitlPrompt("file: report.txt, ok?")).toBe(
       "file: report.txt, ok",
     );
+  });
+});
+
+describe("policyRequiresHitl", () => {
+  it("returns false for 'always' policy", () => {
+    expect(policyRequiresHitl({ type: "always" })).toBe(false);
+  });
+
+  it("returns false for 'never' policy", () => {
+    expect(policyRequiresHitl({ type: "never" })).toBe(false);
+  });
+
+  it("returns true for 'require_hitl_approval' policy", () => {
+    expect(
+      policyRequiresHitl({
+        type: "require_hitl_approval",
+        approverPrompt: "Allow?",
+      }),
+    ).toBe(true);
+  });
+
+  it("returns false for 'max_calls_per_run' policy", () => {
+    expect(
+      policyRequiresHitl({ type: "max_calls_per_run", limit: 5 }),
+    ).toBe(false);
   });
 });

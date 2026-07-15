@@ -470,7 +470,7 @@ describe("handleSkillCall — errors", () => {
     expect(tasks.filter((t) => t.role === "subagent")).toHaveLength(1);
   });
 
-  it("denies approval-gated skill when the human rejects", async () => {
+  it("returns recoverable denial when approval-gated skill is rejected by human", async () => {
     const customHarness = track(
       await createTestHarness({ hitl: { defaultDecision: "no, rejected" } }),
     );
@@ -481,18 +481,51 @@ describe("handleSkillCall — errors", () => {
       },
     });
 
-    await expect(
-      handleSkillCall(
-        buildDispatchOptions(customHarness, fixture, SKILL_TOOL_NAME, {
-          skill_name: "researcher",
-          task_input: "go",
-        }),
-      ),
-    ).rejects.toThrow(/denied by human approver/);
+    const result = await handleSkillCall(
+      buildDispatchOptions(customHarness, fixture, SKILL_TOOL_NAME, {
+        skill_name: "researcher",
+        task_input: "go",
+      }),
+    );
+
+    expect(result.succeeded).toBe(false);
+    expect(result.toolResultContent).toMatch(/denied by human approver/);
 
     const tasks = await customHarness.repo.tasks.getForRun(fixture.runId);
     expect(tasks.filter((t) => t.role === "subagent")).toHaveLength(0);
     expect(mockedRunSubagentLoop).not.toHaveBeenCalled();
+  });
+
+  it("returns recoverable denial when max_calls_per_run limit is exceeded", async () => {
+    const fixture = await setupSkillDispatch(harness, {
+      policy: { type: "max_calls_per_run", limit: 1 },
+    });
+    mockSubagentResult("first call ok");
+
+    // First call succeeds
+    const first = await handleSkillCall(
+      buildDispatchOptions(harness, fixture, SKILL_TOOL_NAME, {
+        skill_name: "researcher",
+        task_input: "first",
+      }),
+    );
+    expect(first.succeeded).toBe(true);
+
+    // Second call should be denied — recoverable, not a throw
+    const second = await handleSkillCall(
+      buildDispatchOptions(harness, fixture, SKILL_TOOL_NAME, {
+        skill_name: "researcher",
+        task_input: "second",
+      }),
+    );
+
+    expect(second.succeeded).toBe(false);
+    expect(second.toolResultContent).toMatch(/exceeded max_calls_per_run/);
+
+    const tasks = await harness.repo.tasks.getForRun(fixture.runId);
+    const subagentTasks = tasks.filter((t) => t.role === "subagent");
+    expect(subagentTasks).toHaveLength(1);
+    expect(subagentTasks[0]!.status).toBe("completed");
   });
 });
 

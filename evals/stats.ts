@@ -59,50 +59,64 @@ function lnGamma(x: number): number {
 }
 
 /**
- * Regularized incomplete beta function I_x(a, b) via continued fraction
- * (Lentz's method). Sufficient precision for p-value computation.
+ * Continued fraction for the incomplete beta function via modified Lentz's
+ * method (Numerical Recipes `betacf`). Converges for x < (a+1)/(a+b+2).
  */
-function betaIncomplete(x: number, a: number, b: number): number {
-  if (x <= 0) return 0;
-  if (x >= 1) return 1;
-
-  const lnBeta = lnGamma(a) + lnGamma(b) - lnGamma(a + b);
-  const front = Math.exp(Math.log(x) * a + Math.log(1 - x) * b - lnBeta);
-
-  // Lentz's continued fraction
+function betaContinuedFraction(x: number, a: number, b: number): number {
   const MAX_ITER = 200;
   const EPS = 1e-14;
   const TINY = 1e-30;
 
-  let f = 1 + cfTerm(0, x, a, b);
-  if (Math.abs(f) < TINY) f = TINY;
-  let c = f;
-  let d = 1;
+  const qab = a + b;
+  const qap = a + 1;
+  const qam = a - 1;
+
+  let c = 1;
+  let d = 1 - (qab * x) / qap;
+  if (Math.abs(d) < TINY) d = TINY;
+  d = 1 / d;
+  let h = d;
 
   for (let m = 1; m <= MAX_ITER; m++) {
-    const am = cfTerm(m, x, a, b);
-    d = 1 + am * d;
+    const m2 = 2 * m;
+    // even step: d_{2m} = m(b-m)x / ((a+2m-1)(a+2m))
+    let aa = (m * (b - m) * x) / ((qam + m2) * (a + m2));
+    d = 1 + aa * d;
     if (Math.abs(d) < TINY) d = TINY;
-    c = 1 + am / c;
+    c = 1 + aa / c;
     if (Math.abs(c) < TINY) c = TINY;
     d = 1 / d;
-    const delta = c * d;
-    f *= delta;
+    h *= d * c;
+    // odd step: d_{2m+1} = -(a+m)(a+b+m)x / ((a+2m)(a+2m+1))
+    aa = (-(a + m) * (qab + m) * x) / ((a + m2) * (qap + m2));
+    d = 1 + aa * d;
+    if (Math.abs(d) < TINY) d = TINY;
+    c = 1 + aa / c;
+    if (Math.abs(c) < TINY) c = TINY;
+    d = 1 / d;
+    const delta = d * c;
+    h *= delta;
     if (Math.abs(delta - 1) < EPS) break;
   }
 
-  return (front / a) * f;
+  return h;
 }
 
-function cfTerm(m: number, x: number, a: number, b: number): number {
-  if (m === 0) return 0;
-  const k = Math.floor((m + 1) / 2);
-  if (m % 2 === 0) {
-    // even term
-    return (k * (b - k) * x) / ((a + 2 * k - 1) * (a + 2 * k));
+/** Regularized incomplete beta function I_x(a, b). */
+function betaIncomplete(x: number, a: number, b: number): number {
+  if (x <= 0) return 0;
+  if (x >= 1) return 1;
+
+  // Continued fraction converges fast only for x < (a+1)/(a+b+2);
+  // otherwise use the symmetry I_x(a,b) = 1 - I_{1-x}(b,a).
+  if (x > (a + 1) / (a + b + 2)) {
+    return 1 - betaIncomplete(1 - x, b, a);
   }
-  // odd term
-  return -((a + k) * (a + b + k) * x) / ((a + 2 * k) * (a + 2 * k + 1));
+
+  const lnBeta = lnGamma(a) + lnGamma(b) - lnGamma(a + b);
+  const front = Math.exp(Math.log(x) * a + Math.log(1 - x) * b - lnBeta);
+
+  return (front / a) * betaContinuedFraction(x, a, b);
 }
 
 /** Two-tailed p-value for t-distribution with given df */

@@ -1,4 +1,22 @@
-# Eval philosophy
+# Eval methodology
+
+This document is the eval-side reference for the methodology playbook
+described in [`docs/why.md`](why.md): per-fact LLM-judge rescoring,
+regex-design ablation, human-audit calibration, cross-vendor judge
+spot-check, and shuffled-fact-order replicates. The long-form writeup of
+the load-bearing finding — a proximity-window matcher artifact on
+`dcv-004`, caught by the playbook's own ablation before the earlier
+"surface-form scoring is broken" framing (v4, unpublished) shipped — is
+in [`eval-methodology-post-v5.md`](../eval-methodology-post-v5.md).
+
+**The manifest is the source of truth.** Every run, report, and rescore
+cited in this document — or in any other doc in this repo — must appear
+in [`evals/results/MANIFEST.md`](../evals/results/MANIFEST.md). Treat any
+unlisted run ID as not auditable from the branch alone, even if a number
+in this doc references it; rerun and add it to the manifest before
+treating it as evidence.
+
+## Eval philosophy
 
 Most agent eval suites measure the wrong thing. They test whether the agent produced
 the right final answer, ignoring the process that produced it. This conflates two
@@ -117,7 +135,10 @@ added to address reviewer feedback that the original eval was too easy.
 
 Historical 5-run results (paired t-test, all significant at p < .05). These
 raw runs are not tracked in this branch; rerun and add them to the manifest
-before treating the table as auditable evidence:
+before treating the table as auditable evidence. The p-values were also
+computed before the 2026-07 incomplete-beta fix in `evals/stats.ts`, which
+biased all printed p-values toward significance — recompute rather than
+cite:
 
 | Task          | Category         | Harness   | Baseline (mean ± 95% CI) | Delta       | p-value |
 | ------------- | ---------------- | --------- | ------------------------ | ----------- | ------- |
@@ -239,13 +260,20 @@ decomposed and flat measures decomposition specifically, holding
 prompt and tools constant. Across four tasks spanning 4K–28K tokens
 and varied shapes (cross-source synthesis, arithmetic joins,
 per-item fact extraction), the harness has not produced a content-
-quality advantage over the flat-harness baseline. On `dcv-004`, local
-rescoring suggested the regex delta was mostly surface-form sensitivity
-rather than real content difference, but those rescore artifacts are not
-checked in. The current auditable claim is the methodological one:
-decomposition-value tasks compare decomposed harness against flat harness,
-not direct API, so future deltas isolate decomposition rather than prompt
-or tool access.
+quality advantage over the flat-harness baseline. On `dcv-004`, the
+committed rescore and regex-ablation artifacts (see
+[`evals/results/MANIFEST.md`](../evals/results/MANIFEST.md)) show the
+−23.3pp regex delta was dominated by the matcher's 130-character
+proximity window, not by real content difference: the per-fact judge
+scores the two conditions at parity (−3.3pp, not significant), and
+widening the proximity window collapses the regex gap to statistical
+zero. The full self-audit is in
+[`eval-methodology-post-v5.md`](../eval-methodology-post-v5.md). The
+auditable claims are therefore: decomposition-value tasks compare
+decomposed harness against flat harness (not direct API), so deltas
+isolate decomposition rather than prompt or tool access; and on
+`dcv-004` decomposition is content-equivalent to flat under judge
+scoring, with the judge at ceiling in both conditions.
 
 Summary of `dcv-*` results:
 
@@ -254,9 +282,11 @@ Summary of `dcv-*` results:
 - `dcv-002` and `dcv-003` — null: increased scale and arithmetic pressure,
   but flat still kept up once scoring bugs were removed.
 - `dcv-004` — 12 independent vendor dossiers, each with plausible
-  distractors for the authoritative fact; local rescoring indicated content
-  parity, but this needs a committed report/rescore artifact before it is
-  cited as evidence.
+  distractors for the authoritative fact; null under judge scoring
+  (content parity, judge at ceiling in both conditions). The regex
+  scorer's apparent −23.3pp harness loss is a matcher artifact — see
+  the tracked rescore and regex-ablation artifacts in the manifest and
+  the v5 methodology post.
 
 The honest position: the skill system is load-bearing infrastructure for
 auditability, policy enforcement, steering, and graph-routed artifact flow.
@@ -322,9 +352,12 @@ Earlier multi-run analysis with judge scoring:
 | Pass rate        | 100%    | 96.3%    | +3.7pp | —                       |
 
 Synthesis is the only category with a significant delta (p=0.003). These
-numbers predate the `skill`/`agent` tool rename and may be stale; a
-post-rename multi-run analysis would confirm whether the steering
-improvements changed the distribution.
+numbers predate the `skill`/`agent` tool rename and may be stale. They also
+predate the 2026-07 incomplete-beta fix in `evals/stats.ts`: the buggy
+implementation deflated p-values (e.g. a true p of .227 printed as .096),
+so borderline "significant" verdicts in this table — the judge-quality
+p=0.017 in particular — may not survive recomputation. A post-rename
+multi-run analysis with the fixed statistics would settle both questions.
 
 ## Task design
 
@@ -685,10 +718,13 @@ correct facts due to phrasing variation — the judge column is the one to
 cite, and the regex/judge disagreement count shows how much of the
 headline delta was scorer noise.
 
-No per-fact rescore output is currently tracked in this branch. Before citing
-a rescored `dcv-*` claim, commit the corresponding `rescore-*.md` and either
-commit or archive the raw JSON bundle referenced from
-[`evals/results/MANIFEST.md`](../evals/results/MANIFEST.md).
+Three per-fact rescores over the dcv-004 runs are tracked (April 22
+canonical plus two replicates quantifying judge verdict stochasticity —
+one borderline fact-verdict in 240 flips between reruns), along with the
+regex-design ablation that cross-references the April rescore. See
+[`evals/results/MANIFEST.md`](../evals/results/MANIFEST.md) § Tracked
+Methodology Artifacts. Before citing any _other_ rescored claim, commit
+the corresponding `rescore-*.{md,json}` pair and add it to the manifest.
 
 ## Judge reliability
 

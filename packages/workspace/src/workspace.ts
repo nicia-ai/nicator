@@ -242,6 +242,59 @@ export async function createWorkspace(
 // separate connections; SQLite WAL mode handles concurrent access.
 // ---------------------------------------------------------------------------
 
+const MAX_SYMLINK_DEPTH = 40;
+
+async function resolvePhysicalPath(
+  fileSystem: IFileSystem,
+  path: string,
+  depth = 0,
+): Promise<string> {
+  if (depth > MAX_SYMLINK_DEPTH) {
+    throw new Error(`realpath: too many levels of symbolic links: ${path}`);
+  }
+  const segments = path.split("/").filter((s) => s.length > 0 && s !== ".");
+  let resolved = "";
+  for (const [index, segment] of segments.entries()) {
+    if (segment === "..") {
+      resolved = resolved.slice(0, Math.max(resolved.lastIndexOf("/"), 0));
+      continue;
+    }
+    const candidate = `${resolved}/${segment}`;
+    const stat = await fileSystem.lstat(candidate);
+    if (stat.isSymbolicLink) {
+      const target = await fileSystem.readlink(candidate);
+      const base = target.startsWith("/") ? target : `${resolved}/${target}`;
+      const rest = segments.slice(index + 1).join("/");
+      return resolvePhysicalPath(
+        fileSystem,
+        rest.length > 0 ? `${base}/${rest}` : base,
+        depth + 1,
+      );
+    }
+    resolved = candidate;
+  }
+  return resolved.length > 0 ? resolved : "/";
+}
+
+// agentfs-sdk 0.6.4 implements the just-bash 2.x filesystem interface, but
+// just-bash 3 also requires realpath and utimes and binds them at Bash
+// construction. Fill the gap until agentfs-sdk ships a 3.x-compatible adapter.
+function patchJustBash3Gaps(fileSystem: IFileSystem): void {
+  const fs = fileSystem as Omit<IFileSystem, "realpath" | "utimes"> &
+    Partial<Pick<IFileSystem, "realpath" | "utimes">>;
+  if (typeof fs.realpath !== "function") {
+    fs.realpath = async (path: string): Promise<string> =>
+      resolvePhysicalPath(fileSystem, path);
+  }
+  if (typeof fs.utimes !== "function") {
+    // agentfs exposes no mtime setter; honor the "throws if path doesn't
+    // exist" contract and otherwise accept the call as a no-op.
+    fs.utimes = async (path: string): Promise<void> => {
+      await fileSystem.stat(path);
+    };
+  }
+}
+
 export async function createPersistentWorkspace(
   config: WorkspaceConfig,
   dbPath: string,
@@ -257,6 +310,7 @@ export async function createPersistentWorkspace(
   const { agentfs: createAgentFs } = await import("agentfs-sdk/just-bash");
   const agent = await AgentFS.open({ path: dbPath });
   const fileSystem = await createAgentFs(agent);
+  patchJustBash3Gaps(fileSystem);
   const bash = await initBash(config, fileSystem);
 
   return assembleWorkspace(config, fileSystem, bash, async () => {

@@ -1,0 +1,2482 @@
+[
+  {
+    "runId": "7464bfdf-0439-4041-a5b2-cc208f7b257c",
+    "taskId": "dcv-004",
+    "harness": {
+      "regexScore": 0.2916666666666667,
+      "judgeScore": 1,
+      "verdicts": [
+        {
+          "factId": "fact-quantix-soc2",
+          "matched": true,
+          "justification": "Response states Quantix has SOC 2 Type II certified with report issue date 2025-06-15."
+        },
+        {
+          "factId": "fact-quantix-encryption",
+          "matched": true,
+          "justification": "Response states Quantix uses AES-256 encryption."
+        },
+        {
+          "factId": "fact-quantix-residency",
+          "matched": true,
+          "justification": "Response states Quantix is U.S. AWS regions only."
+        },
+        {
+          "factId": "fact-quantix-breach",
+          "matched": true,
+          "justification": "Response states Quantix breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-forest-soc2",
+          "matched": true,
+          "justification": "Response states Forest Ledger has SOC 2 Type I only, no Type II."
+        },
+        {
+          "factId": "fact-forest-encryption",
+          "matched": true,
+          "justification": "Response states Forest Ledger uses AES-256."
+        },
+        {
+          "factId": "fact-forest-residency",
+          "matched": true,
+          "justification": "Response states Forest Ledger offers U.S. and EU clusters."
+        },
+        {
+          "factId": "fact-forest-breach",
+          "matched": true,
+          "justification": "Response states Forest Ledger breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-harborline-soc2",
+          "matched": true,
+          "justification": "Response states Harborline has SOC 2 Type II certified dated 2024-11-03."
+        },
+        {
+          "factId": "fact-harborline-encryption",
+          "matched": true,
+          "justification": "Response states Harborline uses AES-128."
+        },
+        {
+          "factId": "fact-harborline-residency",
+          "matched": true,
+          "justification": "Response states Harborline is global multi-region by default."
+        },
+        {
+          "factId": "fact-harborline-breach",
+          "matched": true,
+          "justification": "Response states Harborline breach SLA is 48 hours."
+        },
+        {
+          "factId": "fact-prismway-soc2",
+          "matched": true,
+          "justification": "Response states Prismway has no SOC 2 Type I or Type II."
+        },
+        {
+          "factId": "fact-prismway-encryption",
+          "matched": true,
+          "justification": "Response states Prismway uses AES-256."
+        },
+        {
+          "factId": "fact-prismway-residency",
+          "matched": true,
+          "justification": "Response states Prismway is U.S.-only."
+        },
+        {
+          "factId": "fact-prismway-breach",
+          "matched": true,
+          "justification": "Response states Prismway breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-stonebridge-soc2",
+          "matched": true,
+          "justification": "Response states Stonebridge SOC 2 Type II is in progress."
+        },
+        {
+          "factId": "fact-stonebridge-encryption",
+          "matched": true,
+          "justification": "Response states Stonebridge uses AES-256."
+        },
+        {
+          "factId": "fact-stonebridge-residency",
+          "matched": true,
+          "justification": "Response states Stonebridge has U.S. and EU regions."
+        },
+        {
+          "factId": "fact-stonebridge-breach",
+          "matched": true,
+          "justification": "Response states Stonebridge breach SLA is 48 hours."
+        },
+        {
+          "factId": "fact-orinoco-soc2",
+          "matched": true,
+          "justification": "Response states Orinoco has SOC 2 Type II certified dated 2025-09-22."
+        },
+        {
+          "factId": "fact-orinoco-encryption",
+          "matched": true,
+          "justification": "Response states Orinoco uses ChaCha20-Poly1305."
+        },
+        {
+          "factId": "fact-orinoco-residency",
+          "matched": true,
+          "justification": "Response states Orinoco is U.S. regions only."
+        },
+        {
+          "factId": "fact-orinoco-breach",
+          "matched": true,
+          "justification": "Response states Orinoco breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-kestrel-soc2",
+          "matched": true,
+          "justification": "Response states Kestrel has SOC 2 Type II certified issued 2025-02-14."
+        },
+        {
+          "factId": "fact-kestrel-encryption",
+          "matched": true,
+          "justification": "Response states Kestrel uses AES-256."
+        },
+        {
+          "factId": "fact-kestrel-residency",
+          "matched": true,
+          "justification": "Response states Kestrel has US-East, EU-Central, and APAC-Singapore (three regions)."
+        },
+        {
+          "factId": "fact-kestrel-breach",
+          "matched": true,
+          "justification": "Response states Kestrel breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-vantage-soc2",
+          "matched": true,
+          "justification": "Response states Vantage Trail SOC 2 Type II expired, last report 2024-08-01, no renewal."
+        },
+        {
+          "factId": "fact-vantage-encryption",
+          "matched": true,
+          "justification": "Response states Vantage Trail uses AES-256."
+        },
+        {
+          "factId": "fact-vantage-residency",
+          "matched": true,
+          "justification": "Response states Vantage Trail is EU-only."
+        },
+        {
+          "factId": "fact-vantage-breach",
+          "matched": true,
+          "justification": "Response states Vantage Trail breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-meridian-soc2",
+          "matched": true,
+          "justification": "Response states Meridian has SOC 2 Type II certified dated 2025-11-29."
+        },
+        {
+          "factId": "fact-meridian-encryption",
+          "matched": true,
+          "justification": "Response states Meridian uses AES-256."
+        },
+        {
+          "factId": "fact-meridian-residency",
+          "matched": true,
+          "justification": "Response states Meridian is U.S.-only."
+        },
+        {
+          "factId": "fact-meridian-breach",
+          "matched": true,
+          "justification": "Response states Meridian breach SLA is 4 hours."
+        },
+        {
+          "factId": "fact-polaris-soc2",
+          "matched": true,
+          "justification": "Response states Polaris has no SOC 2 report (Type I or Type II) ever issued."
+        },
+        {
+          "factId": "fact-polaris-encryption",
+          "matched": true,
+          "justification": "Response states Polaris uses AES-128."
+        },
+        {
+          "factId": "fact-polaris-residency",
+          "matched": true,
+          "justification": "Response states Polaris has U.S. and EU regions."
+        },
+        {
+          "factId": "fact-polaris-breach",
+          "matched": true,
+          "justification": "Response states Polaris breach SLA is 96 hours."
+        },
+        {
+          "factId": "fact-copperline-soc2",
+          "matched": true,
+          "justification": "Response states Copperline has SOC 2 Type II certified dated 2025-07-18."
+        },
+        {
+          "factId": "fact-copperline-encryption",
+          "matched": true,
+          "justification": "Response states Copperline uses AES-256."
+        },
+        {
+          "factId": "fact-copperline-residency",
+          "matched": true,
+          "justification": "Response states Copperline is United States only."
+        },
+        {
+          "factId": "fact-copperline-breach",
+          "matched": true,
+          "justification": "Response states Copperline breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-twelvefold-soc2",
+          "matched": true,
+          "justification": "Response states Twelvefold SOC 2 Type II is in progress."
+        },
+        {
+          "factId": "fact-twelvefold-encryption",
+          "matched": true,
+          "justification": "Response states Twelvefold uses AES-256."
+        },
+        {
+          "factId": "fact-twelvefold-residency",
+          "matched": true,
+          "justification": "Response states Twelvefold has U.S. and EU regions."
+        },
+        {
+          "factId": "fact-twelvefold-breach",
+          "matched": true,
+          "justification": "Response states Twelvefold breach SLA is 48 hours."
+        }
+      ]
+    },
+    "baseline": {
+      "regexScore": 0.7916666666666666,
+      "judgeScore": 1,
+      "verdicts": [
+        {
+          "factId": "fact-quantix-soc2",
+          "matched": true,
+          "justification": "Response states Quantix has SOC 2 Type II certified with report issue date 2025-06-15."
+        },
+        {
+          "factId": "fact-quantix-encryption",
+          "matched": true,
+          "justification": "Response states Quantix uses AES-256 encryption."
+        },
+        {
+          "factId": "fact-quantix-residency",
+          "matched": true,
+          "justification": "Response states Quantix is US-only."
+        },
+        {
+          "factId": "fact-quantix-breach",
+          "matched": true,
+          "justification": "Response states Quantix has a 24-hour breach SLA."
+        },
+        {
+          "factId": "fact-forest-soc2",
+          "matched": true,
+          "justification": "Response states Forest Ledger has SOC 2 Type I only with Type II absent."
+        },
+        {
+          "factId": "fact-forest-encryption",
+          "matched": true,
+          "justification": "Response states Forest Ledger uses AES-256."
+        },
+        {
+          "factId": "fact-forest-residency",
+          "matched": true,
+          "justification": "Response states Forest Ledger offers US and EU regions."
+        },
+        {
+          "factId": "fact-forest-breach",
+          "matched": true,
+          "justification": "Response states Forest Ledger has a 72-hour breach SLA."
+        },
+        {
+          "factId": "fact-harborline-soc2",
+          "matched": true,
+          "justification": "Response states Harborline has SOC 2 Type II certified with report issue date 2024-11-03."
+        },
+        {
+          "factId": "fact-harborline-encryption",
+          "matched": true,
+          "justification": "Response states Harborline uses AES-128."
+        },
+        {
+          "factId": "fact-harborline-residency",
+          "matched": true,
+          "justification": "Response states Harborline is global with North America, Europe, and Asia-Pacific."
+        },
+        {
+          "factId": "fact-harborline-breach",
+          "matched": true,
+          "justification": "Response states Harborline has a 48-hour breach SLA."
+        },
+        {
+          "factId": "fact-prismway-soc2",
+          "matched": true,
+          "justification": "Response states Prismway has no SOC 2 Type I or Type II."
+        },
+        {
+          "factId": "fact-prismway-encryption",
+          "matched": true,
+          "justification": "Response states Prismway uses AES-256."
+        },
+        {
+          "factId": "fact-prismway-residency",
+          "matched": true,
+          "justification": "Response states Prismway is US-only."
+        },
+        {
+          "factId": "fact-prismway-breach",
+          "matched": true,
+          "justification": "Response states Prismway has a 24-hour breach SLA."
+        },
+        {
+          "factId": "fact-stonebridge-soc2",
+          "matched": true,
+          "justification": "Response states Stonebridge has SOC 2 Type II in progress."
+        },
+        {
+          "factId": "fact-stonebridge-encryption",
+          "matched": true,
+          "justification": "Response states Stonebridge uses AES-256."
+        },
+        {
+          "factId": "fact-stonebridge-residency",
+          "matched": true,
+          "justification": "Response states Stonebridge has US and EU regions."
+        },
+        {
+          "factId": "fact-stonebridge-breach",
+          "matched": true,
+          "justification": "Response states Stonebridge has a 48-hour breach SLA."
+        },
+        {
+          "factId": "fact-orinoco-soc2",
+          "matched": true,
+          "justification": "Response states Orinoco has SOC 2 Type II certified with report issue date 2025-09-22."
+        },
+        {
+          "factId": "fact-orinoco-encryption",
+          "matched": true,
+          "justification": "Response states Orinoco uses ChaCha20-Poly1305."
+        },
+        {
+          "factId": "fact-orinoco-residency",
+          "matched": true,
+          "justification": "Response states Orinoco is US-only."
+        },
+        {
+          "factId": "fact-orinoco-breach",
+          "matched": true,
+          "justification": "Response states Orinoco has a 72-hour breach SLA."
+        },
+        {
+          "factId": "fact-kestrel-soc2",
+          "matched": true,
+          "justification": "Response states Kestrel has SOC 2 Type II certified with report issue date 2025-02-14."
+        },
+        {
+          "factId": "fact-kestrel-encryption",
+          "matched": true,
+          "justification": "Response states Kestrel uses AES-256."
+        },
+        {
+          "factId": "fact-kestrel-residency",
+          "matched": true,
+          "justification": "Response states Kestrel has tri-continent coverage: US, EU, and APAC."
+        },
+        {
+          "factId": "fact-kestrel-breach",
+          "matched": true,
+          "justification": "Response states Kestrel has a 24-hour breach SLA."
+        },
+        {
+          "factId": "fact-vantage-soc2",
+          "matched": true,
+          "justification": "Response states Vantage Trail has SOC 2 Type II expired, last report 2024-08-01, not renewed."
+        },
+        {
+          "factId": "fact-vantage-encryption",
+          "matched": true,
+          "justification": "Response states Vantage Trail uses AES-256."
+        },
+        {
+          "factId": "fact-vantage-residency",
+          "matched": true,
+          "justification": "Response states Vantage Trail is EU-only."
+        },
+        {
+          "factId": "fact-vantage-breach",
+          "matched": true,
+          "justification": "Response states Vantage Trail has a 72-hour breach SLA."
+        },
+        {
+          "factId": "fact-meridian-soc2",
+          "matched": true,
+          "justification": "Response states Meridian has SOC 2 Type II certified with report issue date 2025-11-29."
+        },
+        {
+          "factId": "fact-meridian-encryption",
+          "matched": true,
+          "justification": "Response states Meridian uses AES-256."
+        },
+        {
+          "factId": "fact-meridian-residency",
+          "matched": true,
+          "justification": "Response states Meridian is US-only."
+        },
+        {
+          "factId": "fact-meridian-breach",
+          "matched": true,
+          "justification": "Response states Meridian has a 4-hour breach SLA."
+        },
+        {
+          "factId": "fact-polaris-soc2",
+          "matched": true,
+          "justification": "Response states Polaris has no SOC 2 and holds ISO 27001 only."
+        },
+        {
+          "factId": "fact-polaris-encryption",
+          "matched": true,
+          "justification": "Response states Polaris uses AES-128."
+        },
+        {
+          "factId": "fact-polaris-residency",
+          "matched": true,
+          "justification": "Response states Polaris offers US and EU regions."
+        },
+        {
+          "factId": "fact-polaris-breach",
+          "matched": true,
+          "justification": "Response states Polaris has a 96-hour breach SLA."
+        },
+        {
+          "factId": "fact-copperline-soc2",
+          "matched": true,
+          "justification": "Response states Copperline has SOC 2 Type II certified with report issue date 2025-07-18."
+        },
+        {
+          "factId": "fact-copperline-encryption",
+          "matched": true,
+          "justification": "Response states Copperline uses AES-256."
+        },
+        {
+          "factId": "fact-copperline-residency",
+          "matched": true,
+          "justification": "Response states Copperline is US-only."
+        },
+        {
+          "factId": "fact-copperline-breach",
+          "matched": true,
+          "justification": "Response states Copperline has a 24-hour breach SLA."
+        },
+        {
+          "factId": "fact-twelvefold-soc2",
+          "matched": true,
+          "justification": "Response states Twelvefold has SOC 2 Type II in progress."
+        },
+        {
+          "factId": "fact-twelvefold-encryption",
+          "matched": true,
+          "justification": "Response states Twelvefold uses AES-256."
+        },
+        {
+          "factId": "fact-twelvefold-residency",
+          "matched": true,
+          "justification": "Response states Twelvefold offers US and EU regions."
+        },
+        {
+          "factId": "fact-twelvefold-breach",
+          "matched": true,
+          "justification": "Response states Twelvefold has a 48-hour breach SLA."
+        }
+      ]
+    }
+  },
+  {
+    "runId": "757cf6f9-aa92-478c-8650-065b1ec24317",
+    "taskId": "dcv-004",
+    "harness": {
+      "regexScore": 0.5833333333333334,
+      "judgeScore": 0.9791666666666666,
+      "verdicts": [
+        {
+          "factId": "fact-quantix-soc2",
+          "matched": true,
+          "justification": "Response states Quantix has SOC 2 Type II certified with report issue date 2025-06-15."
+        },
+        {
+          "factId": "fact-quantix-encryption",
+          "matched": true,
+          "justification": "Response states Quantix uses AES-256 encryption."
+        },
+        {
+          "factId": "fact-quantix-residency",
+          "matched": true,
+          "justification": "Response states Quantix is U.S.-only (U.S. AWS regions exclusively)."
+        },
+        {
+          "factId": "fact-quantix-breach",
+          "matched": true,
+          "justification": "Response states Quantix breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-forest-soc2",
+          "matched": true,
+          "justification": "Response states Forest Ledger has SOC 2 Type I only, with Type II not certified and not in progress."
+        },
+        {
+          "factId": "fact-forest-encryption",
+          "matched": true,
+          "justification": "Response states Forest Ledger uses AES-256."
+        },
+        {
+          "factId": "fact-forest-residency",
+          "matched": true,
+          "justification": "Response states Forest Ledger has dual-region U.S. and EU."
+        },
+        {
+          "factId": "fact-forest-breach",
+          "matched": true,
+          "justification": "Response states Forest Ledger breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-harborline-soc2",
+          "matched": true,
+          "justification": "Response states Harborline has SOC 2 Type II certified with report issue date 2024-11-03."
+        },
+        {
+          "factId": "fact-harborline-encryption",
+          "matched": true,
+          "justification": "Response states Harborline uses AES-128."
+        },
+        {
+          "factId": "fact-harborline-residency",
+          "matched": true,
+          "justification": "Response states Harborline is global active-active across North America, Europe, and Asia-Pacific."
+        },
+        {
+          "factId": "fact-harborline-breach",
+          "matched": true,
+          "justification": "Response states Harborline breach SLA is 48 hours."
+        },
+        {
+          "factId": "fact-prismway-soc2",
+          "matched": false,
+          "justification": "Response only denies SOC 2 Type II for Prismway but does not address Type I; the fact requires no SOC 2 of any kind."
+        },
+        {
+          "factId": "fact-prismway-encryption",
+          "matched": true,
+          "justification": "Response states Prismway uses AES-256."
+        },
+        {
+          "factId": "fact-prismway-residency",
+          "matched": true,
+          "justification": "Response states Prismway is U.S.-only."
+        },
+        {
+          "factId": "fact-prismway-breach",
+          "matched": true,
+          "justification": "Response states Prismway breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-stonebridge-soc2",
+          "matched": true,
+          "justification": "Response states Stonebridge SOC 2 Type II is in progress."
+        },
+        {
+          "factId": "fact-stonebridge-encryption",
+          "matched": true,
+          "justification": "Response states Stonebridge uses AES-256."
+        },
+        {
+          "factId": "fact-stonebridge-residency",
+          "matched": true,
+          "justification": "Response states Stonebridge has dual-region U.S. and EU."
+        },
+        {
+          "factId": "fact-stonebridge-breach",
+          "matched": true,
+          "justification": "Response states Stonebridge breach SLA is 48 hours."
+        },
+        {
+          "factId": "fact-orinoco-soc2",
+          "matched": true,
+          "justification": "Response states Orinoco has SOC 2 Type II certified with report issue date 2025-09-22."
+        },
+        {
+          "factId": "fact-orinoco-encryption",
+          "matched": true,
+          "justification": "Response states Orinoco uses ChaCha20-Poly1305."
+        },
+        {
+          "factId": "fact-orinoco-residency",
+          "matched": true,
+          "justification": "Response states Orinoco is U.S.-only."
+        },
+        {
+          "factId": "fact-orinoco-breach",
+          "matched": true,
+          "justification": "Response states Orinoco breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-kestrel-soc2",
+          "matched": true,
+          "justification": "Response states Kestrel has SOC 2 Type II certified with report issue date 2025-02-14."
+        },
+        {
+          "factId": "fact-kestrel-encryption",
+          "matched": true,
+          "justification": "Response states Kestrel uses AES-256."
+        },
+        {
+          "factId": "fact-kestrel-residency",
+          "matched": true,
+          "justification": "Response states Kestrel has tri-continent footprint: US-East, EU-Central, and APAC-Singapore."
+        },
+        {
+          "factId": "fact-kestrel-breach",
+          "matched": true,
+          "justification": "Response states Kestrel breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-vantage-soc2",
+          "matched": true,
+          "justification": "Response states Vantage Trail SOC 2 Type II expired with report issue date 2024-08-01 and no renewal booked."
+        },
+        {
+          "factId": "fact-vantage-encryption",
+          "matched": true,
+          "justification": "Response states Vantage Trail uses AES-256."
+        },
+        {
+          "factId": "fact-vantage-residency",
+          "matched": true,
+          "justification": "Response states Vantage Trail is EU-only."
+        },
+        {
+          "factId": "fact-vantage-breach",
+          "matched": true,
+          "justification": "Response states Vantage Trail breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-meridian-soc2",
+          "matched": true,
+          "justification": "Response states Meridian has SOC 2 Type II certified with report issue date 2025-11-29."
+        },
+        {
+          "factId": "fact-meridian-encryption",
+          "matched": true,
+          "justification": "Response states Meridian uses AES-256."
+        },
+        {
+          "factId": "fact-meridian-residency",
+          "matched": true,
+          "justification": "Response states Meridian is U.S.-only."
+        },
+        {
+          "factId": "fact-meridian-breach",
+          "matched": true,
+          "justification": "Response states Meridian breach SLA is 4 hours."
+        },
+        {
+          "factId": "fact-polaris-soc2",
+          "matched": true,
+          "justification": "Response states Polaris has no SOC 2 report (Type I or Type II) issued, consistent with the fact."
+        },
+        {
+          "factId": "fact-polaris-encryption",
+          "matched": true,
+          "justification": "Response states Polaris uses AES-128."
+        },
+        {
+          "factId": "fact-polaris-residency",
+          "matched": true,
+          "justification": "Response states Polaris has U.S. and EU regions."
+        },
+        {
+          "factId": "fact-polaris-breach",
+          "matched": true,
+          "justification": "Response states Polaris breach SLA is 96 hours."
+        },
+        {
+          "factId": "fact-copperline-soc2",
+          "matched": true,
+          "justification": "Response states Copperline has SOC 2 Type II certified with report issue date 2025-07-18."
+        },
+        {
+          "factId": "fact-copperline-encryption",
+          "matched": true,
+          "justification": "Response states Copperline uses AES-256."
+        },
+        {
+          "factId": "fact-copperline-residency",
+          "matched": true,
+          "justification": "Response states Copperline is United States only."
+        },
+        {
+          "factId": "fact-copperline-breach",
+          "matched": true,
+          "justification": "Response states Copperline breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-twelvefold-soc2",
+          "matched": true,
+          "justification": "Response states Twelvefold SOC 2 Type II is in progress."
+        },
+        {
+          "factId": "fact-twelvefold-encryption",
+          "matched": true,
+          "justification": "Response states Twelvefold uses AES-256."
+        },
+        {
+          "factId": "fact-twelvefold-residency",
+          "matched": true,
+          "justification": "Response states Twelvefold has dual-region U.S. and EU."
+        },
+        {
+          "factId": "fact-twelvefold-breach",
+          "matched": true,
+          "justification": "Response states Twelvefold breach SLA is 48 hours."
+        }
+      ]
+    },
+    "baseline": {
+      "regexScore": 0.8125,
+      "judgeScore": 1,
+      "verdicts": [
+        {
+          "factId": "fact-quantix-soc2",
+          "matched": true,
+          "justification": "Response states Quantix has SOC 2 Type II certified with report issue date 2025-06-15."
+        },
+        {
+          "factId": "fact-quantix-encryption",
+          "matched": true,
+          "justification": "Response states Quantix uses AES-256 encryption."
+        },
+        {
+          "factId": "fact-quantix-residency",
+          "matched": true,
+          "justification": "Response states Quantix is US-only."
+        },
+        {
+          "factId": "fact-quantix-breach",
+          "matched": true,
+          "justification": "Response states Quantix has a 24-hour breach SLA."
+        },
+        {
+          "factId": "fact-forest-soc2",
+          "matched": true,
+          "justification": "Response states Forest Ledger has SOC 2 Type I only with Type II absent."
+        },
+        {
+          "factId": "fact-forest-encryption",
+          "matched": true,
+          "justification": "Response states Forest Ledger uses AES-256."
+        },
+        {
+          "factId": "fact-forest-residency",
+          "matched": true,
+          "justification": "Response states Forest Ledger offers US or EU residency."
+        },
+        {
+          "factId": "fact-forest-breach",
+          "matched": true,
+          "justification": "Response states Forest Ledger has a 72-hour breach SLA."
+        },
+        {
+          "factId": "fact-harborline-soc2",
+          "matched": true,
+          "justification": "Response states Harborline has SOC 2 Type II certified with date 2024-11-03."
+        },
+        {
+          "factId": "fact-harborline-encryption",
+          "matched": true,
+          "justification": "Response states Harborline uses AES-128."
+        },
+        {
+          "factId": "fact-harborline-residency",
+          "matched": true,
+          "justification": "Response states Harborline is global with North America, Europe, and Asia-Pacific."
+        },
+        {
+          "factId": "fact-harborline-breach",
+          "matched": true,
+          "justification": "Response states Harborline has a 48-hour breach SLA."
+        },
+        {
+          "factId": "fact-prismway-soc2",
+          "matched": true,
+          "justification": "Response states Prismway has no SOC 2 Type I or Type II."
+        },
+        {
+          "factId": "fact-prismway-encryption",
+          "matched": true,
+          "justification": "Response states Prismway uses AES-256."
+        },
+        {
+          "factId": "fact-prismway-residency",
+          "matched": true,
+          "justification": "Response states Prismway is US-only."
+        },
+        {
+          "factId": "fact-prismway-breach",
+          "matched": true,
+          "justification": "Response states Prismway has a 24-hour breach SLA."
+        },
+        {
+          "factId": "fact-stonebridge-soc2",
+          "matched": true,
+          "justification": "Response states Stonebridge has SOC 2 Type II in progress."
+        },
+        {
+          "factId": "fact-stonebridge-encryption",
+          "matched": true,
+          "justification": "Response states Stonebridge uses AES-256."
+        },
+        {
+          "factId": "fact-stonebridge-residency",
+          "matched": true,
+          "justification": "Response states Stonebridge offers US or EU residency."
+        },
+        {
+          "factId": "fact-stonebridge-breach",
+          "matched": true,
+          "justification": "Response states Stonebridge has a 48-hour breach SLA."
+        },
+        {
+          "factId": "fact-orinoco-soc2",
+          "matched": true,
+          "justification": "Response states Orinoco has SOC 2 Type II certified with date 2025-09-22."
+        },
+        {
+          "factId": "fact-orinoco-encryption",
+          "matched": true,
+          "justification": "Response states Orinoco uses ChaCha20-Poly1305."
+        },
+        {
+          "factId": "fact-orinoco-residency",
+          "matched": true,
+          "justification": "Response states Orinoco is US-only."
+        },
+        {
+          "factId": "fact-orinoco-breach",
+          "matched": true,
+          "justification": "Response states Orinoco has a 72-hour breach SLA."
+        },
+        {
+          "factId": "fact-kestrel-soc2",
+          "matched": true,
+          "justification": "Response states Kestrel has SOC 2 Type II certified with date 2025-02-14."
+        },
+        {
+          "factId": "fact-kestrel-encryption",
+          "matched": true,
+          "justification": "Response states Kestrel uses AES-256."
+        },
+        {
+          "factId": "fact-kestrel-residency",
+          "matched": true,
+          "justification": "Response states Kestrel has tri-continent coverage: US, EU, and APAC."
+        },
+        {
+          "factId": "fact-kestrel-breach",
+          "matched": true,
+          "justification": "Response states Kestrel has a 24-hour breach SLA."
+        },
+        {
+          "factId": "fact-vantage-soc2",
+          "matched": true,
+          "justification": "Response states Vantage Trail has SOC 2 Type II expired, last report 2024-08-01, not renewed."
+        },
+        {
+          "factId": "fact-vantage-encryption",
+          "matched": true,
+          "justification": "Response states Vantage Trail uses AES-256."
+        },
+        {
+          "factId": "fact-vantage-residency",
+          "matched": true,
+          "justification": "Response states Vantage Trail is EU-only."
+        },
+        {
+          "factId": "fact-vantage-breach",
+          "matched": true,
+          "justification": "Response states Vantage Trail has a 72-hour breach SLA."
+        },
+        {
+          "factId": "fact-meridian-soc2",
+          "matched": true,
+          "justification": "Response states Meridian has SOC 2 Type II certified with date 2025-11-29."
+        },
+        {
+          "factId": "fact-meridian-encryption",
+          "matched": true,
+          "justification": "Response states Meridian uses AES-256."
+        },
+        {
+          "factId": "fact-meridian-residency",
+          "matched": true,
+          "justification": "Response states Meridian is US-only."
+        },
+        {
+          "factId": "fact-meridian-breach",
+          "matched": true,
+          "justification": "Response states Meridian has a 4-hour breach SLA."
+        },
+        {
+          "factId": "fact-polaris-soc2",
+          "matched": true,
+          "justification": "Response states Polaris has no SOC 2 Type I or Type II."
+        },
+        {
+          "factId": "fact-polaris-encryption",
+          "matched": true,
+          "justification": "Response states Polaris uses AES-128."
+        },
+        {
+          "factId": "fact-polaris-residency",
+          "matched": true,
+          "justification": "Response states Polaris offers US or EU residency."
+        },
+        {
+          "factId": "fact-polaris-breach",
+          "matched": true,
+          "justification": "Response states Polaris has a 96-hour breach SLA."
+        },
+        {
+          "factId": "fact-copperline-soc2",
+          "matched": true,
+          "justification": "Response states Copperline has SOC 2 Type II certified with date 2025-07-18."
+        },
+        {
+          "factId": "fact-copperline-encryption",
+          "matched": true,
+          "justification": "Response states Copperline uses AES-256."
+        },
+        {
+          "factId": "fact-copperline-residency",
+          "matched": true,
+          "justification": "Response states Copperline is US-only."
+        },
+        {
+          "factId": "fact-copperline-breach",
+          "matched": true,
+          "justification": "Response states Copperline has a 24-hour breach SLA."
+        },
+        {
+          "factId": "fact-twelvefold-soc2",
+          "matched": true,
+          "justification": "Response states Twelvefold has SOC 2 Type II in progress."
+        },
+        {
+          "factId": "fact-twelvefold-encryption",
+          "matched": true,
+          "justification": "Response states Twelvefold uses AES-256."
+        },
+        {
+          "factId": "fact-twelvefold-residency",
+          "matched": true,
+          "justification": "Response states Twelvefold offers US or EU residency."
+        },
+        {
+          "factId": "fact-twelvefold-breach",
+          "matched": true,
+          "justification": "Response states Twelvefold has a 48-hour breach SLA."
+        }
+      ]
+    }
+  },
+  {
+    "runId": "a702013b-7126-4b42-be92-90c07ff358cd",
+    "taskId": "dcv-004",
+    "harness": {
+      "regexScore": 0.625,
+      "judgeScore": 0.9791666666666666,
+      "verdicts": [
+        {
+          "factId": "fact-quantix-soc2",
+          "matched": true,
+          "justification": "Response states Quantix has SOC 2 Type II certified 2025-06-15."
+        },
+        {
+          "factId": "fact-quantix-encryption",
+          "matched": true,
+          "justification": "Response states Quantix uses AES-256."
+        },
+        {
+          "factId": "fact-quantix-residency",
+          "matched": true,
+          "justification": "Response states Quantix is U.S. AWS regions only."
+        },
+        {
+          "factId": "fact-quantix-breach",
+          "matched": true,
+          "justification": "Response states Quantix breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-forest-soc2",
+          "matched": false,
+          "justification": "Response says Forest Ledger has no Type II but does not confirm it holds SOC 2 Type I; the fact requires Type I only status."
+        },
+        {
+          "factId": "fact-forest-encryption",
+          "matched": true,
+          "justification": "Response states Forest Ledger uses AES-256."
+        },
+        {
+          "factId": "fact-forest-residency",
+          "matched": true,
+          "justification": "Response states Forest Ledger has U.S. and EU clusters."
+        },
+        {
+          "factId": "fact-forest-breach",
+          "matched": true,
+          "justification": "Response states Forest Ledger breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-harborline-soc2",
+          "matched": true,
+          "justification": "Response states Harborline SOC 2 Type II certified 2024-11-03."
+        },
+        {
+          "factId": "fact-harborline-encryption",
+          "matched": true,
+          "justification": "Response states Harborline uses AES-128."
+        },
+        {
+          "factId": "fact-harborline-residency",
+          "matched": true,
+          "justification": "Response states Harborline is global active-active across multiple continents."
+        },
+        {
+          "factId": "fact-harborline-breach",
+          "matched": true,
+          "justification": "Response states Harborline breach SLA is 48 hours."
+        },
+        {
+          "factId": "fact-prismway-soc2",
+          "matched": true,
+          "justification": "Response states Prismway has no Type II or Type I certification."
+        },
+        {
+          "factId": "fact-prismway-encryption",
+          "matched": true,
+          "justification": "Response states Prismway uses AES-256."
+        },
+        {
+          "factId": "fact-prismway-residency",
+          "matched": true,
+          "justification": "Response states Prismway is U.S.-only."
+        },
+        {
+          "factId": "fact-prismway-breach",
+          "matched": true,
+          "justification": "Response states Prismway breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-stonebridge-soc2",
+          "matched": true,
+          "justification": "Response states Stonebridge SOC 2 Type II is in progress."
+        },
+        {
+          "factId": "fact-stonebridge-encryption",
+          "matched": true,
+          "justification": "Response states Stonebridge uses AES-256."
+        },
+        {
+          "factId": "fact-stonebridge-residency",
+          "matched": true,
+          "justification": "Response states Stonebridge has U.S. and EU regions."
+        },
+        {
+          "factId": "fact-stonebridge-breach",
+          "matched": true,
+          "justification": "Response states Stonebridge breach SLA is 48 hours."
+        },
+        {
+          "factId": "fact-orinoco-soc2",
+          "matched": true,
+          "justification": "Response states Orinoco SOC 2 Type II certified 2025-09-22."
+        },
+        {
+          "factId": "fact-orinoco-encryption",
+          "matched": true,
+          "justification": "Response states Orinoco uses ChaCha20-Poly1305."
+        },
+        {
+          "factId": "fact-orinoco-residency",
+          "matched": true,
+          "justification": "Response states Orinoco is U.S. regions only."
+        },
+        {
+          "factId": "fact-orinoco-breach",
+          "matched": true,
+          "justification": "Response states Orinoco breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-kestrel-soc2",
+          "matched": true,
+          "justification": "Response states Kestrel SOC 2 Type II certified 2025-02-14."
+        },
+        {
+          "factId": "fact-kestrel-encryption",
+          "matched": true,
+          "justification": "Response states Kestrel uses AES-256."
+        },
+        {
+          "factId": "fact-kestrel-residency",
+          "matched": true,
+          "justification": "Response states Kestrel has US-East, EU-Central, and APAC-Singapore (three regions)."
+        },
+        {
+          "factId": "fact-kestrel-breach",
+          "matched": true,
+          "justification": "Response states Kestrel breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-vantage-soc2",
+          "matched": true,
+          "justification": "Response states Vantage Trail SOC 2 Type II expired with original issue date 2024-08-01, not renewed."
+        },
+        {
+          "factId": "fact-vantage-encryption",
+          "matched": true,
+          "justification": "Response states Vantage Trail uses AES-256."
+        },
+        {
+          "factId": "fact-vantage-residency",
+          "matched": true,
+          "justification": "Response states Vantage Trail is EU-only."
+        },
+        {
+          "factId": "fact-vantage-breach",
+          "matched": true,
+          "justification": "Response states Vantage Trail breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-meridian-soc2",
+          "matched": true,
+          "justification": "Response states Meridian SOC 2 Type II certified 2025-11-29."
+        },
+        {
+          "factId": "fact-meridian-encryption",
+          "matched": true,
+          "justification": "Response states Meridian uses AES-256."
+        },
+        {
+          "factId": "fact-meridian-residency",
+          "matched": true,
+          "justification": "Response states Meridian is U.S.-only."
+        },
+        {
+          "factId": "fact-meridian-breach",
+          "matched": true,
+          "justification": "Response states Meridian breach SLA is 4 hours."
+        },
+        {
+          "factId": "fact-polaris-soc2",
+          "matched": true,
+          "justification": "Response states Polaris has no SOC 2 report (Type I or Type II)."
+        },
+        {
+          "factId": "fact-polaris-encryption",
+          "matched": true,
+          "justification": "Response states Polaris uses AES-128."
+        },
+        {
+          "factId": "fact-polaris-residency",
+          "matched": true,
+          "justification": "Response states Polaris has U.S. and EU regions."
+        },
+        {
+          "factId": "fact-polaris-breach",
+          "matched": true,
+          "justification": "Response states Polaris breach SLA is 96 hours."
+        },
+        {
+          "factId": "fact-copperline-soc2",
+          "matched": true,
+          "justification": "Response states Copperline SOC 2 Type II certified 2025-07-18."
+        },
+        {
+          "factId": "fact-copperline-encryption",
+          "matched": true,
+          "justification": "Response states Copperline uses AES-256."
+        },
+        {
+          "factId": "fact-copperline-residency",
+          "matched": true,
+          "justification": "Response states Copperline is entirely U.S.-based."
+        },
+        {
+          "factId": "fact-copperline-breach",
+          "matched": true,
+          "justification": "Response states Copperline breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-twelvefold-soc2",
+          "matched": true,
+          "justification": "Response states Twelvefold SOC 2 Type II is in progress."
+        },
+        {
+          "factId": "fact-twelvefold-encryption",
+          "matched": true,
+          "justification": "Response states Twelvefold uses AES-256."
+        },
+        {
+          "factId": "fact-twelvefold-residency",
+          "matched": true,
+          "justification": "Response states Twelvefold has U.S. and EU regions."
+        },
+        {
+          "factId": "fact-twelvefold-breach",
+          "matched": true,
+          "justification": "Response states Twelvefold breach SLA is 48 hours."
+        }
+      ]
+    },
+    "baseline": {
+      "regexScore": 0.7083333333333334,
+      "judgeScore": 1,
+      "verdicts": [
+        {
+          "factId": "fact-quantix-soc2",
+          "matched": true,
+          "justification": "Response states Quantix is certified with report issue date 2025-06-15."
+        },
+        {
+          "factId": "fact-quantix-encryption",
+          "matched": true,
+          "justification": "Response states Quantix uses AES-256 encryption."
+        },
+        {
+          "factId": "fact-quantix-residency",
+          "matched": true,
+          "justification": "Response states Quantix is U.S.-only."
+        },
+        {
+          "factId": "fact-quantix-breach",
+          "matched": true,
+          "justification": "Response states Quantix has a 24-hour breach SLA."
+        },
+        {
+          "factId": "fact-forest-soc2",
+          "matched": true,
+          "justification": "Response states Forest Ledger has SOC 2 Type I only with Type II absent."
+        },
+        {
+          "factId": "fact-forest-encryption",
+          "matched": true,
+          "justification": "Response states Forest Ledger uses AES-256."
+        },
+        {
+          "factId": "fact-forest-residency",
+          "matched": true,
+          "justification": "Response states Forest Ledger offers U.S. or EU residency."
+        },
+        {
+          "factId": "fact-forest-breach",
+          "matched": true,
+          "justification": "Response states Forest Ledger has a 72-hour breach SLA."
+        },
+        {
+          "factId": "fact-harborline-soc2",
+          "matched": true,
+          "justification": "Response states Harborline is certified with report issue date 2024-11-03."
+        },
+        {
+          "factId": "fact-harborline-encryption",
+          "matched": true,
+          "justification": "Response states Harborline uses AES-128."
+        },
+        {
+          "factId": "fact-harborline-residency",
+          "matched": true,
+          "justification": "Response states Harborline is global across North America, Europe, and Asia-Pacific."
+        },
+        {
+          "factId": "fact-harborline-breach",
+          "matched": true,
+          "justification": "Response states Harborline has a 48-hour breach SLA."
+        },
+        {
+          "factId": "fact-prismway-soc2",
+          "matched": true,
+          "justification": "Response states Prismway has no SOC 2 Type I or Type II."
+        },
+        {
+          "factId": "fact-prismway-encryption",
+          "matched": true,
+          "justification": "Response states Prismway uses AES-256."
+        },
+        {
+          "factId": "fact-prismway-residency",
+          "matched": true,
+          "justification": "Response states Prismway is U.S.-only."
+        },
+        {
+          "factId": "fact-prismway-breach",
+          "matched": true,
+          "justification": "Response states Prismway has a 24-hour breach SLA."
+        },
+        {
+          "factId": "fact-stonebridge-soc2",
+          "matched": true,
+          "justification": "Response states Stonebridge has Type II in progress."
+        },
+        {
+          "factId": "fact-stonebridge-encryption",
+          "matched": true,
+          "justification": "Response states Stonebridge uses AES-256."
+        },
+        {
+          "factId": "fact-stonebridge-residency",
+          "matched": true,
+          "justification": "Response states Stonebridge offers U.S. or EU residency."
+        },
+        {
+          "factId": "fact-stonebridge-breach",
+          "matched": true,
+          "justification": "Response states Stonebridge has a 48-hour breach SLA."
+        },
+        {
+          "factId": "fact-orinoco-soc2",
+          "matched": true,
+          "justification": "Response states Orinoco is certified with report issue date 2025-09-22."
+        },
+        {
+          "factId": "fact-orinoco-encryption",
+          "matched": true,
+          "justification": "Response states Orinoco uses ChaCha20-Poly1305."
+        },
+        {
+          "factId": "fact-orinoco-residency",
+          "matched": true,
+          "justification": "Response states Orinoco is U.S.-only."
+        },
+        {
+          "factId": "fact-orinoco-breach",
+          "matched": true,
+          "justification": "Response states Orinoco has a 72-hour breach SLA."
+        },
+        {
+          "factId": "fact-kestrel-soc2",
+          "matched": true,
+          "justification": "Response states Kestrel is certified with report issue date 2025-02-14."
+        },
+        {
+          "factId": "fact-kestrel-encryption",
+          "matched": true,
+          "justification": "Response states Kestrel uses AES-256."
+        },
+        {
+          "factId": "fact-kestrel-residency",
+          "matched": true,
+          "justification": "Response states Kestrel has tri-continent coverage: US, EU, and APAC."
+        },
+        {
+          "factId": "fact-kestrel-breach",
+          "matched": true,
+          "justification": "Response states Kestrel has a 24-hour breach SLA."
+        },
+        {
+          "factId": "fact-vantage-soc2",
+          "matched": true,
+          "justification": "Response states Vantage Trail's SOC 2 expired with last report 2024-08-01, not renewed."
+        },
+        {
+          "factId": "fact-vantage-encryption",
+          "matched": true,
+          "justification": "Response states Vantage Trail uses AES-256."
+        },
+        {
+          "factId": "fact-vantage-residency",
+          "matched": true,
+          "justification": "Response states Vantage Trail is EU-only."
+        },
+        {
+          "factId": "fact-vantage-breach",
+          "matched": true,
+          "justification": "Response states Vantage Trail has a 72-hour breach SLA."
+        },
+        {
+          "factId": "fact-meridian-soc2",
+          "matched": true,
+          "justification": "Response states Meridian is certified with report issue date 2025-11-29."
+        },
+        {
+          "factId": "fact-meridian-encryption",
+          "matched": true,
+          "justification": "Response states Meridian uses AES-256."
+        },
+        {
+          "factId": "fact-meridian-residency",
+          "matched": true,
+          "justification": "Response states Meridian is U.S.-only."
+        },
+        {
+          "factId": "fact-meridian-breach",
+          "matched": true,
+          "justification": "Response states Meridian has a 4-hour breach SLA."
+        },
+        {
+          "factId": "fact-polaris-soc2",
+          "matched": true,
+          "justification": "Response states Polaris has no SOC 2 Type I or Type II."
+        },
+        {
+          "factId": "fact-polaris-encryption",
+          "matched": true,
+          "justification": "Response states Polaris uses AES-128."
+        },
+        {
+          "factId": "fact-polaris-residency",
+          "matched": true,
+          "justification": "Response states Polaris offers U.S. or EU residency."
+        },
+        {
+          "factId": "fact-polaris-breach",
+          "matched": true,
+          "justification": "Response states Polaris has a 96-hour breach SLA."
+        },
+        {
+          "factId": "fact-copperline-soc2",
+          "matched": true,
+          "justification": "Response states Copperline is certified with report issue date 2025-07-18."
+        },
+        {
+          "factId": "fact-copperline-encryption",
+          "matched": true,
+          "justification": "Response states Copperline uses AES-256."
+        },
+        {
+          "factId": "fact-copperline-residency",
+          "matched": true,
+          "justification": "Response states Copperline is U.S.-only."
+        },
+        {
+          "factId": "fact-copperline-breach",
+          "matched": true,
+          "justification": "Response states Copperline has a 24-hour breach SLA."
+        },
+        {
+          "factId": "fact-twelvefold-soc2",
+          "matched": true,
+          "justification": "Response states Twelvefold has Type II in progress."
+        },
+        {
+          "factId": "fact-twelvefold-encryption",
+          "matched": true,
+          "justification": "Response states Twelvefold uses AES-256."
+        },
+        {
+          "factId": "fact-twelvefold-residency",
+          "matched": true,
+          "justification": "Response states Twelvefold offers U.S. or EU residency."
+        },
+        {
+          "factId": "fact-twelvefold-breach",
+          "matched": true,
+          "justification": "Response states Twelvefold has a 48-hour breach SLA."
+        }
+      ]
+    }
+  },
+  {
+    "runId": "e15c4595-6c56-44e5-97e3-93d33bd3315f",
+    "taskId": "dcv-004",
+    "harness": {
+      "regexScore": 0.4791666666666667,
+      "judgeScore": 1,
+      "verdicts": [
+        {
+          "factId": "fact-quantix-soc2",
+          "matched": true,
+          "justification": "Response states Quantix has SOC 2 Type II certified 2025-06-15."
+        },
+        {
+          "factId": "fact-quantix-encryption",
+          "matched": true,
+          "justification": "Response states Quantix uses AES-256 encryption."
+        },
+        {
+          "factId": "fact-quantix-residency",
+          "matched": true,
+          "justification": "Response states Quantix is U.S. AWS regions only."
+        },
+        {
+          "factId": "fact-quantix-breach",
+          "matched": true,
+          "justification": "Response states Quantix breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-forest-soc2",
+          "matched": true,
+          "justification": "Response states Forest Ledger has SOC 2 Type I only, explicitly noting no Type II."
+        },
+        {
+          "factId": "fact-forest-encryption",
+          "matched": true,
+          "justification": "Response states Forest Ledger uses AES-256."
+        },
+        {
+          "factId": "fact-forest-residency",
+          "matched": true,
+          "justification": "Response states Forest Ledger has dual active regions in U.S. and EU."
+        },
+        {
+          "factId": "fact-forest-breach",
+          "matched": true,
+          "justification": "Response states Forest Ledger breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-harborline-soc2",
+          "matched": true,
+          "justification": "Response states Harborline SOC 2 Type II certified 2024-11-03."
+        },
+        {
+          "factId": "fact-harborline-encryption",
+          "matched": true,
+          "justification": "Response states Harborline uses AES-128."
+        },
+        {
+          "factId": "fact-harborline-residency",
+          "matched": true,
+          "justification": "Response states Harborline is global active-active across multiple continents."
+        },
+        {
+          "factId": "fact-harborline-breach",
+          "matched": true,
+          "justification": "Response states Harborline breach SLA is 48 hours."
+        },
+        {
+          "factId": "fact-prismway-soc2",
+          "matched": true,
+          "justification": "Response states Prismway has no SOC 2 Type I or Type II certification."
+        },
+        {
+          "factId": "fact-prismway-encryption",
+          "matched": true,
+          "justification": "Response states Prismway uses AES-256."
+        },
+        {
+          "factId": "fact-prismway-residency",
+          "matched": true,
+          "justification": "Response states Prismway is U.S.-only."
+        },
+        {
+          "factId": "fact-prismway-breach",
+          "matched": true,
+          "justification": "Response states Prismway breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-stonebridge-soc2",
+          "matched": true,
+          "justification": "Response states Stonebridge SOC 2 Type II is in progress."
+        },
+        {
+          "factId": "fact-stonebridge-encryption",
+          "matched": true,
+          "justification": "Response states Stonebridge uses AES-256."
+        },
+        {
+          "factId": "fact-stonebridge-residency",
+          "matched": true,
+          "justification": "Response states Stonebridge has dual-region U.S. and EU."
+        },
+        {
+          "factId": "fact-stonebridge-breach",
+          "matched": true,
+          "justification": "Response states Stonebridge breach SLA is 48 hours."
+        },
+        {
+          "factId": "fact-orinoco-soc2",
+          "matched": true,
+          "justification": "Response states Orinoco SOC 2 Type II certified 2025-09-22."
+        },
+        {
+          "factId": "fact-orinoco-encryption",
+          "matched": true,
+          "justification": "Response states Orinoco uses ChaCha20-Poly1305."
+        },
+        {
+          "factId": "fact-orinoco-residency",
+          "matched": true,
+          "justification": "Response states Orinoco is United States only."
+        },
+        {
+          "factId": "fact-orinoco-breach",
+          "matched": true,
+          "justification": "Response states Orinoco breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-kestrel-soc2",
+          "matched": true,
+          "justification": "Response states Kestrel SOC 2 Type II certified 2025-02-14."
+        },
+        {
+          "factId": "fact-kestrel-encryption",
+          "matched": true,
+          "justification": "Response states Kestrel uses AES-256."
+        },
+        {
+          "factId": "fact-kestrel-residency",
+          "matched": true,
+          "justification": "Response states Kestrel has tri-continent coverage: US, EU, and APAC."
+        },
+        {
+          "factId": "fact-kestrel-breach",
+          "matched": true,
+          "justification": "Response states Kestrel breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-vantage-soc2",
+          "matched": true,
+          "justification": "Response states Vantage Trail SOC 2 Type II expired with last report 2024-08-01 and no renewal."
+        },
+        {
+          "factId": "fact-vantage-encryption",
+          "matched": true,
+          "justification": "Response states Vantage Trail uses AES-256."
+        },
+        {
+          "factId": "fact-vantage-residency",
+          "matched": true,
+          "justification": "Response states Vantage Trail is EU-only."
+        },
+        {
+          "factId": "fact-vantage-breach",
+          "matched": true,
+          "justification": "Response states Vantage Trail breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-meridian-soc2",
+          "matched": true,
+          "justification": "Response states Meridian SOC 2 Type II certified 2025-11-29."
+        },
+        {
+          "factId": "fact-meridian-encryption",
+          "matched": true,
+          "justification": "Response states Meridian uses AES-256."
+        },
+        {
+          "factId": "fact-meridian-residency",
+          "matched": true,
+          "justification": "Response states Meridian is U.S.-only."
+        },
+        {
+          "factId": "fact-meridian-breach",
+          "matched": true,
+          "justification": "Response states Meridian breach SLA is 4 hours."
+        },
+        {
+          "factId": "fact-polaris-soc2",
+          "matched": true,
+          "justification": "Response states Polaris has no SOC 2 certification of any type."
+        },
+        {
+          "factId": "fact-polaris-encryption",
+          "matched": true,
+          "justification": "Response states Polaris uses AES-128."
+        },
+        {
+          "factId": "fact-polaris-residency",
+          "matched": true,
+          "justification": "Response states Polaris has two active regions in U.S. and EU."
+        },
+        {
+          "factId": "fact-polaris-breach",
+          "matched": true,
+          "justification": "Response states Polaris breach SLA is 96 hours."
+        },
+        {
+          "factId": "fact-copperline-soc2",
+          "matched": true,
+          "justification": "Response states Copperline SOC 2 Type II certified 2025-07-18."
+        },
+        {
+          "factId": "fact-copperline-encryption",
+          "matched": true,
+          "justification": "Response states Copperline uses AES-256."
+        },
+        {
+          "factId": "fact-copperline-residency",
+          "matched": true,
+          "justification": "Response states Copperline is United States only."
+        },
+        {
+          "factId": "fact-copperline-breach",
+          "matched": true,
+          "justification": "Response states Copperline breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-twelvefold-soc2",
+          "matched": true,
+          "justification": "Response states Twelvefold SOC 2 Type II is in progress."
+        },
+        {
+          "factId": "fact-twelvefold-encryption",
+          "matched": true,
+          "justification": "Response states Twelvefold uses AES-256."
+        },
+        {
+          "factId": "fact-twelvefold-residency",
+          "matched": true,
+          "justification": "Response states Twelvefold has dual-region U.S. and EU."
+        },
+        {
+          "factId": "fact-twelvefold-breach",
+          "matched": true,
+          "justification": "Response states Twelvefold breach SLA is 48 hours."
+        }
+      ]
+    },
+    "baseline": {
+      "regexScore": 0.6458333333333334,
+      "judgeScore": 1,
+      "verdicts": [
+        {
+          "factId": "fact-quantix-soc2",
+          "matched": true,
+          "justification": "Response states Quantix is SOC 2 certified with report issue date 2025-06-15."
+        },
+        {
+          "factId": "fact-quantix-encryption",
+          "matched": true,
+          "justification": "Response states Quantix uses AES-256 encryption."
+        },
+        {
+          "factId": "fact-quantix-residency",
+          "matched": true,
+          "justification": "Response states Quantix residency is US-only."
+        },
+        {
+          "factId": "fact-quantix-breach",
+          "matched": true,
+          "justification": "Response states Quantix breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-forest-soc2",
+          "matched": true,
+          "justification": "Response states Forest Ledger has SOC 2 Type I only, with Type II not in progress."
+        },
+        {
+          "factId": "fact-forest-encryption",
+          "matched": true,
+          "justification": "Response states Forest Ledger uses AES-256."
+        },
+        {
+          "factId": "fact-forest-residency",
+          "matched": true,
+          "justification": "Response states Forest Ledger offers U.S. or EU region choice."
+        },
+        {
+          "factId": "fact-forest-breach",
+          "matched": true,
+          "justification": "Response states Forest Ledger breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-harborline-soc2",
+          "matched": true,
+          "justification": "Response states Harborline is SOC 2 certified with report issue date 2024-11-03."
+        },
+        {
+          "factId": "fact-harborline-encryption",
+          "matched": true,
+          "justification": "Response states Harborline uses AES-128."
+        },
+        {
+          "factId": "fact-harborline-residency",
+          "matched": true,
+          "justification": "Response states Harborline is global with North America, Europe, and Asia-Pacific."
+        },
+        {
+          "factId": "fact-harborline-breach",
+          "matched": true,
+          "justification": "Response states Harborline breach SLA is 48 hours."
+        },
+        {
+          "factId": "fact-prismway-soc2",
+          "matched": true,
+          "justification": "Response states Prismway has no SOC 2 Type I or Type II."
+        },
+        {
+          "factId": "fact-prismway-encryption",
+          "matched": true,
+          "justification": "Response states Prismway uses AES-256."
+        },
+        {
+          "factId": "fact-prismway-residency",
+          "matched": true,
+          "justification": "Response states Prismway residency is US-only."
+        },
+        {
+          "factId": "fact-prismway-breach",
+          "matched": true,
+          "justification": "Response states Prismway breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-stonebridge-soc2",
+          "matched": true,
+          "justification": "Response states Stonebridge SOC 2 Type II is in progress."
+        },
+        {
+          "factId": "fact-stonebridge-encryption",
+          "matched": true,
+          "justification": "Response states Stonebridge uses AES-256."
+        },
+        {
+          "factId": "fact-stonebridge-residency",
+          "matched": true,
+          "justification": "Response states Stonebridge offers U.S. or EU region choice."
+        },
+        {
+          "factId": "fact-stonebridge-breach",
+          "matched": true,
+          "justification": "Response states Stonebridge breach SLA is 48 hours."
+        },
+        {
+          "factId": "fact-orinoco-soc2",
+          "matched": true,
+          "justification": "Response states Orinoco is SOC 2 certified with report issue date 2025-09-22."
+        },
+        {
+          "factId": "fact-orinoco-encryption",
+          "matched": true,
+          "justification": "Response states Orinoco uses ChaCha20-Poly1305."
+        },
+        {
+          "factId": "fact-orinoco-residency",
+          "matched": true,
+          "justification": "Response states Orinoco residency is US-only."
+        },
+        {
+          "factId": "fact-orinoco-breach",
+          "matched": true,
+          "justification": "Response states Orinoco breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-kestrel-soc2",
+          "matched": true,
+          "justification": "Response states Kestrel is SOC 2 certified with report issue date 2025-02-14."
+        },
+        {
+          "factId": "fact-kestrel-encryption",
+          "matched": true,
+          "justification": "Response states Kestrel uses AES-256."
+        },
+        {
+          "factId": "fact-kestrel-residency",
+          "matched": true,
+          "justification": "Response states Kestrel has tri-continent coverage: US-East, EU-Central, APAC-Singapore."
+        },
+        {
+          "factId": "fact-kestrel-breach",
+          "matched": true,
+          "justification": "Response states Kestrel breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-vantage-soc2",
+          "matched": true,
+          "justification": "Response states Vantage Trail SOC 2 is expired with last report date 2024-08-01 and no renewal."
+        },
+        {
+          "factId": "fact-vantage-encryption",
+          "matched": true,
+          "justification": "Response states Vantage Trail uses AES-256."
+        },
+        {
+          "factId": "fact-vantage-residency",
+          "matched": true,
+          "justification": "Response states Vantage Trail residency is EU-only."
+        },
+        {
+          "factId": "fact-vantage-breach",
+          "matched": true,
+          "justification": "Response states Vantage Trail breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-meridian-soc2",
+          "matched": true,
+          "justification": "Response states Meridian is SOC 2 certified with report issue date 2025-11-29."
+        },
+        {
+          "factId": "fact-meridian-encryption",
+          "matched": true,
+          "justification": "Response states Meridian uses AES-256."
+        },
+        {
+          "factId": "fact-meridian-residency",
+          "matched": true,
+          "justification": "Response states Meridian residency is US-only."
+        },
+        {
+          "factId": "fact-meridian-breach",
+          "matched": true,
+          "justification": "Response states Meridian breach SLA is 4 hours."
+        },
+        {
+          "factId": "fact-polaris-soc2",
+          "matched": true,
+          "justification": "Response states Polaris has no SOC 2 and holds ISO 27001 only."
+        },
+        {
+          "factId": "fact-polaris-encryption",
+          "matched": true,
+          "justification": "Response states Polaris uses AES-128."
+        },
+        {
+          "factId": "fact-polaris-residency",
+          "matched": true,
+          "justification": "Response states Polaris offers U.S. or EU region choice."
+        },
+        {
+          "factId": "fact-polaris-breach",
+          "matched": true,
+          "justification": "Response states Polaris breach SLA is 96 hours."
+        },
+        {
+          "factId": "fact-copperline-soc2",
+          "matched": true,
+          "justification": "Response states Copperline is SOC 2 certified with report issue date 2025-07-18."
+        },
+        {
+          "factId": "fact-copperline-encryption",
+          "matched": true,
+          "justification": "Response states Copperline uses AES-256."
+        },
+        {
+          "factId": "fact-copperline-residency",
+          "matched": true,
+          "justification": "Response states Copperline residency is US-only."
+        },
+        {
+          "factId": "fact-copperline-breach",
+          "matched": true,
+          "justification": "Response states Copperline breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-twelvefold-soc2",
+          "matched": true,
+          "justification": "Response states Twelvefold SOC 2 Type II is in progress."
+        },
+        {
+          "factId": "fact-twelvefold-encryption",
+          "matched": true,
+          "justification": "Response states Twelvefold uses AES-256."
+        },
+        {
+          "factId": "fact-twelvefold-residency",
+          "matched": true,
+          "justification": "Response states Twelvefold offers U.S. or EU region choice."
+        },
+        {
+          "factId": "fact-twelvefold-breach",
+          "matched": true,
+          "justification": "Response states Twelvefold breach SLA is 48 hours."
+        }
+      ]
+    }
+  },
+  {
+    "runId": "ed259a03-58fe-403e-afed-85b16fbb5cee",
+    "taskId": "dcv-004",
+    "harness": {
+      "regexScore": 0.5416666666666666,
+      "judgeScore": 0.875,
+      "verdicts": [
+        {
+          "factId": "fact-quantix-soc2",
+          "matched": true,
+          "justification": "Response states Quantix SOC 2 Type II certified 2025-06-15, matching the reference fact."
+        },
+        {
+          "factId": "fact-quantix-encryption",
+          "matched": true,
+          "justification": "Response states Quantix uses AES-256 encryption."
+        },
+        {
+          "factId": "fact-quantix-residency",
+          "matched": true,
+          "justification": "Response states Quantix is U.S. AWS regions only."
+        },
+        {
+          "factId": "fact-quantix-breach",
+          "matched": true,
+          "justification": "Response states Quantix breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-forest-soc2",
+          "matched": true,
+          "justification": "Response states Forest Ledger has SOC 2 Type I only and explicitly says Type II is not certified."
+        },
+        {
+          "factId": "fact-forest-encryption",
+          "matched": true,
+          "justification": "Response states Forest Ledger uses AES-256."
+        },
+        {
+          "factId": "fact-forest-residency",
+          "matched": true,
+          "justification": "Response states Forest Ledger supports U.S. and EU regions."
+        },
+        {
+          "factId": "fact-forest-breach",
+          "matched": true,
+          "justification": "Response states Forest Ledger breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-harborline-soc2",
+          "matched": true,
+          "justification": "Response states Harborline SOC 2 Type II certified 2024-11-03."
+        },
+        {
+          "factId": "fact-harborline-encryption",
+          "matched": true,
+          "justification": "Response states Harborline uses AES-128."
+        },
+        {
+          "factId": "fact-harborline-residency",
+          "matched": true,
+          "justification": "Response states Harborline is global multi-region."
+        },
+        {
+          "factId": "fact-harborline-breach",
+          "matched": true,
+          "justification": "Response states Harborline breach SLA is 48 hours."
+        },
+        {
+          "factId": "fact-prismway-soc2",
+          "matched": true,
+          "justification": "Response states Prismway has no SOC 2 Type I or Type II certification."
+        },
+        {
+          "factId": "fact-prismway-encryption",
+          "matched": true,
+          "justification": "Response states Prismway uses AES-256."
+        },
+        {
+          "factId": "fact-prismway-residency",
+          "matched": true,
+          "justification": "Response states Prismway is U.S.-only."
+        },
+        {
+          "factId": "fact-prismway-breach",
+          "matched": true,
+          "justification": "Response states Prismway breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-stonebridge-soc2",
+          "matched": true,
+          "justification": "Response states Stonebridge SOC 2 Type II is in progress."
+        },
+        {
+          "factId": "fact-stonebridge-encryption",
+          "matched": true,
+          "justification": "Response states Stonebridge uses AES-256."
+        },
+        {
+          "factId": "fact-stonebridge-residency",
+          "matched": true,
+          "justification": "Response states Stonebridge supports U.S. and EU regions."
+        },
+        {
+          "factId": "fact-stonebridge-breach",
+          "matched": true,
+          "justification": "Response states Stonebridge breach SLA is 48 hours."
+        },
+        {
+          "factId": "fact-orinoco-soc2",
+          "matched": true,
+          "justification": "Response states Orinoco SOC 2 Type II certified 2025-09-22."
+        },
+        {
+          "factId": "fact-orinoco-encryption",
+          "matched": true,
+          "justification": "Response states Orinoco uses ChaCha20-Poly1305."
+        },
+        {
+          "factId": "fact-orinoco-residency",
+          "matched": true,
+          "justification": "Response states Orinoco is U.S.-only."
+        },
+        {
+          "factId": "fact-orinoco-breach",
+          "matched": true,
+          "justification": "Response states Orinoco breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-kestrel-soc2",
+          "matched": true,
+          "justification": "Response states Kestrel SOC 2 Type II certified 2025-02-14."
+        },
+        {
+          "factId": "fact-kestrel-encryption",
+          "matched": true,
+          "justification": "Response states Kestrel uses AES-256."
+        },
+        {
+          "factId": "fact-kestrel-residency",
+          "matched": true,
+          "justification": "Response states Kestrel has US-East, EU-Central, and APAC-Singapore (three regions)."
+        },
+        {
+          "factId": "fact-kestrel-breach",
+          "matched": true,
+          "justification": "Response states Kestrel breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-vantage-soc2",
+          "matched": true,
+          "justification": "Response states Vantage Trail SOC 2 Type II expired with last report 2024-08-01 and no renewal."
+        },
+        {
+          "factId": "fact-vantage-encryption",
+          "matched": true,
+          "justification": "Response states Vantage Trail uses AES-256."
+        },
+        {
+          "factId": "fact-vantage-residency",
+          "matched": true,
+          "justification": "Response states Vantage Trail is EU-only."
+        },
+        {
+          "factId": "fact-vantage-breach",
+          "matched": true,
+          "justification": "Response states Vantage Trail breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-meridian-soc2",
+          "matched": true,
+          "justification": "Response states Meridian SOC 2 Type II certified 2025-11-29."
+        },
+        {
+          "factId": "fact-meridian-encryption",
+          "matched": true,
+          "justification": "Response states Meridian uses AES-256."
+        },
+        {
+          "factId": "fact-meridian-residency",
+          "matched": true,
+          "justification": "Response states Meridian is U.S. regions only."
+        },
+        {
+          "factId": "fact-meridian-breach",
+          "matched": true,
+          "justification": "Response states Meridian breach SLA is 4 hours."
+        },
+        {
+          "factId": "fact-polaris-soc2",
+          "matched": true,
+          "justification": "Response states Polaris has no SOC 2 report of any type, matching the no SOC 2 fact."
+        },
+        {
+          "factId": "fact-polaris-encryption",
+          "matched": true,
+          "justification": "Response states Polaris uses AES-128."
+        },
+        {
+          "factId": "fact-polaris-residency",
+          "matched": true,
+          "justification": "Response states Polaris has US and EU regions."
+        },
+        {
+          "factId": "fact-polaris-breach",
+          "matched": false,
+          "justification": "Response states Polaris breach SLA is 48 hours, but reference fact says 96 hours."
+        },
+        {
+          "factId": "fact-copperline-soc2",
+          "matched": false,
+          "justification": "Response states Copperline certified 2025-07-10, but reference fact says 2025-07-18."
+        },
+        {
+          "factId": "fact-copperline-encryption",
+          "matched": true,
+          "justification": "Response states Copperline uses AES-256-GCM, which is a mode of AES-256."
+        },
+        {
+          "factId": "fact-copperline-residency",
+          "matched": false,
+          "justification": "Response states Copperline has global replication with multiple regions, but reference fact says US-only."
+        },
+        {
+          "factId": "fact-copperline-breach",
+          "matched": false,
+          "justification": "Response states Copperline breach SLA is 72 hours, but reference fact says 24 hours."
+        },
+        {
+          "factId": "fact-twelvefold-soc2",
+          "matched": false,
+          "justification": "Response states Twelvefold is SOC 2 Type II certified, but reference fact says it is in progress."
+        },
+        {
+          "factId": "fact-twelvefold-encryption",
+          "matched": true,
+          "justification": "Response states Twelvefold uses AES-256-XTS, which is a mode of AES-256."
+        },
+        {
+          "factId": "fact-twelvefold-residency",
+          "matched": false,
+          "justification": "Response states Twelvefold is single region US-only, but reference fact says US + EU."
+        },
+        {
+          "factId": "fact-twelvefold-breach",
+          "matched": true,
+          "justification": "Response states Twelvefold breach SLA is 48 hours."
+        }
+      ]
+    },
+    "baseline": {
+      "regexScore": 0.7291666666666666,
+      "judgeScore": 1,
+      "verdicts": [
+        {
+          "factId": "fact-quantix-soc2",
+          "matched": true,
+          "justification": "Response states Quantix is certified with report issue date 2025-06-15."
+        },
+        {
+          "factId": "fact-quantix-encryption",
+          "matched": true,
+          "justification": "Response states Quantix uses AES-256."
+        },
+        {
+          "factId": "fact-quantix-residency",
+          "matched": true,
+          "justification": "Response states Quantix is US-only."
+        },
+        {
+          "factId": "fact-quantix-breach",
+          "matched": true,
+          "justification": "Response states Quantix breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-forest-soc2",
+          "matched": true,
+          "justification": "Response states Forest Ledger has SOC 2 Type I only with Type II absent."
+        },
+        {
+          "factId": "fact-forest-encryption",
+          "matched": true,
+          "justification": "Response states Forest Ledger uses AES-256."
+        },
+        {
+          "factId": "fact-forest-residency",
+          "matched": true,
+          "justification": "Response states Forest Ledger offers US or EU residency."
+        },
+        {
+          "factId": "fact-forest-breach",
+          "matched": true,
+          "justification": "Response states Forest Ledger breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-harborline-soc2",
+          "matched": true,
+          "justification": "Response states Harborline is certified with report issue date 2024-11-03."
+        },
+        {
+          "factId": "fact-harborline-encryption",
+          "matched": true,
+          "justification": "Response states Harborline uses AES-128."
+        },
+        {
+          "factId": "fact-harborline-residency",
+          "matched": true,
+          "justification": "Response states Harborline is Global across multiple regions."
+        },
+        {
+          "factId": "fact-harborline-breach",
+          "matched": true,
+          "justification": "Response states Harborline breach SLA is 48 hours."
+        },
+        {
+          "factId": "fact-prismway-soc2",
+          "matched": true,
+          "justification": "Response states Prismway has no SOC 2 Type I or Type II."
+        },
+        {
+          "factId": "fact-prismway-encryption",
+          "matched": true,
+          "justification": "Response states Prismway uses AES-256."
+        },
+        {
+          "factId": "fact-prismway-residency",
+          "matched": true,
+          "justification": "Response states Prismway is US-only."
+        },
+        {
+          "factId": "fact-prismway-breach",
+          "matched": true,
+          "justification": "Response states Prismway breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-stonebridge-soc2",
+          "matched": true,
+          "justification": "Response states Stonebridge Type II is in progress."
+        },
+        {
+          "factId": "fact-stonebridge-encryption",
+          "matched": true,
+          "justification": "Response states Stonebridge uses AES-256."
+        },
+        {
+          "factId": "fact-stonebridge-residency",
+          "matched": true,
+          "justification": "Response states Stonebridge offers US or EU residency."
+        },
+        {
+          "factId": "fact-stonebridge-breach",
+          "matched": true,
+          "justification": "Response states Stonebridge breach SLA is 48 hours."
+        },
+        {
+          "factId": "fact-orinoco-soc2",
+          "matched": true,
+          "justification": "Response states Orinoco is certified with report issue date 2025-09-22."
+        },
+        {
+          "factId": "fact-orinoco-encryption",
+          "matched": true,
+          "justification": "Response states Orinoco uses ChaCha20-Poly1305."
+        },
+        {
+          "factId": "fact-orinoco-residency",
+          "matched": true,
+          "justification": "Response states Orinoco is US-only."
+        },
+        {
+          "factId": "fact-orinoco-breach",
+          "matched": true,
+          "justification": "Response states Orinoco breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-kestrel-soc2",
+          "matched": true,
+          "justification": "Response states Kestrel is certified with report issue date 2025-02-14."
+        },
+        {
+          "factId": "fact-kestrel-encryption",
+          "matched": true,
+          "justification": "Response states Kestrel uses AES-256."
+        },
+        {
+          "factId": "fact-kestrel-residency",
+          "matched": true,
+          "justification": "Response states Kestrel has tri-continent coverage: US, EU, APAC."
+        },
+        {
+          "factId": "fact-kestrel-breach",
+          "matched": true,
+          "justification": "Response states Kestrel breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-vantage-soc2",
+          "matched": true,
+          "justification": "Response states Vantage Trail SOC 2 is expired with last report 2024-08-01 and no renewal."
+        },
+        {
+          "factId": "fact-vantage-encryption",
+          "matched": true,
+          "justification": "Response states Vantage Trail uses AES-256."
+        },
+        {
+          "factId": "fact-vantage-residency",
+          "matched": true,
+          "justification": "Response states Vantage Trail is EU-only."
+        },
+        {
+          "factId": "fact-vantage-breach",
+          "matched": true,
+          "justification": "Response states Vantage Trail breach SLA is 72 hours."
+        },
+        {
+          "factId": "fact-meridian-soc2",
+          "matched": true,
+          "justification": "Response states Meridian is certified with report issue date 2025-11-29."
+        },
+        {
+          "factId": "fact-meridian-encryption",
+          "matched": true,
+          "justification": "Response states Meridian uses AES-256."
+        },
+        {
+          "factId": "fact-meridian-residency",
+          "matched": true,
+          "justification": "Response states Meridian is US-only."
+        },
+        {
+          "factId": "fact-meridian-breach",
+          "matched": true,
+          "justification": "Response states Meridian breach SLA is 4 hours."
+        },
+        {
+          "factId": "fact-polaris-soc2",
+          "matched": true,
+          "justification": "Response states Polaris has no SOC 2 Type I or Type II."
+        },
+        {
+          "factId": "fact-polaris-encryption",
+          "matched": true,
+          "justification": "Response states Polaris uses AES-128."
+        },
+        {
+          "factId": "fact-polaris-residency",
+          "matched": true,
+          "justification": "Response states Polaris offers US or EU residency."
+        },
+        {
+          "factId": "fact-polaris-breach",
+          "matched": true,
+          "justification": "Response states Polaris breach SLA is 96 hours."
+        },
+        {
+          "factId": "fact-copperline-soc2",
+          "matched": true,
+          "justification": "Response states Copperline is certified with report issue date 2025-07-18."
+        },
+        {
+          "factId": "fact-copperline-encryption",
+          "matched": true,
+          "justification": "Response states Copperline uses AES-256."
+        },
+        {
+          "factId": "fact-copperline-residency",
+          "matched": true,
+          "justification": "Response states Copperline is US-only."
+        },
+        {
+          "factId": "fact-copperline-breach",
+          "matched": true,
+          "justification": "Response states Copperline breach SLA is 24 hours."
+        },
+        {
+          "factId": "fact-twelvefold-soc2",
+          "matched": true,
+          "justification": "Response states Twelvefold Type II is in progress."
+        },
+        {
+          "factId": "fact-twelvefold-encryption",
+          "matched": true,
+          "justification": "Response states Twelvefold uses AES-256."
+        },
+        {
+          "factId": "fact-twelvefold-residency",
+          "matched": true,
+          "justification": "Response states Twelvefold offers US or EU residency."
+        },
+        {
+          "factId": "fact-twelvefold-breach",
+          "matched": true,
+          "justification": "Response states Twelvefold breach SLA is 48 hours."
+        }
+      ]
+    }
+  }
+]

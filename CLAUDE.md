@@ -3,7 +3,7 @@
 A framework for running LLM agents with skill dispatch, human-in-the-loop
 (HITL) approval, and evaluation. The active runtime is the local CLI and eval
 harness. Stores execution state as a graph using
-[TypeGraph](https://github.com/niciaai/typegraph).
+[TypeGraph](https://github.com/nicia-ai/typegraph).
 
 Read this file first, then the docs in `docs/`, then the existing source
 files listed below before writing any code.
@@ -15,7 +15,7 @@ files listed below before writing any code.
 - **Monorepo**: Turborepo
 - **Language**: TypeScript 5.x strict mode throughout
 - **LLM SDK**: Anthropic TypeScript SDK
-- **Storage**: [TypeGraph](https://github.com/niciaai/typegraph) (open-source graph-native) on SQLite via libsql
+- **Storage**: [TypeGraph](https://github.com/nicia-ai/typegraph) (open-source graph-native) on SQLite via libsql
 - **Workspace**: [just-bash](https://github.com/vercel-labs/just-bash) (virtual shell) + [agentfs](https://github.com/tursodatabase/agentfs) (SQLite filesystem) — same database as TypeGraph
 - **HITL**: readline-backed local approval handler
 
@@ -54,12 +54,13 @@ Operation  — atomic recorded action (tool_call | hitl_response)
 Artifact   — named, typed content node (outputs, inputs, skill prompts)
 ```
 
-Every Run has a root Task (coordinator, no Operations). Every dispatch — tool
-call, agent creation, or HITL request — creates a child Task linked via
-`spawns` edges. Task roles: `root`, `tool`, `hitl`, `subagent`. Child agents
-are created via the `agent` tool (custom role defined by the coordinator) or
-the `skill` tool (activates a pre-registered skill). All dispatches are
-concurrent with a gather timeout; HITL dispatches are sequential.
+Every Run has a root Task (coordinator, no Operations except policy-gated
+HITL — see below). Every dispatch — tool call, agent creation, or HITL
+request — creates a child Task linked via `spawns` edges. Task roles:
+`root`, `tool`, `hitl`, `subagent`. Child agents are created via the `agent`
+tool (custom role defined by the coordinator) or the `skill` tool (activates
+a pre-registered skill). All dispatches are concurrent with a gather
+timeout; HITL dispatches are sequential.
 
 ## Agent and Skill Tools
 
@@ -138,7 +139,7 @@ fixtures/definitions/               AgentDefinition fixtures
 
 ## Critical constraints
 
-**TypeGraph is the storage layer.** [TypeGraph](https://github.com/niciaai/typegraph)
+**TypeGraph is the storage layer.** [TypeGraph](https://github.com/nicia-ai/typegraph)
 is an open-source typed knowledge graph library for SQLite and Postgres
 ([docs](https://typegraph.dev), [LLM context](https://typegraph.dev/llms-small.txt)).
 There is no SQL schema file. There are no JOIN queries. All persistence goes
@@ -165,12 +166,21 @@ that duplicates a Zod schema. Infer types with `z.infer<typeof Schema>`.
 
 **Policy before Operation.** In the harness run loop, policy checks must happen
 before the child Task and its Operation are created. A policy denial should
-produce no Operation node — the Task is either never created (`never` policy)
-or gated via HITL before creation.
+produce no subagent Task or Operation in the graph. `never` policy throws
+(fatal, no task created). `max_calls_per_run` over limit and
+`require_hitl_approval` rejection return a recoverable denial — the caller
+creates a failed `tool`-role Task recording the denial reason so the model
+sees the error and can choose a different approach, but no subagent Task
+or subagent Operation is created.
 
-**HITL is a child Task, not a special case.** A HITL request creates a child
-Task (`role: "hitl"`) with an Operation (`type: "hitl_response"`). HITL
-dispatches are sequential (they change run status to `awaiting_hitl`).
+**HITL is a child Task, not a special case.** Agent-initiated HITL creates a
+child Task (`role: "hitl"`) with an Operation (`type: "hitl_response"`).
+Policy-gated HITL (`require_hitl_approval`) records its operation on the root
+task as an exception to the "root has no operations" rule — the operation
+precedes the subagent Task, which is only created on approval. Both paths
+produce `hitl_response` operations and `hitl_decision` artifacts findable by
+`findHitlDecision`, which deduplicates by normalized prompt. HITL dispatches
+are sequential (they change run status to `awaiting_hitl`).
 
 **Compression creates real graph nodes.** Context compression produces a
 `Compaction` node linked to the Run via a `has_compaction` edge. Compactions

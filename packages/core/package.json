@@ -18,10 +18,11 @@
     "fix": "eslint --fix . && prettier --write --ignore-path ../../.prettierignore ."
   },
   "dependencies": {
-    "@nicia-ai/typegraph": "^0.23.0",
-    "zod": "^4.3.6"
+    "@nicia-ai/typegraph": "^0.25.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@libsql/client": "^0.17.3"
+    "@libsql/client": "^0.17.3",
+    "@types/node": "^24.12.4"
   }
 }

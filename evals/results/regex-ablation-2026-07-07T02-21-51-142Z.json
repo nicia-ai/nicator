@@ -1,0 +1,511 @@
+{
+  "taskId": "dcv-004",
+  "runIds": [
+    "7464bfdf-0439-4041-a5b2-cc208f7b257c",
+    "757cf6f9-aa92-478c-8650-065b1ec24317",
+    "a702013b-7126-4b42-be92-90c07ff358cd",
+    "e15c4595-6c56-44e5-97e3-93d33bd3315f",
+    "ed259a03-58fe-403e-afed-85b16fbb5cee"
+  ],
+  "summaries": [
+    {
+      "variant": "original",
+      "perRun": [
+        {
+          "runId": "7464bfdf-0439-4041-a5b2-cc208f7b257c",
+          "harness": 0.2916666666666667,
+          "baseline": 0.7916666666666666,
+          "delta": -0.49999999999999994
+        },
+        {
+          "runId": "757cf6f9-aa92-478c-8650-065b1ec24317",
+          "harness": 0.5833333333333334,
+          "baseline": 0.8125,
+          "delta": -0.22916666666666663
+        },
+        {
+          "runId": "a702013b-7126-4b42-be92-90c07ff358cd",
+          "harness": 0.625,
+          "baseline": 0.7083333333333334,
+          "delta": -0.08333333333333337
+        },
+        {
+          "runId": "e15c4595-6c56-44e5-97e3-93d33bd3315f",
+          "harness": 0.4791666666666667,
+          "baseline": 0.6458333333333334,
+          "delta": -0.16666666666666669
+        },
+        {
+          "runId": "ed259a03-58fe-403e-afed-85b16fbb5cee",
+          "harness": 0.5416666666666666,
+          "baseline": 0.7291666666666666,
+          "delta": -0.1875
+        }
+      ],
+      "harnessMean": 0.5041666666666667,
+      "baselineMean": 0.7375,
+      "deltaMean": -0.2333333333333333,
+      "deltaCi95Lower": -0.42979649499192224,
+      "deltaCi95Upper": -0.03687017167474438,
+      "deltaPValue": 0.030018536357774513,
+      "deltaSignificant": true
+    },
+    {
+      "variant": "proximity-260",
+      "perRun": [
+        {
+          "runId": "7464bfdf-0439-4041-a5b2-cc208f7b257c",
+          "harness": 0.8333333333333334,
+          "baseline": 1,
+          "delta": -0.16666666666666663
+        },
+        {
+          "runId": "757cf6f9-aa92-478c-8650-065b1ec24317",
+          "harness": 0.9375,
+          "baseline": 1,
+          "delta": -0.0625
+        },
+        {
+          "runId": "a702013b-7126-4b42-be92-90c07ff358cd",
+          "harness": 0.8958333333333334,
+          "baseline": 0.875,
+          "delta": 0.02083333333333337
+        },
+        {
+          "runId": "e15c4595-6c56-44e5-97e3-93d33bd3315f",
+          "harness": 0.8541666666666666,
+          "baseline": 0.8333333333333334,
+          "delta": 0.02083333333333326
+        },
+        {
+          "runId": "ed259a03-58fe-403e-afed-85b16fbb5cee",
+          "harness": 0.8125,
+          "baseline": 0.875,
+          "delta": -0.0625
+        }
+      ],
+      "harnessMean": 0.8666666666666668,
+      "baselineMean": 0.9166666666666667,
+      "deltaMean": -0.05,
+      "deltaCi95Lower": -0.14607994934775237,
+      "deltaCi95Upper": 0.04607994934775235,
+      "deltaPValue": 0.22206822756388314,
+      "deltaSignificant": false
+    },
+    {
+      "variant": "proximity-520",
+      "perRun": [
+        {
+          "runId": "7464bfdf-0439-4041-a5b2-cc208f7b257c",
+          "harness": 0.9583333333333334,
+          "baseline": 1,
+          "delta": -0.04166666666666663
+        },
+        {
+          "runId": "757cf6f9-aa92-478c-8650-065b1ec24317",
+          "harness": 1,
+          "baseline": 1,
+          "delta": 0
+        },
+        {
+          "runId": "a702013b-7126-4b42-be92-90c07ff358cd",
+          "harness": 0.9583333333333334,
+          "baseline": 0.875,
+          "delta": 0.08333333333333337
+        },
+        {
+          "runId": "e15c4595-6c56-44e5-97e3-93d33bd3315f",
+          "harness": 0.9791666666666666,
+          "baseline": 0.8333333333333334,
+          "delta": 0.14583333333333326
+        },
+        {
+          "runId": "ed259a03-58fe-403e-afed-85b16fbb5cee",
+          "harness": 0.8333333333333334,
+          "baseline": 0.875,
+          "delta": -0.04166666666666663
+        }
+      ],
+      "harnessMean": 0.9458333333333334,
+      "baselineMean": 0.9166666666666667,
+      "deltaMean": 0.029166666666666674,
+      "deltaCi95Lower": -0.07364011542695023,
+      "deltaCi95Upper": 0.13197344876028358,
+      "deltaPValue": 0.4749986354512953,
+      "deltaSignificant": false
+    },
+    {
+      "variant": "proximity-1040",
+      "perRun": [
+        {
+          "runId": "7464bfdf-0439-4041-a5b2-cc208f7b257c",
+          "harness": 0.9791666666666666,
+          "baseline": 1,
+          "delta": -0.02083333333333337
+        },
+        {
+          "runId": "757cf6f9-aa92-478c-8650-065b1ec24317",
+          "harness": 1,
+          "baseline": 1,
+          "delta": 0
+        },
+        {
+          "runId": "a702013b-7126-4b42-be92-90c07ff358cd",
+          "harness": 1,
+          "baseline": 0.875,
+          "delta": 0.125
+        },
+        {
+          "runId": "e15c4595-6c56-44e5-97e3-93d33bd3315f",
+          "harness": 0.9791666666666666,
+          "baseline": 0.8333333333333334,
+          "delta": 0.14583333333333326
+        },
+        {
+          "runId": "ed259a03-58fe-403e-afed-85b16fbb5cee",
+          "harness": 0.8541666666666666,
+          "baseline": 0.875,
+          "delta": -0.02083333333333337
+        }
+      ],
+      "harnessMean": 0.9625,
+      "baselineMean": 0.9166666666666667,
+      "deltaMean": 0.0458333333333333,
+      "deltaCi95Lower": -0.05664759443157107,
+      "deltaCi95Upper": 0.14831426109823767,
+      "deltaPValue": 0.28223792660395,
+      "deltaSignificant": false
+    },
+    {
+      "variant": "no-proximity",
+      "perRun": [
+        {
+          "runId": "7464bfdf-0439-4041-a5b2-cc208f7b257c",
+          "harness": 1,
+          "baseline": 1,
+          "delta": 0
+        },
+        {
+          "runId": "757cf6f9-aa92-478c-8650-065b1ec24317",
+          "harness": 1,
+          "baseline": 1,
+          "delta": 0
+        },
+        {
+          "runId": "a702013b-7126-4b42-be92-90c07ff358cd",
+          "harness": 1,
+          "baseline": 0.875,
+          "delta": 0.125
+        },
+        {
+          "runId": "e15c4595-6c56-44e5-97e3-93d33bd3315f",
+          "harness": 1,
+          "baseline": 0.875,
+          "delta": 0.125
+        },
+        {
+          "runId": "ed259a03-58fe-403e-afed-85b16fbb5cee",
+          "harness": 0.9583333333333334,
+          "baseline": 0.875,
+          "delta": 0.08333333333333337
+        }
+      ],
+      "harnessMean": 0.9916666666666666,
+      "baselineMean": 0.925,
+      "deltaMean": 0.06666666666666668,
+      "deltaCi95Lower": -0.011782283471482247,
+      "deltaCi95Upper": 0.1451156168048156,
+      "deltaPValue": 0.07774164094789965,
+      "deltaSignificant": false
+    },
+    {
+      "variant": "substring-canonical",
+      "perRun": [
+        {
+          "runId": "7464bfdf-0439-4041-a5b2-cc208f7b257c",
+          "harness": 0,
+          "baseline": 0,
+          "delta": 0
+        },
+        {
+          "runId": "757cf6f9-aa92-478c-8650-065b1ec24317",
+          "harness": 0,
+          "baseline": 0,
+          "delta": 0
+        },
+        {
+          "runId": "a702013b-7126-4b42-be92-90c07ff358cd",
+          "harness": 0,
+          "baseline": 0,
+          "delta": 0
+        },
+        {
+          "runId": "e15c4595-6c56-44e5-97e3-93d33bd3315f",
+          "harness": 0,
+          "baseline": 0,
+          "delta": 0
+        },
+        {
+          "runId": "ed259a03-58fe-403e-afed-85b16fbb5cee",
+          "harness": 0,
+          "baseline": 0,
+          "delta": 0
+        }
+      ],
+      "harnessMean": 0,
+      "baselineMean": 0,
+      "deltaMean": 0,
+      "deltaCi95Lower": 0,
+      "deltaCi95Upper": 0,
+      "deltaPValue": 1,
+      "deltaSignificant": false
+    },
+    {
+      "variant": "bag-of-tokens",
+      "perRun": [
+        {
+          "runId": "7464bfdf-0439-4041-a5b2-cc208f7b257c",
+          "harness": 0.8958333333333334,
+          "baseline": 1,
+          "delta": -0.10416666666666663
+        },
+        {
+          "runId": "757cf6f9-aa92-478c-8650-065b1ec24317",
+          "harness": 0.8958333333333334,
+          "baseline": 1,
+          "delta": -0.10416666666666663
+        },
+        {
+          "runId": "a702013b-7126-4b42-be92-90c07ff358cd",
+          "harness": 0.8958333333333334,
+          "baseline": 0.8958333333333334,
+          "delta": 0
+        },
+        {
+          "runId": "e15c4595-6c56-44e5-97e3-93d33bd3315f",
+          "harness": 0.8958333333333334,
+          "baseline": 1,
+          "delta": -0.10416666666666663
+        },
+        {
+          "runId": "ed259a03-58fe-403e-afed-85b16fbb5cee",
+          "harness": 0.8541666666666666,
+          "baseline": 1,
+          "delta": -0.14583333333333337
+        }
+      ],
+      "harnessMean": 0.8875,
+      "baselineMean": 0.9791666666666667,
+      "deltaMean": -0.09166666666666665,
+      "deltaCi95Lower": -0.1591113435837106,
+      "deltaCi95Upper": -0.024221989749622683,
+      "deltaPValue": 0.01955421272030459,
+      "deltaSignificant": true
+    },
+    {
+      "variant": "judge",
+      "perRun": [
+        {
+          "runId": "7464bfdf-0439-4041-a5b2-cc208f7b257c",
+          "harness": 1,
+          "baseline": 1,
+          "delta": 0
+        },
+        {
+          "runId": "757cf6f9-aa92-478c-8650-065b1ec24317",
+          "harness": 0.9791666666666666,
+          "baseline": 1,
+          "delta": -0.02083333333333337
+        },
+        {
+          "runId": "a702013b-7126-4b42-be92-90c07ff358cd",
+          "harness": 0.9791666666666666,
+          "baseline": 1,
+          "delta": -0.02083333333333337
+        },
+        {
+          "runId": "e15c4595-6c56-44e5-97e3-93d33bd3315f",
+          "harness": 1,
+          "baseline": 1,
+          "delta": 0
+        },
+        {
+          "runId": "ed259a03-58fe-403e-afed-85b16fbb5cee",
+          "harness": 0.875,
+          "baseline": 1,
+          "delta": -0.125
+        }
+      ],
+      "harnessMean": 0.9666666666666666,
+      "baselineMean": 1,
+      "deltaMean": -0.03333333333333335,
+      "deltaCi95Lower": -0.0982510889938612,
+      "deltaCi95Upper": 0.031584422327194515,
+      "deltaPValue": 0.22717687883017676,
+      "deltaSignificant": false
+    }
+  ],
+  "sanity": [
+    {
+      "runId": "7464bfdf-0439-4041-a5b2-cc208f7b257c",
+      "mode": "harness",
+      "reproduced": true,
+      "ablation": 0.2916666666666667,
+      "resultFile": 0.2916666666666667
+    },
+    {
+      "runId": "7464bfdf-0439-4041-a5b2-cc208f7b257c",
+      "mode": "baseline",
+      "reproduced": true,
+      "ablation": 0.7916666666666666,
+      "resultFile": 0.7916666666666666
+    },
+    {
+      "runId": "757cf6f9-aa92-478c-8650-065b1ec24317",
+      "mode": "harness",
+      "reproduced": true,
+      "ablation": 0.5833333333333334,
+      "resultFile": 0.5833333333333334
+    },
+    {
+      "runId": "757cf6f9-aa92-478c-8650-065b1ec24317",
+      "mode": "baseline",
+      "reproduced": true,
+      "ablation": 0.8125,
+      "resultFile": 0.8125
+    },
+    {
+      "runId": "a702013b-7126-4b42-be92-90c07ff358cd",
+      "mode": "harness",
+      "reproduced": true,
+      "ablation": 0.625,
+      "resultFile": 0.625
+    },
+    {
+      "runId": "a702013b-7126-4b42-be92-90c07ff358cd",
+      "mode": "baseline",
+      "reproduced": true,
+      "ablation": 0.7083333333333334,
+      "resultFile": 0.7083333333333334
+    },
+    {
+      "runId": "e15c4595-6c56-44e5-97e3-93d33bd3315f",
+      "mode": "harness",
+      "reproduced": true,
+      "ablation": 0.4791666666666667,
+      "resultFile": 0.4791666666666667
+    },
+    {
+      "runId": "e15c4595-6c56-44e5-97e3-93d33bd3315f",
+      "mode": "baseline",
+      "reproduced": true,
+      "ablation": 0.6458333333333334,
+      "resultFile": 0.6458333333333334
+    },
+    {
+      "runId": "ed259a03-58fe-403e-afed-85b16fbb5cee",
+      "mode": "harness",
+      "reproduced": true,
+      "ablation": 0.5416666666666666,
+      "resultFile": 0.5416666666666666
+    },
+    {
+      "runId": "ed259a03-58fe-403e-afed-85b16fbb5cee",
+      "mode": "baseline",
+      "reproduced": true,
+      "ablation": 0.7291666666666666,
+      "resultFile": 0.7291666666666666
+    }
+  ],
+  "judgeRescorePath": "evals/results/rescore-2026-04-22T17-57-49-540Z.json",
+  "vsJudge": {
+    "harness": {
+      "original": {
+        "bothPass": 119,
+        "variantOnlyPass": 2,
+        "judgeOnlyPass": 113,
+        "bothFail": 6
+      },
+      "proximity-260": {
+        "bothPass": 206,
+        "variantOnlyPass": 2,
+        "judgeOnlyPass": 26,
+        "bothFail": 6
+      },
+      "proximity-520": {
+        "bothPass": 225,
+        "variantOnlyPass": 2,
+        "judgeOnlyPass": 7,
+        "bothFail": 6
+      },
+      "proximity-1040": {
+        "bothPass": 229,
+        "variantOnlyPass": 2,
+        "judgeOnlyPass": 3,
+        "bothFail": 6
+      },
+      "no-proximity": {
+        "bothPass": 232,
+        "variantOnlyPass": 6,
+        "judgeOnlyPass": 0,
+        "bothFail": 2
+      },
+      "substring-canonical": {
+        "bothPass": 0,
+        "variantOnlyPass": 0,
+        "judgeOnlyPass": 232,
+        "bothFail": 8
+      },
+      "bag-of-tokens": {
+        "bothPass": 208,
+        "variantOnlyPass": 5,
+        "judgeOnlyPass": 24,
+        "bothFail": 3
+      }
+    },
+    "baseline": {
+      "original": {
+        "bothPass": 177,
+        "variantOnlyPass": 0,
+        "judgeOnlyPass": 63,
+        "bothFail": 0
+      },
+      "proximity-260": {
+        "bothPass": 220,
+        "variantOnlyPass": 0,
+        "judgeOnlyPass": 20,
+        "bothFail": 0
+      },
+      "proximity-520": {
+        "bothPass": 220,
+        "variantOnlyPass": 0,
+        "judgeOnlyPass": 20,
+        "bothFail": 0
+      },
+      "proximity-1040": {
+        "bothPass": 220,
+        "variantOnlyPass": 0,
+        "judgeOnlyPass": 20,
+        "bothFail": 0
+      },
+      "no-proximity": {
+        "bothPass": 222,
+        "variantOnlyPass": 0,
+        "judgeOnlyPass": 18,
+        "bothFail": 0
+      },
+      "substring-canonical": {
+        "bothPass": 0,
+        "variantOnlyPass": 0,
+        "judgeOnlyPass": 240,
+        "bothFail": 0
+      },
+      "bag-of-tokens": {
+        "bothPass": 235,
+        "variantOnlyPass": 0,
+        "judgeOnlyPass": 5,
+        "bothFail": 0
+      }
+    }
+  }
+}

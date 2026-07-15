@@ -86,15 +86,18 @@ cleanup logic from the start.
 cancellation, and wait semantics. Tasks form a two-level hierarchy within a Run:
 
 - **Root Task** — created automatically at run start, represents the outer LLM
-  loop. The root Task is a pure coordinator: it owns no Operations directly.
-  All work is delegated to child Tasks. The coordinator's decisions are
-  expressed structurally — `spawns` edges and child Task ordering via
-  `sequenceNumber` — rather than as Operations. The model's reasoning about
-  what to dispatch is part of the conversation state, not the graph. This is
-  deliberate: recording reasoning as Operations would conflate deciding with
-  acting. A failed tool call is meaningfully different from a reasoning step
-  that led nowhere. The graph captures _what happened_; compaction summaries
-  (`has_compaction` on the Run) preserve a lossy record of _why_.
+  loop. The root Task is a pure coordinator: it owns no Operations directly,
+  except for policy-gated HITL (`require_hitl_approval`), which records its
+  `hitl_response` operation on the root task before the subagent child Task is
+  created (on approval). All other work is delegated to child Tasks. The
+  coordinator's decisions are expressed structurally — `spawns` edges and
+  child Task ordering via `sequenceNumber` — rather than as Operations. The
+  model's reasoning about what to dispatch is part of the conversation state,
+  not the graph. This is deliberate: recording reasoning as Operations would
+  conflate deciding with acting. A failed tool call is meaningfully different
+  from a reasoning step that led nowhere. The graph captures _what happened_;
+  compaction summaries (`has_compaction` on the Run) preserve a lossy record
+  of _why_.
 - **Child Task** — created for every dispatch: tool calls, subagent spawns,
   and HITL requests. Each child Task has its own Operation(s), a
   `parentTaskId` linking it to the root via a `spawns` edge, and a `role`

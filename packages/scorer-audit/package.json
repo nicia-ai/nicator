@@ -1,0 +1,38 @@
+{
+  "name": "@nicator/scorer-audit",
+  "version": "0.0.0",
+  "private": false,
+  "description": "Audit whether your eval scorer choice flips your conclusion: per-fact LLM-judge rescore, matcher-design ablation with paired-t statistics, and human-audit packets with Cohen's kappa.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "scorer-audit": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format:check": "prettier --check --ignore-path ../../.prettierignore .",
+    "fix": "eslint --fix . && prettier --write --ignore-path ../../.prettierignore ."
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.96.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.4",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.6"
+  }
+}

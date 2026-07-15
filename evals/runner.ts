@@ -654,6 +654,28 @@ async function run(options: RunOptions = {}, tag = ""): Promise<string> {
 
 // Parse CLI args when run directly
 const args = process.argv.slice(2);
+if (args.includes("--help") || args.includes("-h")) {
+  console.log(`Usage: pnpm eval [options]
+
+Filters (combine to narrow the run set):
+  --task <id>              Run a single task by id (e.g. dcv-004)
+  --category <name>        Run all tasks in a category (repeatable)
+  --exclude-category <n>   Exclude a category (repeatable)
+  --purpose <name>         Run tasks with a given purpose (repeatable)
+  --exclude-purpose <n>    Exclude a purpose (repeatable)
+  --suite <name>           Run tasks in a named suite (repeatable)
+
+Execution:
+  --runs <n>               Repeat the suite n times (default: 1)
+  --concurrency <n>        Max concurrent runs (default: bounded)
+  --no-judge               Skip the LLM judge (regex/graph scoring only)
+  --baseline-only          Run baseline mode only (skip harness)
+  -h, --help               Show this help
+
+Caution: evals call the Anthropic API and can run up large bills quickly.
+Use --no-judge or a single --task while iterating.`);
+  process.exit(0);
+}
 const options: RunOptions = {};
 for (let i = 0; i < args.length; i++) {
   if (args[i] === "--category") {

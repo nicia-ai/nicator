@@ -113,6 +113,32 @@ describe("pairedTTest", () => {
     expect(Math.abs(result.meanDelta)).toBeLessThan(0.1);
     expect(result.significant).toBe(false);
   });
+
+  // Exact anchors for the t-distribution p-value. These pin the incomplete
+  // beta implementation to reference values; a broken continued fraction
+  // passes directional assertions but fails these.
+  it("matches exact two-tailed p for t=1 at df=4 (p=.373901)", () => {
+    // Closed form: p = I_x(2, 0.5) with x = df/(df+t²) = 0.8
+    //   I_x(2, 0.5) = 1 − 1.5·√(1−x) + 0.5·(1−x)^1.5 = 0.373901
+    const r = pairedTTest([0, 0, 0, 0, 1], [0, 0, 0, 0, 0]);
+    expect(r.tStatistic).toBeCloseTo(1.0, 10);
+    expect(r.pValue).toBeCloseTo(0.373901, 4);
+  });
+
+  it("matches exact two-tailed p for t=6 at df=4 (p=.003883)", () => {
+    const r = pairedTTest([2, 1, 1, 1, 1], [0, 0, 0, 0, 0]);
+    expect(r.tStatistic).toBeCloseTo(6.0, 10);
+    expect(r.pValue).toBeCloseTo(0.003883, 4);
+  });
+
+  it("matches exact two-tailed p for t=6 at df=9 (p=.000201)", () => {
+    const r = pairedTTest(
+      [3, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    );
+    expect(r.tStatistic).toBeCloseTo(6.0, 10);
+    expect(r.pValue).toBeCloseTo(0.000201, 5);
+  });
 });
 
 describe("summarize", () => {
