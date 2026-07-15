@@ -23,6 +23,22 @@ and NLG benchmarking literature has been documenting this for years:
 - [FActScore (Min et al., EMNLP 2023)](https://arxiv.org/abs/2305.14251)
   argued long-form generations need atomic-fact decomposition, not
   blob-level scoring.
+- [Chandak et al. (2025)](https://arxiv.org/abs/2507.02856) showed
+  reference-guided free-form answer matching reaches near-human-grader
+  agreement while multiple choice and reference-free LLM judging both
+  align poorly — the current-generation successor to this lineage, and
+  the design the per-fact rescorer follows (the judge always sees the
+  reference fact).
+
+The v5 post positions the finding against the 2025–26
+measurement-validity literature — the Agentic Benchmark Checklist
+([Zhu et al.](https://arxiv.org/abs/2507.02825)), the tool-calling
+evaluator audit ([Bhat et al.](https://arxiv.org/abs/2607.02577)), the
+delimiter-sensitivity result ([Su et al.](https://arxiv.org/abs/2510.05152)),
+and judge reliability-vs-validity
+([Norman et al.](https://arxiv.org/abs/2606.19544)) — and proposes
+matcher-design ablation as a missing outcome-validity checklist item:
+report scorer sensitivity the way you report seed variance.
 
 The agent-eval-specific recurrence of this problem, measured on the
 `dcv-004` vendor-compliance matrix in this repo: a same-task, same-model,
@@ -36,7 +52,7 @@ publishing, a regex-design ablation on the same outputs showed that almost
 all of the disagreement was attributable to one specific matcher choice —
 the regex's 130-character proximity window. Widening that window to 260
 characters collapses the comparative gap to −5 pp; widening further makes
-the harness *beat* the baseline. The simpler "this regex was tuned wrong
+the harness _beat_ the baseline. The simpler "this regex was tuned wrong
 for this output distribution" story accounts for ~78% of the headline
 number. The full writeup is now
 [`eval-methodology-post-v5.md`](../eval-methodology-post-v5.md), which
@@ -51,7 +67,7 @@ lexically-scored comparative result at face value and publishing
 "architecture A is worse than architecture B by N points" when in fact
 a one-line matcher change would have given a different N or a different
 sign. Per-fact LLM-judge rescoring detects that the matcher and the judge
-disagree. The matcher-design ablation localizes *why*. Both checks are
+disagree. The matcher-design ablation localizes _why_. Both checks are
 necessary; neither alone is sufficient.
 
 ## What the playbook is
@@ -78,8 +94,8 @@ pnpm eval:rescore --task dcv-004 --last 5
 
 ### Regex-design ablation (primary measurement #2)
 
-The rescore tells you *that* the matcher and the judge disagree. It does
-not tell you *why*. The ablation localizes the disagreement to specific
+The rescore tells you _that_ the matcher and the judge disagree. It does
+not tell you _why_. The ablation localizes the disagreement to specific
 matcher-design choices by sweeping matcher specifications over the same
 outputs: proximity-window widths (130, 260, 520, 1040), no-proximity
 (strip the contiguity anchor entirely), substring-canonical, and

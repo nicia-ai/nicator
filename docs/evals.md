@@ -723,7 +723,7 @@ canonical plus two replicates quantifying judge verdict stochasticity —
 one borderline fact-verdict in 240 flips between reruns), along with the
 regex-design ablation that cross-references the April rescore. See
 [`evals/results/MANIFEST.md`](../evals/results/MANIFEST.md) § Tracked
-Methodology Artifacts. Before citing any *other* rescored claim, commit
+Methodology Artifacts. Before citing any _other_ rescored claim, commit
 the corresponding `rescore-*.{md,json}` pair and add it to the manifest.
 
 ## Judge reliability

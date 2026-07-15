@@ -12,5 +12,15 @@
     "MD060": false
   },
   "globs": ["**/*.md"],
-  "ignores": ["node_modules", "**/node_modules", "dist", "**/dist", "evals/results"]
+  "ignores": [
+    "node_modules",
+    "**/node_modules",
+    "dist",
+    "**/dist",
+    "evals/results",
+    // Untracked working drafts of the methodology post — not part of the repo surface
+    "eval-methodology-post-v3.md",
+    "eval-methodology-post-v4.md",
+    "claude-code-delegation.md"
+  ]
 }

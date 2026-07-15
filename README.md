@@ -177,6 +177,7 @@ pnpm eval:audit-score --packet evals/human-audit/<stem>.md
 ```
 
 Default sample design (~82 cases, ~45-90 min of labeling):
+
 - 40 from regex-fail/judge-pass (harness side — load-bearing quadrant)
 - 20 from regex-fail/judge-pass (baseline side)
 - All regex-pass/judge-fail (typically 1-2)
