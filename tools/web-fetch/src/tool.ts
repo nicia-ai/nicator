@@ -14,6 +14,61 @@ const MAX_TOKENS = 8000;
 const MAX_CHARS = MAX_TOKENS * CHARS_PER_TOKEN_PROSE;
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB fetch limit
 
+// ---------------------------------------------------------------------------
+// SSRF protection — block internal/metadata hosts that the agent must not
+// reach. The agent controls the URL (via model output), so without these
+// guards a malicious or confused model can hit cloud metadata endpoints,
+// loopback services, or private network hosts.
+// ---------------------------------------------------------------------------
+
+const BLOCKED_HOSTS: ReadonlySet<string> = new Set([
+  "169.254.169.254", // AWS/GCP/Azure metadata
+  "metadata.google.internal", // GCP metadata
+  "metadata.aws.internal",
+  "0.0.0.0",
+  "localhost",
+]);
+
+function isLoopbackOrPrivate(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  if (h === "127.0.0.1" || h.startsWith("127.")) return true;
+  if (h === "::1" || h === "[::1]") return true;
+  if (h.startsWith("10.")) return true;
+  if (h.startsWith("192.168.")) return true;
+  if (h.startsWith("169.254.")) return true;
+  if (h.startsWith("172.")) {
+    const second = Number(h.split(".")[1]);
+    return second >= 16 && second <= 31;
+  }
+  return false;
+}
+
+function validateFetchUrl(url: string): { ok: true } | { ok: false; error: string } {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return { ok: false, error: `Invalid URL: "${url}"` };
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    return {
+      ok: false,
+      error: `URL scheme "${parsed.protocol}" not allowed — use http or https`,
+    };
+  }
+  const hostname = parsed.hostname.toLowerCase();
+  if (BLOCKED_HOSTS.has(hostname)) {
+    return { ok: false, error: `URL host "${hostname}" is blocked (metadata/loopback)` };
+  }
+  if (isLoopbackOrPrivate(hostname)) {
+    return {
+      ok: false,
+      error: `URL host "${hostname}" is blocked (loopback or private range)`,
+    };
+  }
+  return { ok: true };
+}
+
 const WebFetchInputSchema = z.object({
   url: z.url(),
 });
@@ -99,6 +154,11 @@ export function createWebFetchTool(tool: Tool): ToolImplementation {
     async execute(input: unknown): Promise<unknown> {
       const { url } = WebFetchInputSchema.parse(input);
 
+      const validation = validateFetchUrl(url);
+      if (!validation.ok) {
+        return { error: validation.error, url };
+      }
+
       const resp = await fetch(url, {
         headers: {
           "User-Agent": "AgentHarness/1.0 (web-fetch tool)",
@@ -114,6 +174,17 @@ export function createWebFetchTool(tool: Tool): ToolImplementation {
         return {
           error: `Fetch failed for ${url}: ${resp.status} ${resp.statusText}`,
           status: resp.status,
+          url,
+        };
+      }
+
+      // Pre-check Content-Length for all content types — prevents buffering
+      // a multi-hundred-MB response into memory before truncation.
+      const contentLength = Number(resp.headers.get("content-length") ?? 0);
+      if (contentLength > MAX_BYTES) {
+        await resp.body?.cancel?.();
+        return {
+          error: `Response too large (${(contentLength / 1024 / 1024).toFixed(1)} MB, limit ${MAX_BYTES / 1024 / 1024} MB)`,
           url,
         };
       }

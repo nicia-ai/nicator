@@ -397,4 +397,108 @@ describe("web-fetch execute", () => {
       await expect(tool.execute({})).rejects.toThrow();
     });
   });
+
+  describe("SSRF protection", () => {
+    it("blocks cloud metadata endpoint (169.254.169.254)", async () => {
+      const result = await execute("http://169.254.169.254/latest/meta-data/");
+      expect(result).toMatchObject({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        error: expect.stringMatching(/blocked/i),
+      });
+    });
+
+    it("blocks GCP metadata endpoint", async () => {
+      const result = await execute(
+        "http://metadata.google.internal/computeMetadata/v1/",
+      );
+      expect(result).toMatchObject({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        error: expect.stringMatching(/blocked/i),
+      });
+    });
+
+    it("blocks localhost", async () => {
+      const result = await execute("http://localhost:8080/admin");
+      expect(result).toMatchObject({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        error: expect.stringMatching(/blocked/i),
+      });
+    });
+
+    it("blocks 127.0.0.1 loopback", async () => {
+      const result = await execute("http://127.0.0.1:3000/");
+      expect(result).toMatchObject({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        error: expect.stringMatching(/blocked/i),
+      });
+    });
+
+    it("blocks private 10.x range", async () => {
+      const result = await execute("http://10.0.0.1/");
+      expect(result).toMatchObject({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        error: expect.stringMatching(/blocked/i),
+      });
+    });
+
+    it("blocks private 192.168.x range", async () => {
+      const result = await execute("http://192.168.1.1/");
+      expect(result).toMatchObject({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        error: expect.stringMatching(/blocked/i),
+      });
+    });
+
+    it("blocks private 172.16-31.x range", async () => {
+      const result = await execute("http://172.16.0.1/");
+      expect(result).toMatchObject({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        error: expect.stringMatching(/blocked/i),
+      });
+    });
+
+    it("blocks non-http schemes (file://)", async () => {
+      const result = await execute("file:///etc/passwd");
+      expect(result).toMatchObject({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        error: expect.stringMatching(/scheme/i),
+      });
+    });
+
+    it("blocks non-http schemes (gopher://)", async () => {
+      const result = await execute("gopher://localhost/abc");
+      expect(result).toMatchObject({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        error: expect.stringMatching(/scheme/i),
+      });
+    });
+
+    it("allows public HTTPS URLs", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce(
+        new Response("ok", { headers: { "content-type": "text/plain" } }),
+      );
+      const result = await execute("https://example.com/doc");
+      expect(result).toMatchObject({ content: "ok" });
+    });
+  });
+
+  describe("response size limits", () => {
+    it("rejects oversized responses via Content-Length for all content types", async () => {
+      vi.mocked(fetch).mockResolvedValueOnce(
+        new Response("x".repeat(100), {
+          headers: {
+            "content-type": "text/plain",
+            "content-length": String(11 * 1024 * 1024),
+          },
+        }),
+      );
+
+      await expect(
+        execute("https://example.com/huge.txt"),
+      ).resolves.toMatchObject({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        error: expect.stringMatching(/too large/i),
+      });
+    });
+  });
 });
