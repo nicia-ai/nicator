@@ -810,7 +810,7 @@ async function handleHumanApproval(
 
   const match = await config.repo.tasks.findHitlDecision(runId, fullPrompt);
   if (match) {
-    const approved = match.taskStatus === "completed";
+    const approved = match.approved;
     const childTaskId = await spawnChildTask(
       config.repo,
       runId,

@@ -4,6 +4,7 @@ import {
   HarnessError,
   HUMAN_APPROVAL_SKILL_NAME,
   now,
+  policyRequiresHitl,
   SKILL_TOOL_NAME,
 } from "@nicator/core";
 import type { ParsedToolUse } from "@nicator/sdk";
@@ -143,6 +144,41 @@ async function rejectDispatchForMissingArtifacts(
   };
 }
 
+async function rejectDispatchForPolicyDenial(
+  options: DispatchOptions,
+  toolName: string,
+  reason: string,
+): Promise<DispatchResult> {
+  const {
+    runId,
+    rootTaskId,
+    toolInput,
+    toolUseId,
+    taskSequenceNumber,
+    config,
+  } = options;
+  const childTaskId = await spawnChildTask(
+    config.repo,
+    runId,
+    rootTaskId,
+    "tool",
+    toolInput,
+    taskSequenceNumber,
+    toolName,
+  );
+  await config.repo.tasks.update(childTaskId, {
+    status: "failed",
+    updatedAt: now(),
+  });
+  return {
+    succeeded: false,
+    additionalTokens: 0,
+    toolResultContent: reason,
+    toolUseId,
+    childTaskId,
+  };
+}
+
 async function rejectDispatchForEmptyArtifactQuery(
   options: DispatchOptions,
   toolName: string,
@@ -159,7 +195,7 @@ async function rejectDispatchForEmptyArtifactQuery(
     config.repo,
     runId,
     rootTaskId,
-    "subagent",
+    "tool",
     toolInput,
     taskSequenceNumber,
     toolName,
@@ -207,8 +243,9 @@ export const SkillToolInputSchema = z.object({
 /**
  * Single source of truth for predicting whether a tool call will trigger HITL.
  * Used by the run loop to partition calls into sequential (HITL) and concurrent
- * batches before dispatch. Must stay in sync with enforcePolicy — if a new
- * policy type requires HITL, add it here.
+ * batches before dispatch. Delegates to policyRequiresHitl (from core) so the
+ * partition and enforcement read from the same exhaustive switch — adding a
+ * new HITL-requiring policy type produces a compile-time error in both paths.
  */
 export function willRequireHitl(
   tc: ParsedToolUse,
@@ -221,7 +258,7 @@ export function willRequireHitl(
       const skillRef = definition.skills.find(
         (s) => s.name === parsed.data.skill_name,
       );
-      return skillRef?.policy?.type === "require_hitl_approval";
+      return skillRef?.policy ? policyRequiresHitl(skillRef.policy) : false;
     }
   }
   return false;
@@ -286,7 +323,7 @@ export async function handleSkillCall(
 
   const { skill } = resolved;
   if (skillRef?.policy) {
-    await enforcePolicy(
+    const decision = await enforcePolicy(
       {
         policy: skillRef.policy,
         subagentName: skill_name,
@@ -297,6 +334,13 @@ export async function handleSkillCall(
       },
       config,
     );
+    if (!decision.allowed) {
+      return rejectDispatchForPolicyDenial(
+        options,
+        SKILL_TOOL_NAME,
+        decision.reason,
+      );
+    }
   }
 
   if (!workspace) {

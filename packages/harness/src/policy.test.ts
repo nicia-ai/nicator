@@ -40,10 +40,10 @@ describe("enforcePolicy", () => {
         },
         harness.config,
       ),
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual({ allowed: true });
   });
 
-  it("denies invocation with 'never' policy", async () => {
+  it("denies invocation with 'never' policy (fatal throw)", async () => {
     const { run, rootTaskId } = await seedRun(harness);
 
     await expect(
@@ -79,7 +79,7 @@ describe("enforcePolicy", () => {
         },
         harness.config,
       ),
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual({ allowed: true });
 
     const operations = await harness.repo.operations.getForTask(
       rootTaskId,
@@ -90,33 +90,38 @@ describe("enforcePolicy", () => {
     expect(operations[0]!.status).toBe("succeeded");
   });
 
-  it("denies with require_hitl_approval when human denies", async () => {
+  it("returns recoverable denial with require_hitl_approval when human denies", async () => {
     const denyHarness = await createTestHarness({
-      hitl: { defaultDecision: "denied" },
+      hitl: { defaultDecision: "no, rejected" },
     });
     try {
       const { run, rootTaskId } = await seedRun(denyHarness);
-      await expect(
-        enforcePolicy(
-          {
-            policy: {
-              type: "require_hitl_approval",
-              approverPrompt: "Allow?",
-            },
-            subagentName: "sensitive-skill",
-            toolInput: {},
-            runId: run.id,
-            rootTaskId,
+      const decision = await enforcePolicy(
+        {
+          policy: {
+            type: "require_hitl_approval",
+            approverPrompt: "Allow?",
           },
-          denyHarness.config,
-        ),
-      ).rejects.toThrow("denied by human approver");
+          subagentName: "sensitive-skill",
+          toolInput: {},
+          runId: run.id,
+          rootTaskId,
+        },
+        denyHarness.config,
+      );
+
+      expect(decision).toMatchObject({
+        allowed: false,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        reason: expect.stringMatching(/denied by human approver/),
+      });
     } finally {
       denyHarness.dispose();
     }
   });
 
   it("interpolates approver prompt template variables", async () => {
+    harness.hitl.enqueue("approved");
     const { run, rootTaskId } = await seedRun(harness);
 
     await enforcePolicy(
@@ -150,10 +155,10 @@ describe("enforcePolicy", () => {
         },
         harness.config,
       ),
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual({ allowed: true });
   });
 
-  it("denies with max_calls_per_run when at limit", async () => {
+  it("returns recoverable denial with max_calls_per_run when at limit", async () => {
     const { run, rootTaskId } = await seedRun(harness);
 
     for (let index = 0; index < 3; index++) {
@@ -167,18 +172,22 @@ describe("enforcePolicy", () => {
       await harness.repo.tasks.create(task);
     }
 
-    await expect(
-      enforcePolicy(
-        {
-          policy: { type: "max_calls_per_run", limit: 3 },
-          subagentName: "limited-skill",
-          toolInput: {},
-          runId: run.id,
-          rootTaskId,
-        },
-        harness.config,
-      ),
-    ).rejects.toThrow("exceeded max_calls_per_run");
+    const decision = await enforcePolicy(
+      {
+        policy: { type: "max_calls_per_run", limit: 3 },
+        subagentName: "limited-skill",
+        toolInput: {},
+        runId: run.id,
+        rootTaskId,
+      },
+      harness.config,
+    );
+
+    expect(decision).toMatchObject({
+      allowed: false,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      reason: expect.stringMatching(/exceeded max_calls_per_run/),
+    });
   });
 
   it("counts only tasks of the same subagentName toward max_calls_per_run", async () => {
@@ -206,6 +215,62 @@ describe("enforcePolicy", () => {
         },
         harness.config,
       ),
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual({ allowed: true });
+  });
+
+  it("deduplicates require_hitl_approval — reuses prior approval without re-asking", async () => {
+    harness.hitl.enqueue("approved, go ahead");
+    const { run, rootTaskId } = await seedRun(harness);
+
+    const ctx = {
+      policy: {
+        type: "require_hitl_approval" as const,
+        approverPrompt: "Allow {{skill_name}}?",
+      },
+      subagentName: "dedup-skill",
+      toolInput: { skill_name: "dedup-skill" },
+      runId: run.id,
+      rootTaskId,
+    };
+
+    const first = await enforcePolicy(ctx, harness.config);
+    expect(first).toEqual({ allowed: true });
+    expect(harness.hitl.calls).toHaveLength(1);
+
+    // Second call with the same prompt should reuse the prior decision
+    // without invoking the HITL handler again.
+    const second = await enforcePolicy(ctx, harness.config);
+    expect(second).toEqual({ allowed: true });
+    expect(harness.hitl.calls).toHaveLength(1);
+  });
+
+  it("deduplicates require_hitl_approval — reuses prior denial without re-asking", async () => {
+    const denyHarness = await createTestHarness({
+      hitl: { defaultDecision: "no, denied" },
+    });
+    try {
+      const { run, rootTaskId } = await seedRun(denyHarness);
+
+      const ctx = {
+        policy: {
+          type: "require_hitl_approval" as const,
+          approverPrompt: "Allow {{skill_name}}?",
+        },
+        subagentName: "dedup-deny-skill",
+        toolInput: { skill_name: "dedup-deny-skill" },
+        runId: run.id,
+        rootTaskId,
+      };
+
+      const first = await enforcePolicy(ctx, denyHarness.config);
+      expect(first.allowed).toBe(false);
+      expect(denyHarness.hitl.calls).toHaveLength(1);
+
+      const second = await enforcePolicy(ctx, denyHarness.config);
+      expect(second.allowed).toBe(false);
+      expect(denyHarness.hitl.calls).toHaveLength(1);
+    } finally {
+      denyHarness.dispose();
+    }
   });
 });

@@ -1,4 +1,10 @@
-import type { Artifact, ArtifactType, OperationType, Task } from "./schema.js";
+import type {
+  Artifact,
+  ArtifactType,
+  OperationType,
+  Policy,
+  Task,
+} from "./schema.js";
 
 export function now(): string {
   return new Date().toISOString();
@@ -102,4 +108,35 @@ export function taskHasOperationType(
   type: OperationType,
 ): boolean {
   return entry.operations.some((o) => o.operation.type === type);
+}
+
+// ---------------------------------------------------------------------------
+// Policy helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Single source of truth for whether a policy requires HITL before dispatch.
+ * Used by willRequireHitl (run-loop partition) and enforcePolicy (execution).
+ * The exhaustive switch ensures new Policy variants produce a compile-time
+ * error here if not handled — eliminating the manual sync hazard.
+ */
+export function policyRequiresHitl(policy: Policy): boolean {
+  switch (policy.type) {
+    case "always": {
+      return false;
+    }
+    case "never": {
+      return false;
+    }
+    case "require_hitl_approval": {
+      return true;
+    }
+    case "max_calls_per_run": {
+      return false;
+    }
+    default: {
+      const _exhaustive: never = policy;
+      return assertNever(_exhaustive);
+    }
+  }
 }

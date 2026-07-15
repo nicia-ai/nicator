@@ -6,12 +6,16 @@ import {
   toTask,
 } from "../repository-helpers.js";
 import type { Task, TaskPatch } from "../schema.js";
-import { normalizeHitlPrompt, pickDefined } from "../utility.js";
+import {
+  normalizeHitlPrompt,
+  parseApprovalDecision,
+  pickDefined,
+} from "../utility.js";
 import type { NicatorStore } from "./types.js";
 
 export type HitlDecisionMatch = Readonly<{
   taskId: string;
-  taskStatus: "completed" | "failed";
+  approved: boolean;
   artifactId: string;
   artifactContent: string;
 }>;
@@ -151,8 +155,10 @@ export function createTaskRepo(store: NicatorStore) {
 
     /**
      * Find a prior HITL decision in this run whose normalized prompt matches.
-     * Single graph traversal: Run → Task(hitl) → Operation(hitl_response) → Artifact(hitl_decision).
-     * Replaces the O(tasks × operations × artifacts) loop.
+     * Single graph traversal: Run → Task → Operation(hitl_response) → Artifact(hitl_decision).
+     * Matches both agent-initiated HITL (child task with role "hitl") and
+     * policy-gated HITL (operation on root task). Replaces the
+     * O(tasks × operations × artifacts) loop.
      */
     async findHitlDecision(
       runId: string,
@@ -161,7 +167,10 @@ export function createTaskRepo(store: NicatorStore) {
       return storageOp("tasks.findHitlDecision", async () => {
         const normalizedPrompt = normalizeHitlPrompt(prompt);
 
-        // Single traversal: Run → Task → Operation → Artifact
+        // Single traversal: Run → Task → Operation → Artifact.
+        // No role filter — hitl_response operations may live on either a
+        // dedicated hitl child task (agent-initiated) or the root task
+        // (policy-gated require_hitl_approval).
         const results = await store
           .query()
           .from("Run", "r")
@@ -172,7 +181,6 @@ export function createTaskRepo(store: NicatorStore) {
           .traverse("produces", "pe")
           .to("Artifact", "art")
           .whereNode("r", (r) => r.id.eq(runId))
-          .whereNode("t", (t) => t.role.eq("hitl"))
           .whereNode("op", (op) => op.type.eq("hitl_response"))
           .whereNode("op", (op) => op.status.eq("succeeded"))
           .whereNode("art", (art) => art.type.eq("hitl_decision"))
@@ -184,9 +192,6 @@ export function createTaskRepo(store: NicatorStore) {
           .execute();
 
         for (const row of results) {
-          const taskStatus = row.task.status as string;
-          if (taskStatus !== "completed" && taskStatus !== "failed") continue;
-
           const opInput = row.operation.input as
             | Record<string, unknown>
             | null
@@ -201,11 +206,17 @@ export function createTaskRepo(store: NicatorStore) {
               typeof storedPrompt === "string" &&
               normalizeHitlPrompt(storedPrompt) === normalizedPrompt
             ) {
+              // The decision lives in the artifact content, not the task
+              // status: policy-gated HITL records its operation on the root
+              // task, which stays "running" for the life of the run. Parsing
+              // the content mirrors how approval was derived when the
+              // decision was recorded.
+              const content = String(row.artifact.content);
               return {
                 taskId: String(row.task.id),
-                taskStatus: taskStatus,
+                approved: parseApprovalDecision(content) === "approved",
                 artifactId: String(row.artifact.id),
-                artifactContent: String(row.artifact.content),
+                artifactContent: content,
               };
             }
           }
